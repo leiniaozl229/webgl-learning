@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-08-25T12:08:42Z",
+  "generatedAt": "2026-08-25T12:14:13Z",
   "title": "Design System: WebGL2 Learning",
   "extensions": {
     "colorMeta": {
@@ -16,11 +16,11 @@
         "canonical": "oklch(0.255 0.025 245)",
         "tonalRamp": ["oklch(0.15 0.025 245)", "oklch(0.27 0.025 245)", "oklch(0.39 0.025 245)", "oklch(0.51 0.025 245)", "oklch(0.63 0.025 245)", "oklch(0.75 0.025 245)", "oklch(0.87 0.025 245)", "oklch(0.95 0.025 245)"]
       },
-      "lab-cyan": {
+      "lab-blue": {
         "role": "primary",
-        "displayName": "Lab Cyan",
-        "canonical": "oklch(0.7 0.13 216)",
-        "tonalRamp": ["oklch(0.15 0.13 216)", "oklch(0.27 0.13 216)", "oklch(0.39 0.13 216)", "oklch(0.51 0.13 216)", "oklch(0.63 0.13 216)", "oklch(0.75 0.13 216)", "oklch(0.87 0.13 216)", "oklch(0.95 0.13 216)"]
+        "displayName": "Lab Blue",
+        "canonical": "oklch(0.69 0.145 238)",
+        "tonalRamp": ["oklch(0.15 0.055 238)", "oklch(0.27 0.09 238)", "oklch(0.39 0.13 238)", "oklch(0.51 0.16 238)", "oklch(0.63 0.15 238)", "oklch(0.75 0.13 238)", "oklch(0.87 0.07 238)", "oklch(0.95 0.035 238)"]
       },
       "code-night": {
         "role": "neutral",
@@ -99,14 +99,14 @@
   ],
   "narrative": {
     "northStar": "The Living Lab Manual",
-    "overview": "这套界面是一册会运行的实验讲义：阅读区像编校清楚的技术书，互动区像随手可改的图形实验台。整体延续 React 文档轻盈、开放的阅读气质，用克制的实验室青色建立节奏，让复杂图形概念保持亲和与精确。页面依靠稳定导航、宽松留白、清楚层级和真实 WebGL2 输出组织信息。",
-    "keyCharacteristics": ["高密度内容配合舒展的阅读节奏。", "青色只承担方向、状态和关键动作。", "概念、代码与画布结果在同一视野内互相印证。", "明暗主题共用相同的信息结构与交互语义。"],
+    "overview": "这套界面是一册会运行的实验讲义：阅读区像编校清楚的技术书，互动区像随手可改的图形实验台。整体延续 React 文档轻盈、开放的阅读气质，用克制的实验室蓝色建立节奏，让复杂图形概念保持亲和与精确。页面依靠稳定导航、宽松留白、清楚层级和真实 WebGL2 输出组织信息。",
+    "keyCharacteristics": ["高密度内容配合舒展的阅读节奏。", "蓝色只承担方向、状态和关键动作。", "概念、代码与画布结果在同一视野内互相印证。", "明暗主题共用相同的信息结构与交互语义。"],
     "rules": [
-      { "name": "The Ten Percent Cyan Rule", "body": "青色在单个视窗中的占比保持在约 10% 内，只标记方向、状态和可操作位置。", "section": "colors" },
+      { "name": "The Ten Percent Blue Rule", "body": "蓝色在单个视窗中的占比保持在约 10% 内，只标记方向、状态和可操作位置。", "section": "colors" },
       { "name": "The One Display Rule", "body": "每页只出现一个 Display 级标题，其余内容依靠 Headline 与 Title 组织。", "section": "typography" },
       { "name": "The Flat-at-Rest Rule", "body": "常驻卡片和工具栏静止时不使用投影，1px 边框与背景明度承担结构分隔。", "section": "elevation" }
     ],
     "dos": ["Do 先建立心智模型，再展示 API 调用顺序。", "Do 为每个核心概念提供可观察、可修改的运行结果。", "Do 保持学习代码短小透明，抽象只服务于重复劳动。", "Do 使用 8px 间距基准、44px 触控目标和清晰的键盘焦点。", "Do 在明暗主题中保持相同内容层级、语义颜色和交互路径。"],
-    "donts": ["Don't 堆砌旧 WebGL1 写法。", "Don't 制造整页密集文字。", "Don't 照搬第三方教程。", "Don't 提供无法运行的代码片段。", "Don't 用重型框架或黑盒抽象隐藏底层图形 API。", "Don't 让青色承担大面积装饰或让投影成为默认容器边界。"]
+    "donts": ["Don't 堆砌旧 WebGL1 写法。", "Don't 制造整页密集文字。", "Don't 照搬第三方教程。", "Don't 提供无法运行的代码片段。", "Don't 用重型框架或黑盒抽象隐藏底层图形 API。", "Don't 让蓝色承担大面积装饰或让投影成为默认容器边界。"]
   }
 }

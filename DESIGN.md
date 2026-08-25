@@ -8,9 +8,9 @@ colors:
   ink: "oklch(0.255 0.025 245)"
   ink-soft: "oklch(0.47 0.025 245)"
   border: "oklch(0.88 0.014 230)"
-  lab-cyan: "oklch(0.7 0.13 216)"
-  lab-cyan-strong: "oklch(0.54 0.15 222)"
-  lab-cyan-soft: "oklch(0.95 0.035 216)"
+  lab-blue: "oklch(0.69 0.145 238)"
+  lab-blue-strong: "oklch(0.52 0.17 244)"
+  lab-blue-soft: "oklch(0.95 0.035 238)"
   code-night: "oklch(0.205 0.018 250)"
   success: "oklch(0.6 0.14 158)"
   error: "oklch(0.58 0.19 28)"
@@ -57,7 +57,7 @@ spacing:
   3xl: "4.5rem"
 components:
   button-action:
-    backgroundColor: "{colors.lab-cyan-strong}"
+    backgroundColor: "{colors.lab-blue-strong}"
     textColor: "{colors.surface}"
     typography: "{typography.label}"
     rounded: "{rounded.sm}"
@@ -71,8 +71,8 @@ components:
     padding: "0.65rem 0.75rem"
     height: "2.75rem"
   chip-meta:
-    backgroundColor: "{colors.lab-cyan-soft}"
-    textColor: "{colors.lab-cyan-strong}"
+    backgroundColor: "{colors.lab-blue-soft}"
+    textColor: "{colors.lab-blue-strong}"
     typography: "{typography.label}"
     rounded: "999px"
     padding: "0.22rem 0.55rem"
@@ -82,8 +82,8 @@ components:
     rounded: "{rounded.lg}"
     padding: "1.5rem"
   nav-active:
-    backgroundColor: "{colors.lab-cyan-soft}"
-    textColor: "{colors.lab-cyan-strong}"
+    backgroundColor: "{colors.lab-blue-soft}"
+    textColor: "{colors.lab-blue-strong}"
     typography: "{typography.body}"
     rounded: "{rounded.sm}"
     padding: "0.58rem 0.75rem"
@@ -95,26 +95,26 @@ components:
 
 **Creative North Star: “The Living Lab Manual”**
 
-这套界面是一册会运行的实验讲义：阅读区像编校清楚的技术书，互动区像随手可改的图形实验台。整体延续 React 文档轻盈、开放的阅读气质，用克制的实验室青色建立节奏，让复杂图形概念保持亲和与精确。
+这套界面是一册会运行的实验讲义：阅读区像编校清楚的技术书，互动区像随手可改的图形实验台。整体延续 React 文档轻盈、开放的阅读气质，用克制的实验室蓝色建立节奏，让复杂图形概念保持亲和与精确。
 
 页面依靠稳定导航、宽松留白、清楚层级和真实 WebGL2 输出组织信息。它拒绝堆砌旧 WebGL1 写法、整页密集文字、照搬第三方教程、无法运行的代码片段，以及用重型框架或黑盒抽象隐藏底层图形 API。
 
 **Key Characteristics:**
 
 - 高密度内容配合舒展的阅读节奏。
-- 青色只承担方向、状态和关键动作。
+- 蓝色只承担方向、状态和关键动作。
 - 概念、代码与画布结果在同一视野内互相印证。
 - 明暗主题共用相同的信息结构与交互语义。
 
 ## Colors
 
-色彩像光线充足的图形实验室：冷白纸面、深蓝灰文字和少量清透青色组成主体，代码区使用安静的夜蓝提供专注对比。
+色彩像光线充足的图形实验室：冷白纸面、深蓝灰文字和少量清透天空蓝组成主体，代码区使用安静的夜蓝提供专注对比。
 
 ### Primary
 
-- **Lab Cyan** (`lab-cyan`): 用于品牌记号、学习路径和轻量提示。
-- **Focused Cyan** (`lab-cyan-strong`): 用于链接、激活导航和主要操作。
-- **Mist Cyan** (`lab-cyan-soft`): 用于标签、选中项和概念提示背景。
+- **Lab Blue** (`lab-blue`): 用于品牌记号、学习路径和轻量提示。
+- **Focused Blue** (`lab-blue-strong`): 用于链接、激活导航和主要操作。
+- **Mist Blue** (`lab-blue-soft`): 用于标签、选中项和概念提示背景。
 
 ### Neutral
 
@@ -124,7 +124,7 @@ components:
 - **Quiet Technical Ink** (`ink-soft`): 辅助信息与非激活控件。
 - **Code Night** (`code-night`): 代码展示和编辑器背景。
 
-**The Ten Percent Cyan Rule.** 青色在单个视窗中的占比保持在约 10% 内，只标记方向、状态和可操作位置。
+**The Ten Percent Blue Rule.** 蓝色在单个视窗中的占比保持在约 10% 内，只标记方向、状态和可操作位置。
 
 ## Typography
 
@@ -161,13 +161,13 @@ components:
 ### Buttons
 
 - **Shape:** 8px 圆角，最小触控高度 44px。
-- **Primary:** Focused Cyan 背景配白色文字，水平内边距 16px。
+- **Primary:** Focused Blue 背景配白色文字，水平内边距 16px。
 - **Hover / Focus:** 160ms 状态过渡；键盘焦点使用 3px Focus Cyan 轮廓。
 - **Ghost:** 透明背景配 Quiet Technical Ink，悬停时切换为 Soft Surface。
 
 ### Chips
 
-- **Style:** 药丸形、Mist Cyan 背景、Focused Cyan 文字，无装饰性描边。
+- **Style:** 药丸形、Mist Blue 背景、Focused Blue 文字，无装饰性描边。
 - **State:** 只呈现版本、难度、时长等短元数据，不承担长文本操作。
 
 ### Cards / Containers
@@ -186,7 +186,7 @@ components:
 
 ### Navigation
 
-左侧课程树维持稳定章节顺序；当前项使用 Mist Cyan 表面和 Focused Cyan 文字。桌面默认固定显示并允许从页头收起，窄屏转为带遮罩的抽屉，并提供明确关闭按钮和 Escape 键路径。
+左侧课程树维持稳定章节顺序；当前项使用 Mist Blue 表面和 Focused Blue 文字。桌面默认固定显示并允许从页头收起，窄屏转为带遮罩的抽屉，并提供明确关闭按钮和 Escape 键路径。
 
 ### Shader Playground
 
@@ -209,4 +209,4 @@ components:
 - **Don't** 照搬第三方教程。
 - **Don't** 提供无法运行的代码片段。
 - **Don't** 用重型框架或黑盒抽象隐藏底层图形 API。
-- **Don't** 让青色承担大面积装饰或让投影成为默认容器边界。
+- **Don't** 让蓝色承担大面积装饰或让投影成为默认容器边界。

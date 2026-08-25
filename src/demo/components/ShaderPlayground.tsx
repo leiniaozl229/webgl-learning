@@ -131,7 +131,7 @@ export function ShaderPlayground() {
           )}
         </div>
         <div className="result-panel">
-          <canvas ref={canvasRef} role="img" aria-label="WebGL2 绘制的青色三角形" />
+          <canvas ref={canvasRef} role="img" aria-label="WebGL2 绘制的蓝色三角形" />
           <div className="result-panel__meta" aria-hidden="true"><span>WebGL2</span><span>TRIANGLES · 3 vertices</span></div>
         </div>
       </div>

@@ -13,7 +13,7 @@ precision highp float;
 out vec4 outColor;
 
 void main() {
-  outColor = vec4(0.38, 0.82, 0.95, 1.0);
+  outColor = vec4(0.30, 0.64, 0.98, 1.0);
 }`;
 
 export const TRIANGLE_POINTS = [
