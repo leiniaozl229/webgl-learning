@@ -16,6 +16,21 @@ void main() {
   outColor = vec4(0.38, 0.82, 0.95, 1.0);
 }`;
 
+export const TRIANGLE_POINTS = [
+  { x: -0.72, y: -0.62, position: '左下' },
+  { x: 0, y: 0.72, position: '顶部' },
+  { x: 0.72, y: -0.62, position: '右下' },
+] as const;
+
+export const TRIANGLE_VERTEX_DATA_SOURCE = `const positions = new Float32Array([
+  -0.72, -0.62, // 顶点 1 · 左下
+   0.00,  0.72, // 顶点 2 · 顶部
+   0.72, -0.62, // 顶点 3 · 右下
+]);
+
+gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);`;
+
 function compileShader(gl: WebGL2RenderingContext, type: number, source: string): WebGLShader {
   const shader = gl.createShader(type);
   if (!shader) throw new Error('浏览器无法创建着色器对象。');
@@ -83,7 +98,7 @@ export function drawTriangle(
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
     gl.bufferData(
       gl.ARRAY_BUFFER,
-      new Float32Array([-0.72, -0.62, 0, 0.72, 0.72, -0.62]),
+      new Float32Array(TRIANGLE_POINTS.flatMap(({ x, y }) => [x, y])),
       gl.STATIC_DRAW,
     );
     gl.enableVertexAttribArray(positionLocation);

@@ -62,9 +62,9 @@ export function LessonArticle() {
 
       <section id="hello-triangle" className="lesson-section lesson-section--wide">
         <h2>第一个三角形</h2>
-        <p>修改下面两段 GLSL，然后点击“运行”。可以先切换到片段着色器，调整 <code>vec4</code> 中前三个 0–1 颜色值，观察编译和绘制结果。</p>
+        <p>先打开 <code>vertex-data.ts</code>，查看组成三角形的三个坐标以及它们如何上传到 GPU。随后可以修改两段 GLSL 并点击“运行”；切换到片段着色器，调整 <code>vec4</code> 中前三个 0–1 颜色值，就能观察颜色变化。</p>
         <ShaderPlayground />
-        <details className="code-details"><summary>绘制命令做了什么</summary><div><CodeBlock label="一次绘制">{drawCode}</CodeBlock><p><code>useProgram</code> 选择着色程序，<code>bindVertexArray</code> 恢复顶点属性状态，<code>viewport</code> 建立裁剪空间到画布像素的映射，最后由 <code>drawArrays</code> 让顶点着色器执行三次。</p></div></details>
+        <details className="code-details"><summary>绘制命令做了什么</summary><div><CodeBlock label="一次绘制">{drawCode}</CodeBlock><p><code>useProgram</code> 选择着色程序，<code>bindVertexArray</code> 恢复顶点属性状态，<code>viewport</code> 建立裁剪空间到画布像素的映射。最后，<code>drawArrays(gl.TRIANGLES, 0, 3)</code> 请求处理三个顶点：三个坐标会分别进入同一段顶点着色器，然后组成一个三角形。</p></div></details>
       </section>
 
       <section id="next-steps" className="lesson-section next-steps">
