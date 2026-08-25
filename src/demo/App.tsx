@@ -13,9 +13,19 @@ function readInitialTheme(): Theme {
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
+function readInitialSidebarCollapsed() {
+  return window.localStorage.getItem('webgl-learning-sidebar-collapsed') === 'true';
+}
+
+function readInitialDesktopLayout() {
+  return window.matchMedia('(min-width: 56rem)').matches;
+}
+
 export function App() {
   const [theme, setTheme] = useState<Theme>(readInitialTheme);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(readInitialSidebarCollapsed);
+  const [isDesktop, setIsDesktop] = useState(readInitialDesktopLayout);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -28,7 +38,21 @@ export function App() {
   }, [theme]);
 
   useEffect(() => {
-    if (!menuOpen) return;
+    window.localStorage.setItem('webgl-learning-sidebar-collapsed', String(sidebarCollapsed));
+  }, [sidebarCollapsed]);
+
+  useEffect(() => {
+    const media = window.matchMedia('(min-width: 56rem)');
+    const updateLayout = (event: MediaQueryListEvent) => {
+      setIsDesktop(event.matches);
+      if (event.matches) setMenuOpen(false);
+    };
+    media.addEventListener('change', updateLayout);
+    return () => media.removeEventListener('change', updateLayout);
+  }, []);
+
+  useEffect(() => {
+    if (!menuOpen || isDesktop) return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     document.querySelector<HTMLButtonElement>('.sidebar__mobile-header button')?.focus();
@@ -39,20 +63,27 @@ export function App() {
     return () => {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener('keydown', close);
-      document.querySelector<HTMLButtonElement>('.menu-button')?.focus();
+      document.querySelector<HTMLButtonElement>('.mobile-menu-button')?.focus();
     };
-  }, [menuOpen]);
+  }, [isDesktop, menuOpen]);
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell${sidebarCollapsed ? ' app-shell--sidebar-collapsed' : ''}`}>
       <a className="skip-link" href="#main-content">跳到正文</a>
       <SiteHeader
         theme={theme}
         menuOpen={menuOpen}
+        sidebarCollapsed={sidebarCollapsed}
         onThemeChange={() => setTheme((value) => value === 'dark' ? 'light' : 'dark')}
         onMenuOpen={() => setMenuOpen(true)}
+        onSidebarToggle={() => setSidebarCollapsed((value) => !value)}
       />
-      <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
+      <Sidebar
+        open={menuOpen}
+        collapsed={sidebarCollapsed}
+        isDesktop={isDesktop}
+        onClose={() => setMenuOpen(false)}
+      />
       <main id="main-content" className="main-content">
         <LessonArticle />
         <TableOfContents />

@@ -4,13 +4,23 @@ import { navigationGroups } from '../navigation';
 
 interface SidebarProps {
   open: boolean;
+  collapsed: boolean;
+  isDesktop: boolean;
   onClose: () => void;
 }
 
-export function Sidebar({ open, onClose }: SidebarProps) {
+export function Sidebar({ open, collapsed, isDesktop, onClose }: SidebarProps) {
+  const hidden = isDesktop ? collapsed : !open;
+
   return (
     <>
-      <aside id="course-sidebar" className={`sidebar${open ? ' sidebar--open' : ''}`} aria-label="课程导航">
+      <aside
+        id="course-sidebar"
+        className={`sidebar${open ? ' sidebar--open' : ''}${collapsed ? ' sidebar--collapsed' : ''}`}
+        aria-label="课程导航"
+        aria-hidden={hidden}
+        inert={hidden}
+      >
         <div className="sidebar__mobile-header">
           <strong>课程目录</strong>
           <button className="icon-button" type="button" onClick={onClose} aria-label="关闭课程导航"><X aria-hidden="true" /></button>

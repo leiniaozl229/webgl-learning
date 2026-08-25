@@ -1,18 +1,27 @@
-import { ExternalLink, Menu, Moon, Sun, Triangle } from 'lucide-react';
+import { ExternalLink, Menu, Moon, PanelLeftClose, PanelLeftOpen, Sun, Triangle } from 'lucide-react';
 
 interface SiteHeaderProps {
   theme: 'light' | 'dark';
   menuOpen: boolean;
+  sidebarCollapsed: boolean;
   onThemeChange: () => void;
   onMenuOpen: () => void;
+  onSidebarToggle: () => void;
 }
 
-export function SiteHeader({ theme, menuOpen, onThemeChange, onMenuOpen }: SiteHeaderProps) {
+export function SiteHeader({
+  theme,
+  menuOpen,
+  sidebarCollapsed,
+  onThemeChange,
+  onMenuOpen,
+  onSidebarToggle,
+}: SiteHeaderProps) {
   return (
     <header className="site-header">
       <div className="site-header__brand">
         <button
-          className="icon-button menu-button"
+          className="icon-button mobile-menu-button"
           type="button"
           onClick={onMenuOpen}
           aria-label="打开课程导航"
@@ -20,6 +29,17 @@ export function SiteHeader({ theme, menuOpen, onThemeChange, onMenuOpen }: SiteH
           aria-expanded={menuOpen}
         >
           <Menu aria-hidden="true" />
+        </button>
+        <button
+          className="icon-button desktop-sidebar-button"
+          type="button"
+          onClick={onSidebarToggle}
+          aria-label={sidebarCollapsed ? '展开课程导航' : '收起课程导航'}
+          aria-controls="course-sidebar"
+          aria-expanded={!sidebarCollapsed}
+          title={sidebarCollapsed ? '展开课程导航' : '收起课程导航'}
+        >
+          {sidebarCollapsed ? <PanelLeftOpen aria-hidden="true" /> : <PanelLeftClose aria-hidden="true" />}
         </button>
         <a className="brand-link" href="#lesson-title" aria-label="WebGL2 Learning 首页">
           <span className="brand-mark" aria-hidden="true"><Triangle /></span>

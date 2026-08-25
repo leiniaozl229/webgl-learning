@@ -186,7 +186,7 @@ components:
 
 ### Navigation
 
-左侧课程树维持稳定章节顺序；当前项使用 Mist Cyan 表面和 Focused Cyan 文字。桌面固定显示，窄屏转为带遮罩的抽屉，并提供明确关闭按钮和 Escape 键路径。
+左侧课程树维持稳定章节顺序；当前项使用 Mist Cyan 表面和 Focused Cyan 文字。桌面默认固定显示并允许从页头收起，窄屏转为带遮罩的抽屉，并提供明确关闭按钮和 Escape 键路径。
 
 ### Shader Playground
 
