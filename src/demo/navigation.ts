@@ -31,6 +31,7 @@ export const navigationGroups: NavigationGroup[] = [
 export const tableOfContents = [
   { label: 'WebGL2 在做什么', href: '#what-is-webgl2' },
   { label: 'GPU 渲染路径', href: '#pipeline' },
+  { label: '一次绘制如何执行', href: '#execution-flow' },
   { label: '着色器如何接收数据', href: '#shader-data' },
   { label: '第一个三角形', href: '#hello-triangle' },
   { label: '继续学习', href: '#next-steps' },

@@ -1,6 +1,7 @@
 import { ArrowRight, Braces, Cpu, Database, Layers3 } from 'lucide-react';
 
 import { CodeBlock } from './CodeBlock';
+import { ExecutionFlow } from './ExecutionFlow';
 import { ShaderPlayground } from './ShaderPlayground';
 
 const contextCode = `const canvas = document.querySelector<HTMLCanvasElement>('#canvas');
@@ -47,6 +48,12 @@ export function LessonArticle() {
           <li><span><Layers3 aria-hidden="true" /></span><strong>片段着色器</strong><small>输出每个像素颜色</small></li>
         </ol>
         <p>顶点着色器必须写入 <code>gl_Position</code>。片段着色器在 WebGL2 中显式声明颜色输出变量。两者使用 <code>#version 300 es</code>，且版本声明必须位于源码第一行。</p>
+      </section>
+
+      <section id="execution-flow" className="lesson-section lesson-section--wide">
+        <h2>一次绘制如何执行</h2>
+        <p>播放下面的流程，可以看到三个坐标如何依次经过顶点着色器、图元组装、光栅化和片段着色器，最终变成画布上的蓝色三角形。</p>
+        <ExecutionFlow />
       </section>
 
       <section id="shader-data" className="lesson-section">

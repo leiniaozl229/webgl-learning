@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-08-25T12:14:13Z",
+  "generatedAt": "2026-08-25T12:23:26Z",
   "title": "Design System: WebGL2 Learning",
   "extensions": {
     "colorMeta": {
@@ -38,7 +38,10 @@
       { "name": "floating-overlay", "value": "0 8px 32px oklch(0.2 0.03 245 / 0.12)", "purpose": "移动导航抽屉和临时浮层。" }
     ],
     "motion": [
-      { "name": "ease-out", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "抽屉、按钮和主题状态过渡。" }
+      { "name": "ease-out", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "抽屉、按钮和主题状态过渡。" },
+      { "name": "flow-stage", "value": "520ms", "purpose": "执行流程的顶点移动、连线和填充过渡。" },
+      { "name": "flow-copy", "value": "240ms", "purpose": "执行流程阶段说明的替换过渡。" },
+      { "name": "flow-step-hold", "value": "1400ms", "purpose": "自动播放时每个阶段的阅读停留时间。" }
     ],
     "breakpoints": [
       { "name": "sm", "value": "30rem" },
@@ -95,6 +98,14 @@
       "description": "深色、等宽的 GLSL 编辑表面。",
       "html": "<label class=\"ds-editor\"><span>片段着色器</span><textarea spellcheck=\"false\">outColor = vec4(0.38, 0.82, 0.95, 1.0);</textarea></label>",
       "css": ".ds-editor{display:grid;gap:.5rem;color:var(--color-text);font:700 .82rem var(--font-sans)}.ds-editor textarea{min-height:120px;resize:vertical;border:1px solid var(--color-border-strong);border-radius:var(--radius-md);padding:1rem;background:var(--color-surface-code);color:#e8f1f5;font:400 .84rem/1.65 var(--font-code)}.ds-editor textarea:focus-visible{outline:3px solid var(--color-focus);outline-offset:3px}"
+    },
+    {
+      "name": "Execution Flow",
+      "kind": "interactive-diagram",
+      "refersTo": "card-lab",
+      "description": "展示一次 drawArrays 从三个顶点到画布像素的四阶段动画，支持暂停、重播、阶段直达和减少动态效果。",
+      "html": "<section class=\"ds-flow\"><ol><li aria-current=\"step\">顶点数据</li><li>Vertex Shader</li><li>Rasterizer</li><li>Fragment Shader</li></ol><div>三个顶点 → 蓝色三角形</div></section>",
+      "css": ".ds-flow{overflow:hidden;border:1px solid var(--color-border);border-radius:var(--radius-lg);background:var(--color-surface)}.ds-flow ol{display:grid;grid-template-columns:repeat(4,1fr);margin:0;padding:.5rem;list-style:none;background:var(--color-surface-soft)}.ds-flow li{padding:.7rem;color:var(--color-text-soft);font:700 .78rem var(--font-sans)}.ds-flow li[aria-current=step]{border-radius:var(--radius-sm);background:var(--color-accent-soft);color:var(--color-accent-strong)}.ds-flow>div{min-height:180px;display:grid;place-items:center;background:var(--color-surface-code);color:var(--color-accent);font:700 .88rem var(--font-code)}"
     }
   ],
   "narrative": {
