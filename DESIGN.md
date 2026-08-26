@@ -180,9 +180,13 @@ components:
 
 ### Inputs / Fields
 
-- **Style:** 着色器编辑器采用 Code Night 背景、等宽字体和无多余装饰的文本区。
+- **Style:** 着色器编辑器采用 Code Night 背景和等宽字体，透明输入层与 Prism 高亮层保持同步滚动。
 - **Focus:** 由全局 3px 焦点轮廓明确标记。
 - **Error / Disabled:** 错误同时显示 Error 色与可复制的编译信息；禁用状态降低对比并保留文字说明。
+
+### Code Surfaces
+
+TypeScript 和 GLSL 使用同一套 Prism token 语义色：紫色标记关键字、黄色标记函数、绿色标记字符串、橙色标记数字，注释保持较低对比。普通内容宽度上限为 52rem，实验与执行流程可扩展到 64rem，正文段落仍限制在 72ch 内。
 
 ### Navigation
 

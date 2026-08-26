@@ -1,6 +1,8 @@
 import { Check, Copy } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+import { HighlightedCode } from './HighlightedCode';
+
 interface CodeBlockProps {
   children: string;
   language?: string;
@@ -29,7 +31,7 @@ export function CodeBlock({ children, language = 'ts', label }: CodeBlockProps) 
           {copied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}<span>{copied ? '已复制' : '复制'}</span>
         </button>
       </figcaption>
-      <pre><code className={`language-${language}`}>{children}</code></pre>
+      <HighlightedCode code={children} language={language === 'glsl' ? 'glsl' : 'typescript'} />
     </figure>
   );
 }

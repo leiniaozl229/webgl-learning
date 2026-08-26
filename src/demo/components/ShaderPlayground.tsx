@@ -8,6 +8,7 @@ import {
   TRIANGLE_VERTEX_DATA_SOURCE,
   drawTriangle,
 } from '../../core/webgl2';
+import { HighlightedCode } from './HighlightedCode';
 
 type EditorTab = 'data' | 'vertex' | 'fragment';
 
@@ -19,6 +20,7 @@ const editorTabs: Array<{ id: EditorTab; label: string }> = [
 
 export function ShaderPlayground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const highlightedSourceRef = useRef<HTMLPreElement>(null);
   const disposeRef = useRef<(() => void) | null>(null);
   const sourceRef = useRef({ vertex: DEFAULT_VERTEX_SHADER, fragment: DEFAULT_FRAGMENT_SHADER });
   const [vertexSource, setVertexSource] = useState(DEFAULT_VERTEX_SHADER);
@@ -107,7 +109,7 @@ export function ShaderPlayground() {
           </div>
           {activeTab === 'data' ? (
             <div id="editor-panel-data" className="vertex-data-panel" role="tabpanel" aria-labelledby="shader-tab-data">
-              <pre><code>{TRIANGLE_VERTEX_DATA_SOURCE}</code></pre>
+              <HighlightedCode code={TRIANGLE_VERTEX_DATA_SOURCE} language="typescript" />
               <ol aria-label="三角形顶点坐标">
                 {TRIANGLE_POINTS.map((point, index) => (
                   <li key={`${point.x}-${point.y}`}>
@@ -121,10 +123,16 @@ export function ShaderPlayground() {
           ) : (
             <div id={`editor-panel-${activeTab}`} className="shader-source-panel" role="tabpanel" aria-labelledby={`shader-tab-${activeTab}`}>
               <label className="sr-only" htmlFor="shader-editor">{activeTab === 'vertex' ? '顶点着色器源码' : '片段着色器源码'}</label>
+              <HighlightedCode ref={highlightedSourceRef} className="shader-source-highlight" code={source} language="glsl" ariaHidden />
               <textarea
                 id="shader-editor"
                 value={source}
                 spellCheck={false}
+                onScroll={(event) => {
+                  if (!highlightedSourceRef.current) return;
+                  highlightedSourceRef.current.scrollTop = event.currentTarget.scrollTop;
+                  highlightedSourceRef.current.scrollLeft = event.currentTarget.scrollLeft;
+                }}
                 onChange={(event) => activeTab === 'vertex' ? setVertexSource(event.target.value) : setFragmentSource(event.target.value)}
               />
             </div>

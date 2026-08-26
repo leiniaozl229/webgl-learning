@@ -252,7 +252,7 @@ code:not(pre code) {
 
 .main-content {
   display: grid;
-  width: min(100%, 74rem);
+  width: min(100%, 90rem);
   gap: var(--space-3xl);
   margin: 0 auto;
   padding: calc(var(--header-height) + var(--space-2xl)) var(--space-lg) var(--space-3xl);
@@ -302,10 +302,11 @@ code:not(pre code) {
 .learning-note li { position: relative; padding-left: 1.1rem; }
 .learning-note li::before { content: ""; position: absolute; top: 0.75em; left: 0; width: 0.35rem; height: 0.35rem; border-radius: 50%; background: var(--color-accent-strong); }
 
-.lesson-section { max-width: 45rem; }
+.lesson-section { max-width: 52rem; }
+.lesson-section--wide { max-width: 64rem; }
 .lesson-section + .lesson-section { margin-top: var(--space-3xl); }
 .lesson-section h2 { margin: 0 0 var(--space-lg); font-size: clamp(1.7rem, 5vw, 2.25rem); font-weight: 730; letter-spacing: -0.03em; line-height: 1.2; text-wrap: balance; }
-.lesson-section p { margin: 0; color: var(--color-text-soft); text-wrap: pretty; }
+.lesson-section p { max-width: 72ch; margin: 0; color: var(--color-text-soft); text-wrap: pretty; }
 .lesson-section p + p, .lesson-section p + .code-block, .lesson-section p + .pipeline, .lesson-section p + .execution-flow, .lesson-section p + .data-channels, .lesson-section p + .playground { margin-top: var(--space-lg); }
 
 .code-block { overflow: hidden; margin-right: 0; margin-left: 0; border-radius: var(--radius-md); background: var(--color-surface-code); color: oklch(0.9 0.018 230); }
@@ -482,16 +483,39 @@ code:not(pre code) {
   color: oklch(0.88 0.025 220);
 }
 
-.shader-source-panel { display: grid; }
+.shader-source-panel { position: relative; display: grid; overflow: hidden; }
 
-.editor-panel textarea {
-  resize: vertical;
+.editor-panel textarea, .shader-source-highlight {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  margin: 0;
   padding: var(--space-lg);
-  outline: 0;
+  border: 0;
+  white-space: pre;
+  word-break: normal;
+  overflow-wrap: normal;
   font-size: 0.82rem;
   line-height: 1.72;
   tab-size: 2;
 }
+
+.shader-source-highlight { z-index: 0; pointer-events: none; scrollbar-width: none; }
+.shader-source-highlight::-webkit-scrollbar { display: none; }
+
+.editor-panel textarea {
+  z-index: 1;
+  resize: none;
+  background: transparent;
+  caret-color: oklch(0.9 0.025 220);
+  color: transparent;
+  outline: 0;
+  -webkit-text-fill-color: transparent;
+}
+
+.editor-panel textarea::selection { background: oklch(0.58 0.14 238 / 0.45); }
 
 .editor-panel textarea:focus-visible { box-shadow: inset 0 0 0 3px var(--color-focus); }
 .vertex-data-panel { display: grid; align-content: start; overflow: auto; }
@@ -520,7 +544,7 @@ code:not(pre code) {
 .next-steps__link { display: inline-flex; flex: 0 0 auto; align-items: center; gap: var(--space-xs); color: var(--color-muted); font-weight: 700; }
 .next-steps__link svg { width: 1.15rem; }
 
-.lesson-footer { max-width: 45rem; margin-top: var(--space-3xl); padding-top: var(--space-xl); border-top: 1px solid var(--color-border); color: var(--color-muted); font-size: 0.86rem; }
+.lesson-footer { max-width: 52rem; margin-top: var(--space-3xl); padding-top: var(--space-xl); border-top: 1px solid var(--color-border); color: var(--color-muted); font-size: 0.86rem; }
 .lesson-footer p { margin: 0 0 var(--space-sm); }
 .toc { display: none; }
 
@@ -547,7 +571,7 @@ code:not(pre code) {
 }
 
 @media (min-width: 78rem) {
-  .main-content { grid-template-columns: minmax(0, 48rem) 13rem; justify-content: center; align-items: start; gap: var(--space-3xl); }
+  .main-content { grid-template-columns: minmax(0, 64rem) 12rem; justify-content: center; align-items: start; gap: var(--space-xl); }
   .toc { position: sticky; top: calc(var(--header-height) + var(--space-2xl)); display: block; padding-left: var(--space-lg); border-left: 1px solid var(--color-border); color: var(--color-muted); font-size: 0.82rem; }
   .toc strong { color: var(--color-text); font-size: 0.84rem; }
   .toc ol { display: grid; gap: var(--space-sm); margin-top: var(--space-md); }
