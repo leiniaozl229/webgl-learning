@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-08-26T06:38:39Z",
+  "generatedAt": "2026-08-26T06:52:11Z",
   "title": "Design System: WebGL2 Learning",
   "extensions": {
     "colorMeta": {
@@ -100,7 +100,7 @@
       "name": "Shader Editor",
       "kind": "input",
       "refersTo": "card-lab",
-      "description": "深色、等宽的 GLSL 编辑表面，透明输入层与 Prism 语法高亮层同步滚动。",
+      "description": "深色、等宽的 GLSL 编辑表面，透明输入层与 Prism 语法高亮层同步滚动；宽屏实验主体限制在 31–42rem，窄屏代码区上限为 32rem。",
       "html": "<label class=\"ds-editor\"><span>片段着色器</span><textarea spellcheck=\"false\">outColor = vec4(0.38, 0.82, 0.95, 1.0);</textarea></label>",
       "css": ".ds-editor{display:grid;gap:.5rem;color:var(--color-text);font:700 .82rem var(--font-sans)}.ds-editor textarea{min-height:120px;resize:vertical;border:1px solid var(--color-border-strong);border-radius:var(--radius-md);padding:1rem;background:var(--color-surface-code);color:#e8f1f5;font:400 .84rem/1.65 var(--font-code)}.ds-editor textarea:focus-visible{outline:3px solid var(--color-focus);outline-offset:3px}"
     },
