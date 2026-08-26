@@ -1,5 +1,7 @@
 import { ExternalLink, Menu, Moon, PanelLeftClose, PanelLeftOpen, Sun, Triangle } from 'lucide-react';
 
+import { LessonLink } from './LessonLink';
+
 interface SiteHeaderProps {
   theme: 'light' | 'dark';
   menuOpen: boolean;
@@ -41,10 +43,10 @@ export function SiteHeader({
         >
           {sidebarCollapsed ? <PanelLeftOpen aria-hidden="true" /> : <PanelLeftClose aria-hidden="true" />}
         </button>
-        <a className="brand-link" href="/?lesson=fundamentals#lesson-title" aria-label="WebGL2 Learning 首页">
+        <LessonLink className="brand-link" lessonId="fundamentals" aria-label="WebGL2 Learning 首页">
           <span className="brand-mark" aria-hidden="true"><Triangle /></span>
           <span>WebGL2 Learning</span>
-        </a>
+        </LessonLink>
         <span className="version-chip">WebGL2</span>
       </div>
       <nav className="site-header__actions" aria-label="页面工具">

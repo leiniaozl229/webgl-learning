@@ -190,7 +190,7 @@ TypeScript 和 GLSL 使用同一套 Prism token 语义色：紫色标记关键�
 
 ### Navigation
 
-左侧课程树维持稳定章节顺序，可在“WebGL2 基本原理”和“WebGL2 如何工作”之间切换；当前项使用 Mist Blue 表面和 Focused Blue 文字。桌面默认固定显示并允许从页头收起，窄屏转为带遮罩的抽屉，并提供明确关闭按钮和 Escape 键路径。
+左侧课程树维持稳定章节顺序，可在“WebGL2 基本原理”和“WebGL2 如何工作”之间无刷新切换；History API 保留可复制 URL 以及浏览器前进、后退，切换后焦点移到新课程标题。当前项使用 Mist Blue 表面和 Focused Blue 文字。桌面默认固定显示并允许从页头收起，窄屏转为带遮罩的抽屉，并提供明确关闭按钮和 Escape 键路径。
 
 ### Shader Playground
 

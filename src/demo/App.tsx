@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 
+import { LESSON_NAVIGATION_EVENT } from './components/LessonLink';
 import { LessonArticle } from './components/LessonArticle';
 import { HowItWorksArticle } from './components/HowItWorksArticle';
 import { Sidebar } from './components/Sidebar';
@@ -24,11 +25,27 @@ function readInitialDesktopLayout() {
 }
 
 export function App() {
-  const lessonId = readLessonId();
+  const [lessonId, setLessonId] = useState(readLessonId);
   const [theme, setTheme] = useState<Theme>(readInitialTheme);
   const [menuOpen, setMenuOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(readInitialSidebarCollapsed);
   const [isDesktop, setIsDesktop] = useState(readInitialDesktopLayout);
+
+  useEffect(() => {
+    const updateLesson = () => setLessonId(readLessonId());
+    window.addEventListener('popstate', updateLesson);
+    window.addEventListener(LESSON_NAVIGATION_EVENT, updateLesson);
+    return () => {
+      window.removeEventListener('popstate', updateLesson);
+      window.removeEventListener(LESSON_NAVIGATION_EVENT, updateLesson);
+    };
+  }, []);
+
+  useEffect(() => {
+    document.title = lessonId === 'how-it-works'
+      ? 'WebGL2 如何工作 · WebGL2 Learning'
+      : 'WebGL2 的基本原理 · WebGL2 Learning';
+  }, [lessonId]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;

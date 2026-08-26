@@ -2,6 +2,7 @@ import { ArrowRight, Braces, Cpu, Database, Layers3 } from 'lucide-react';
 
 import { CodeBlock } from './CodeBlock';
 import { ExecutionFlow } from './ExecutionFlow';
+import { LessonLink } from './LessonLink';
 import { ShaderPlayground } from './ShaderPlayground';
 
 const contextCode = `const canvas = document.querySelector<HTMLCanvasElement>('#canvas');
@@ -21,7 +22,7 @@ export function LessonArticle() {
     <article className="lesson-article">
       <header className="lesson-hero">
         <nav className="breadcrumb" aria-label="面包屑"><a href="#lesson-title">学习 WebGL2</a><span aria-hidden="true">/</span><span>基础概念</span></nav>
-        <h1 id="lesson-title">WebGL2 的基本原理</h1>
+        <h1 id="lesson-title" tabIndex={-1}>WebGL2 的基本原理</h1>
         <p className="lesson-lead">从 GPU 真正执行的两段程序出发，建立一条清晰的渲染路径，并在浏览器里亲手画出第一个三角形。</p>
         <ul className="lesson-meta" aria-label="课程信息"><li>WebGL2</li><li>GLSL ES 3.00</li><li>约 12 分钟</li></ul>
       </header>
@@ -76,7 +77,7 @@ export function LessonArticle() {
 
       <section id="next-steps" className="lesson-section next-steps">
         <div><h2>接下来</h2><p>下一篇会把这次绘制拆成可复用的初始化阶段与渲染阶段，并用状态图理解绑定点。</p></div>
-        <a className="next-steps__link" href="/?lesson=how-it-works#lesson-title">WebGL2 如何工作 <ArrowRight aria-hidden="true" /></a>
+        <LessonLink className="next-steps__link" lessonId="how-it-works">WebGL2 如何工作 <ArrowRight aria-hidden="true" /></LessonLink>
       </section>
 
       <footer className="lesson-footer">

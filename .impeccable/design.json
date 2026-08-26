@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-08-26T08:25:28Z",
+  "generatedAt": "2026-08-26T08:29:24Z",
   "title": "Design System: WebGL2 Learning",
   "extensions": {
     "colorMeta": {
@@ -84,7 +84,7 @@
       "name": "Lesson Navigation",
       "kind": "nav",
       "refersTo": "nav-active",
-      "description": "课程树中的当前章节状态；桌面端允许从页头展开或收起。",
+      "description": "课程树中的当前章节状态；课程间通过 History API 无刷新切换，并保留前进、后退和标题焦点；桌面端允许从页头展开或收起。",
       "html": "<nav class=\"ds-nav\"><a href=\"#\" aria-current=\"page\">WebGL2 基础</a><a href=\"#\">着色器与 GLSL</a></nav>",
       "css": ".ds-nav{display:grid;gap:4px;width:220px;font:400 1rem var(--font-sans)}.ds-nav a{padding:.58rem .75rem;border-radius:var(--radius-sm);color:var(--color-text-soft);text-decoration:none}.ds-nav a[aria-current=page]{background:var(--color-accent-soft);color:var(--color-accent-strong);font-weight:700}.ds-nav a:hover{background:var(--color-surface-soft);color:var(--color-text)}.ds-nav a:focus-visible{outline:3px solid var(--color-focus);outline-offset:2px}"
     },

@@ -2,6 +2,7 @@ import { ArrowLeft, ArrowRight, Braces, Cpu, Database, GitBranch, Layers3 } from
 
 import { INTERPOLATION_FRAGMENT_SHADER, INTERPOLATION_VERTEX_SHADER } from '../../core/interpolation';
 import { CodeBlock } from './CodeBlock';
+import { LessonLink } from './LessonLink';
 import { VaryingPlayground } from './VaryingPlayground';
 
 const drawCountCode = `gl.bindVertexArray(triangleVao);
@@ -42,8 +43,8 @@ export function HowItWorksArticle() {
   return (
     <article className="lesson-article">
       <header className="lesson-hero">
-        <nav className="breadcrumb" aria-label="面包屑"><a href="/?lesson=fundamentals#lesson-title">学习 WebGL2</a><span aria-hidden="true">/</span><span>工作原理</span></nav>
-        <h1 id="lesson-title">WebGL2 如何工作</h1>
+        <nav className="breadcrumb" aria-label="面包屑"><LessonLink lessonId="fundamentals">学习 WebGL2</LessonLink><span aria-hidden="true">/</span><span>工作原理</span></nav>
+        <h1 id="lesson-title" tabIndex={-1}>WebGL2 如何工作</h1>
         <p className="lesson-lead">从一次 <code>drawArrays</code> 出发，跟踪 GPU 怎样拉取顶点数据、运行着色器，并在三角形内为每个片段插值颜色。</p>
         <ul className="lesson-meta" aria-label="课程信息"><li>WebGL2</li><li>Attributes + Varyings</li><li>约 18 分钟</li></ul>
       </header>
@@ -111,7 +112,7 @@ export function HowItWorksArticle() {
       </section>
 
       <section id="next-steps" className="lesson-section next-steps lesson-pagination">
-        <a href="/?lesson=fundamentals#lesson-title"><ArrowLeft aria-hidden="true" /> WebGL2 基本原理</a>
+        <LessonLink lessonId="fundamentals"><ArrowLeft aria-hidden="true" /> WebGL2 基本原理</LessonLink>
         <div><h2>接下来</h2><p>下一篇会系统拆解 GLSL 类型、函数、Attribute、Uniform 和 Varying。</p></div>
         <span className="next-steps__link" aria-disabled="true">着色器与 GLSL <ArrowRight aria-hidden="true" /></span>
       </section>

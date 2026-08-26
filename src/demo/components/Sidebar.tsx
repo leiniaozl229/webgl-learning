@@ -1,6 +1,7 @@
 import { ChevronRight, X } from 'lucide-react';
 
 import { navigationGroups, type LessonId } from '../navigation';
+import { LessonLink } from './LessonLink';
 
 interface SidebarProps {
   open: boolean;
@@ -33,10 +34,10 @@ export function Sidebar({ open, collapsed, isDesktop, lessonId, onClose }: Sideb
               <ul>
                 {group.items.map((item) => (
                   <li key={item.label}>
-                    {item.href ? (
-                      <a className={`nav-item${item.id === lessonId ? ' nav-item--active' : ''}`} href={item.href} onClick={onClose} aria-current={item.id === lessonId ? 'page' : undefined}>
+                    {item.href && item.id ? (
+                      <LessonLink className={`nav-item${item.id === lessonId ? ' nav-item--active' : ''}`} lessonId={item.id} onClick={onClose} aria-current={item.id === lessonId ? 'page' : undefined}>
                         <span>{item.label}</span><ChevronRight aria-hidden="true" />
-                      </a>
+                      </LessonLink>
                     ) : (
                       <span className="nav-item nav-item--disabled"><span>{item.label}</span>{item.badge ? <small>{item.badge}</small> : null}</span>
                     )}

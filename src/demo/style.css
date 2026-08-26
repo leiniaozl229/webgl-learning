@@ -273,6 +273,8 @@ code:not(pre code) {
   text-wrap: balance;
 }
 
+.lesson-hero h1:focus { outline: none; }
+
 .lesson-lead {
   max-width: 42rem;
   margin: var(--space-lg) 0 0;
