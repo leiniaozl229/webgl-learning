@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from 're
 import {
   DEFAULT_FRAGMENT_SHADER,
   DEFAULT_VERTEX_SHADER,
-  TRIANGLE_POINTS,
   TRIANGLE_VERTEX_DATA_SOURCE,
   drawTriangle,
 } from '../../core/webgl2';
@@ -110,15 +109,6 @@ export function ShaderPlayground() {
           {activeTab === 'data' ? (
             <div id="editor-panel-data" className="vertex-data-panel" role="tabpanel" aria-labelledby="shader-tab-data">
               <HighlightedCode code={TRIANGLE_VERTEX_DATA_SOURCE} language="typescript" />
-              <ol aria-label="三角形顶点坐标">
-                {TRIANGLE_POINTS.map((point, index) => (
-                  <li key={`${point.x}-${point.y}`}>
-                    <span>{index + 1}</span>
-                    <code>({point.x.toFixed(2)}, {point.y.toFixed(2)})</code>
-                    <small>{point.position}</small>
-                  </li>
-                ))}
-              </ol>
             </div>
           ) : (
             <div id={`editor-panel-${activeTab}`} className="shader-source-panel" role="tabpanel" aria-labelledby={`shader-tab-${activeTab}`}>

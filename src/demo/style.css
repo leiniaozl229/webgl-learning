@@ -520,12 +520,6 @@ code:not(pre code) {
 .editor-panel textarea:focus-visible { box-shadow: inset 0 0 0 3px var(--color-focus); }
 .vertex-data-panel { display: grid; max-height: 32rem; align-content: start; overflow: auto; }
 .vertex-data-panel pre { overflow-x: auto; margin: 0; padding: var(--space-lg); font-size: 0.75rem; line-height: 1.72; }
-.vertex-data-panel ol { display: grid; gap: 0; padding: 0; margin: 0; border-top: 1px solid oklch(0.36 0.022 245); list-style: none; }
-.vertex-data-panel li { display: grid; grid-template-columns: 1.5rem minmax(0, 1fr) auto; align-items: center; gap: var(--space-sm); min-height: 2.65rem; padding: 0 var(--space-lg); border-bottom: 1px solid oklch(0.3 0.02 245); }
-.vertex-data-panel li:last-child { border-bottom: 0; }
-.vertex-data-panel li > span { display: grid; width: 1.35rem; height: 1.35rem; place-items: center; border-radius: 50%; background: var(--color-accent-soft); color: var(--color-accent-strong); font: 700 0.7rem var(--font-sans); }
-.vertex-data-panel li code { background: oklch(0.235 0.025 245); color: oklch(0.9 0.025 230); font-size: 0.76rem; }
-.vertex-data-panel li small { color: oklch(0.68 0.025 230); font-family: var(--font-sans); font-size: 0.75rem; }
 .result-panel { position: relative; display: grid; min-height: 18rem; overflow: hidden; background: oklch(0.15 0.022 245); }
 .result-panel canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; min-width: 0; min-height: 0; }
 .result-panel__meta { position: absolute; right: var(--space-sm); bottom: var(--space-sm); left: var(--space-sm); justify-content: space-between; gap: var(--space-sm); color: oklch(0.7 0.03 230); font-family: var(--font-code); font-size: 0.68rem; }
