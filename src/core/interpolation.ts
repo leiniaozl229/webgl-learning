@@ -29,6 +29,76 @@ void main() {
   outColor = vec4(v_color, 1.0);
 }`;
 
+export const INTERPOLATION_VERTEX_DATA_SOURCE = `// gl 是 WebGL2 上下文，program 是已链接的着色程序
+// colors 来自页面上的三个颜色选择器，例如 ['#ff5d73', '#5de0a1', '#55a8ff']
+
+const positions = [
+  [-0.78, -0.68], // 左下顶点
+  [ 0.00,  0.78], // 顶部顶点
+  [ 0.78, -0.68], // 右下顶点
+];
+
+// CSS 十六进制颜色需要转换成 GLSL 使用的 0–1 浮点数
+function hexToRgb(hex: string) {
+  const value = Number.parseInt(hex.replace('#', ''), 16);
+  return [
+    ((value >> 16) & 255) / 255,
+    ((value >> 8) & 255) / 255,
+    (value & 255) / 255,
+  ];
+}
+
+// 把每个顶点的位置和颜色交错排列为：x, y, r, g, b
+const vertices = new Float32Array(
+  positions.flatMap(([x, y], index) => [
+    x,
+    y,
+    ...hexToRgb(colors[index]),
+  ]),
+);
+
+const vao = gl.createVertexArray();
+const vertexBuffer = gl.createBuffer();
+if (!vao || !vertexBuffer) {
+  throw new Error('无法创建顶点输入。');
+}
+
+// VAO 从这里开始记录两个 Attribute 的读取规则
+gl.bindVertexArray(vao);
+gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.DYNAMIC_DRAW);
+
+const positionLocation = gl.getAttribLocation(program, 'a_position');
+const colorLocation = gl.getAttribLocation(program, 'a_color');
+const stride = 5 * Float32Array.BYTES_PER_ELEMENT; // 20 bytes
+
+// a_position 每次读取两个 float，从每组数据的第 0 字节开始
+gl.enableVertexAttribArray(positionLocation);
+gl.vertexAttribPointer(
+  positionLocation,
+  2,
+  gl.FLOAT,
+  false,
+  stride,
+  0,
+);
+
+// a_color 每次读取三个 float，跳过前面的 x、y（8 bytes）
+gl.enableVertexAttribArray(colorLocation);
+gl.vertexAttribPointer(
+  colorLocation,
+  3,
+  gl.FLOAT,
+  false,
+  stride,
+  2 * Float32Array.BYTES_PER_ELEMENT,
+);
+
+// 选择 Program 和 VAO，三个顶点会分别进入顶点着色器
+gl.useProgram(program);
+gl.bindVertexArray(vao);
+gl.drawArrays(gl.TRIANGLES, 0, 3);`;
+
 const positions = [
   [-0.78, -0.68],
   [0, 0.78],

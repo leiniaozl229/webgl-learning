@@ -1,7 +1,7 @@
 import { ArrowLeft, ArrowRight, Braces, Cpu, Database, GitBranch, Layers3 } from 'lucide-react';
 
-import { INTERPOLATION_FRAGMENT_SHADER, INTERPOLATION_VERTEX_SHADER } from '../../core/interpolation';
 import { CodeBlock } from './CodeBlock';
+import { InterpolationSources } from './InterpolationSources';
 import { LessonLink } from './LessonLink';
 import { VaryingPlayground } from './VaryingPlayground';
 
@@ -83,10 +83,8 @@ export function HowItWorksArticle() {
         <h2>从三个颜色到整个三角形</h2>
         <p>顶点着色器为每个顶点输出 <code>v_color</code>。光栅化产生片段时，GPU 会根据片段在三角形中的位置对它进行平滑插值，片段着色器最终收到一个已插值的颜色。</p>
         <VaryingPlayground />
-        <div className="shader-pair">
-          <CodeBlock language="glsl" label="vertex.glsl · 输出 v_color">{INTERPOLATION_VERTEX_SHADER}</CodeBlock>
-          <CodeBlock language="glsl" label="fragment.glsl · 接收 v_color">{INTERPOLATION_FRAGMENT_SHADER}</CodeBlock>
-        </div>
+        <p>切换下面三个文件，可以沿着同一份颜色数据查看完整传递过程：TypeScript 把每个顶点的 RGB 上传到 Buffer，顶点着色器将 <code>a_color</code> 写入 <code>v_color</code>，片段着色器再接收插值后的结果。</p>
+        <InterpolationSources />
       </section>
 
       <section id="stride-offset" className="lesson-section lesson-section--wide">

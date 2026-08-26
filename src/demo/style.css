@@ -506,8 +506,13 @@ code:not(pre code) {
 .varying-playground > footer { min-height: 2.75rem; padding: var(--space-sm) var(--space-md); border-top: 1px solid oklch(0.36 0.022 245); background: oklch(0.235 0.02 245); color: oklch(0.7 0.07 158); font: 400 0.72rem var(--font-code); }
 .varying-playground > .varying-playground__error { color: oklch(0.78 0.12 28); }
 
-.shader-pair { display: grid; gap: var(--space-md); margin-top: var(--space-lg); }
-.shader-pair .code-block { margin: 0; }
+.interpolation-sources { overflow: hidden; margin-top: var(--space-lg); border: 1px solid var(--color-border-strong); border-radius: var(--radius-lg); background: var(--color-surface-code); color: oklch(0.92 0.012 230); }
+.interpolation-sources > header { display: flex; min-height: 3.5rem; align-items: center; gap: var(--space-xs); padding: var(--space-xs) var(--space-md); border-bottom: 1px solid oklch(0.36 0.022 245); background: oklch(0.235 0.02 245); }
+.interpolation-sources > header strong { font-size: 0.9rem; }
+.interpolation-sources > header small { color: oklch(0.68 0.025 230); }
+.interpolation-sources .editor-tabs button { display: inline-flex; align-items: center; justify-content: center; min-width: 0; padding: 0 var(--space-sm); color: oklch(0.78 0.02 230); font-size: 0.78rem; font-weight: 650; }
+.interpolation-sources__code { max-height: 36rem; overflow: auto; }
+.interpolation-sources__code pre { min-width: max-content; margin: 0; padding: var(--space-lg); font-size: 0.78rem; line-height: 1.72; }
 
 .buffer-layout { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1px; overflow: hidden; margin-top: var(--space-lg); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-border); }
 .buffer-layout span { display: grid; min-height: 4rem; place-items: center; background: var(--color-accent-soft); color: var(--color-accent-strong); font: 700 1rem var(--font-code); }
@@ -629,7 +634,6 @@ code:not(pre code) {
   .attribute-path { grid-template-columns: 1fr auto 1fr auto 1.2fr; align-items: stretch; }
   .attribute-path > svg { transform: none; }
   .varying-playground__body { grid-template-columns: minmax(17rem, 0.8fr) minmax(0, 1.2fr); }
-  .shader-pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .next-steps.lesson-pagination { grid-template-columns: auto minmax(0, 1fr) auto; align-items: end; }
   .execution-flow__steps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .execution-flow__body { grid-template-columns: minmax(0, 1.2fr) minmax(15rem, 0.8fr); }
