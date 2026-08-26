@@ -22,12 +22,18 @@ export const TRIANGLE_POINTS = [
   { x: 0.72, y: -0.62, position: '右下' },
 ] as const;
 
-export const TRIANGLE_VERTEX_DATA_SOURCE = `// gl 与 program 已在初始化阶段创建
+export const TRIANGLE_VERTEX_DATA_SOURCE = `// gl 是 WebGL2 上下文，program 是已链接的着色程序
+
+// 1. 找到顶点着色器中 in vec2 a_position 的属性位置
+// 后面通过这个数字，把 Buffer 数据连接到 a_position
 const positionLocation = gl.getAttribLocation(
   program,
   'a_position',
 );
 
+// 2. 创建两个 GPU 对象
+// VAO 记录顶点属性的读取规则
+// positionBuffer 存放三角形的实际坐标数据
 const vao = gl.createVertexArray();
 const positionBuffer = gl.createBuffer();
 
@@ -35,37 +41,53 @@ if (positionLocation < 0 || !vao || !positionBuffer) {
   throw new Error('无法创建顶点输入。');
 }
 
+// 后续的顶点属性配置都会记录进这个 VAO
 gl.bindVertexArray(vao);
 
+// 3. 在 JavaScript 内存中准备三个二维顶点
+// 坐标使用裁剪空间：x、y 的可见范围大致是 -1 到 1
 const positions = new Float32Array([
   -0.72, -0.62, // 顶点 1 · 左下
    0.00,  0.72, // 顶点 2 · 顶部
    0.72, -0.62, // 顶点 3 · 右下
 ]);
 
+// 4. 先把 positionBuffer 选为当前 ARRAY_BUFFER
 gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+
+// 再把 positions 从 JavaScript 内存复制到当前 GPU Buffer
+// STATIC_DRAW 表示这份数据很少修改，后续会多次用于绘制
 gl.bufferData(
   gl.ARRAY_BUFFER,
   positions,
   gl.STATIC_DRAW,
 );
 
+// 5. 启用 a_position 对应的顶点属性
 gl.enableVertexAttribArray(positionLocation);
+
+// 告诉 GPU 应该怎样把当前 Buffer 解释成 a_position
+// 这次配置会记录在当前绑定的 VAO 中
 gl.vertexAttribPointer(
-  positionLocation,
-  2,        // 每个顶点读取 x、y 两个数字
-  gl.FLOAT,
-  false,
-  0,
-  0,
+  positionLocation, // 数据送给 a_position
+  2,                // 每个顶点读取 x、y 两个分量
+  gl.FLOAT,         // 每个分量都是 32 位浮点数
+  false,            // 不对数据做归一化转换
+  0,                // stride：顶点连续紧密排列
+  0,                // offset：从 Buffer 的第 0 个字节开始
 );
 
+// 6. 把裁剪空间映射到整个 Canvas，并清除上一帧
 gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 gl.clearColor(0.035, 0.055, 0.075, 1);
 gl.clear(gl.COLOR_BUFFER_BIT);
 
+// 7. 选择着色程序和顶点输入配置，然后发出绘制命令
 gl.useProgram(program);
 gl.bindVertexArray(vao);
+
+// TRIANGLES：每三个顶点组成一个三角形
+// 0：从第 0 个顶点开始；3：共读取三个顶点
 gl.drawArrays(gl.TRIANGLES, 0, 3);`;
 
 function compileShader(gl: WebGL2RenderingContext, type: number, source: string): WebGLShader {
