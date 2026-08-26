@@ -52,7 +52,7 @@ export function LessonArticle() {
 
       <section id="execution-flow" className="lesson-section lesson-section--wide">
         <h2>一次绘制如何执行</h2>
-        <p>播放下面的流程，可以看到三个坐标如何依次经过顶点着色器、图元组装、光栅化和片段着色器，最终变成画布上的蓝色三角形。</p>
+        <p>播放下面的流程，可以看到 JavaScript 如何在 CPU 上准备顶点和着色器，通过 WebGL API 交给 GPU，再经过顶点着色、光栅化和片段着色，最终变成 Canvas 上的蓝色三角形。</p>
         <ExecutionFlow />
       </section>
 
