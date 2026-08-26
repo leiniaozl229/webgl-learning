@@ -1,15 +1,16 @@
 import { ChevronRight, X } from 'lucide-react';
 
-import { navigationGroups } from '../navigation';
+import { navigationGroups, type LessonId } from '../navigation';
 
 interface SidebarProps {
   open: boolean;
   collapsed: boolean;
   isDesktop: boolean;
+  lessonId: LessonId;
   onClose: () => void;
 }
 
-export function Sidebar({ open, collapsed, isDesktop, onClose }: SidebarProps) {
+export function Sidebar({ open, collapsed, isDesktop, lessonId, onClose }: SidebarProps) {
   const hidden = isDesktop ? collapsed : !open;
 
   return (
@@ -33,7 +34,7 @@ export function Sidebar({ open, collapsed, isDesktop, onClose }: SidebarProps) {
                 {group.items.map((item) => (
                   <li key={item.label}>
                     {item.href ? (
-                      <a className="nav-item nav-item--active" href={item.href} onClick={onClose} aria-current="page">
+                      <a className={`nav-item${item.id === lessonId ? ' nav-item--active' : ''}`} href={item.href} onClick={onClose} aria-current={item.id === lessonId ? 'page' : undefined}>
                         <span>{item.label}</span><ChevronRight aria-hidden="true" />
                       </a>
                     ) : (

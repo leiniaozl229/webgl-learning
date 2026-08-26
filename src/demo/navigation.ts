@@ -1,4 +1,7 @@
+export type LessonId = 'fundamentals' | 'how-it-works';
+
 export interface NavigationItem {
+  id?: LessonId;
   label: string;
   href?: string;
   badge?: string;
@@ -9,13 +12,18 @@ export interface NavigationGroup {
   items: NavigationItem[];
 }
 
+export interface TableOfContentsItem {
+  label: string;
+  href: string;
+}
+
 export const navigationGroups: NavigationGroup[] = [
   {
     label: '开始',
     items: [
-      { label: 'WebGL2 基本原理', href: '#lesson-title', badge: '当前' },
-      { label: 'WebGL2 如何工作', badge: '下一篇' },
-      { label: '着色器与 GLSL', badge: '计划中' },
+      { id: 'fundamentals', label: 'WebGL2 基本原理', href: '/?lesson=fundamentals#lesson-title' },
+      { id: 'how-it-works', label: 'WebGL2 如何工作', href: '/?lesson=how-it-works#lesson-title' },
+      { label: '着色器与 GLSL', badge: '下一篇' },
     ],
   },
   {
@@ -28,11 +36,36 @@ export const navigationGroups: NavigationGroup[] = [
   },
 ];
 
-export const tableOfContents = [
-  { label: 'WebGL2 在做什么', href: '#what-is-webgl2' },
-  { label: 'GPU 渲染路径', href: '#pipeline' },
-  { label: '一次绘制如何执行', href: '#execution-flow' },
-  { label: '着色器如何接收数据', href: '#shader-data' },
-  { label: '第一个三角形', href: '#hello-triangle' },
-  { label: '继续学习', href: '#next-steps' },
-];
+export const tableOfContentsByLesson: Record<LessonId, TableOfContentsItem[]> = {
+  fundamentals: [
+    { label: 'WebGL2 在做什么', href: '#what-is-webgl2' },
+    { label: 'GPU 渲染路径', href: '#pipeline' },
+    { label: '一次绘制如何执行', href: '#execution-flow' },
+    { label: '着色器如何接收数据', href: '#shader-data' },
+    { label: '第一个三角形', href: '#hello-triangle' },
+    { label: '继续学习', href: '#next-steps' },
+  ],
+  'how-it-works': [
+    { label: '顶点着色器调用', href: '#vertex-invocations' },
+    { label: 'GPU 如何拉取顶点', href: '#attribute-pull' },
+    { label: 'Varying 插值', href: '#interpolation' },
+    { label: 'stride 与 offset', href: '#stride-offset' },
+    { label: '绘制状态清单', href: '#draw-checklist' },
+    { label: '继续学习', href: '#next-steps' },
+  ],
+};
+
+export const sourceByLesson: Record<LessonId, string> = {
+  fundamentals: 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-fundamentals.html',
+  'how-it-works': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-how-it-works.html',
+};
+
+export function parseLessonId(search: string): LessonId {
+  return new URLSearchParams(search).get('lesson') === 'how-it-works'
+    ? 'how-it-works'
+    : 'fundamentals';
+}
+
+export function readLessonId(): LessonId {
+  return parseLessonId(window.location.search);
+}

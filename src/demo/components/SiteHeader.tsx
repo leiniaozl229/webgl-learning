@@ -41,7 +41,7 @@ export function SiteHeader({
         >
           {sidebarCollapsed ? <PanelLeftOpen aria-hidden="true" /> : <PanelLeftClose aria-hidden="true" />}
         </button>
-        <a className="brand-link" href="#lesson-title" aria-label="WebGL2 Learning 首页">
+        <a className="brand-link" href="/?lesson=fundamentals#lesson-title" aria-label="WebGL2 Learning 首页">
           <span className="brand-mark" aria-hidden="true"><Triangle /></span>
           <span>WebGL2 Learning</span>
         </a>

@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 
 import { LessonArticle } from './components/LessonArticle';
+import { HowItWorksArticle } from './components/HowItWorksArticle';
 import { Sidebar } from './components/Sidebar';
 import { SiteHeader } from './components/SiteHeader';
 import { TableOfContents } from './components/TableOfContents';
+import { readLessonId, sourceByLesson, tableOfContentsByLesson } from './navigation';
 
 type Theme = 'light' | 'dark';
 
@@ -22,6 +24,7 @@ function readInitialDesktopLayout() {
 }
 
 export function App() {
+  const lessonId = readLessonId();
   const [theme, setTheme] = useState<Theme>(readInitialTheme);
   const [menuOpen, setMenuOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(readInitialSidebarCollapsed);
@@ -82,11 +85,12 @@ export function App() {
         open={menuOpen}
         collapsed={sidebarCollapsed}
         isDesktop={isDesktop}
+        lessonId={lessonId}
         onClose={() => setMenuOpen(false)}
       />
       <main id="main-content" className="main-content">
-        <LessonArticle />
-        <TableOfContents />
+        {lessonId === 'how-it-works' ? <HowItWorksArticle /> : <LessonArticle />}
+        <TableOfContents items={tableOfContentsByLesson[lessonId]} sourceHref={sourceByLesson[lessonId]} />
       </main>
     </div>
   );

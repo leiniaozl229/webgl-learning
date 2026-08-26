@@ -76,7 +76,7 @@ export function LessonArticle() {
 
       <section id="next-steps" className="lesson-section next-steps">
         <div><h2>接下来</h2><p>下一篇会把这次绘制拆成可复用的初始化阶段与渲染阶段，并用状态图理解绑定点。</p></div>
-        <span className="next-steps__link" aria-disabled="true">WebGL2 如何工作 <ArrowRight aria-hidden="true" /></span>
+        <a className="next-steps__link" href="/?lesson=how-it-works#lesson-title">WebGL2 如何工作 <ArrowRight aria-hidden="true" /></a>
       </section>
 
       <footer className="lesson-footer">

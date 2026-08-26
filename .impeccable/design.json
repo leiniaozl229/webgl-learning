@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-08-26T06:52:11Z",
+  "generatedAt": "2026-08-26T08:25:28Z",
   "title": "Design System: WebGL2 Learning",
   "extensions": {
     "colorMeta": {
@@ -103,6 +103,14 @@
       "description": "深色、等宽的 GLSL 编辑表面，透明输入层与 Prism 语法高亮层同步滚动；宽屏实验主体限制在 31–42rem，窄屏代码区上限为 32rem。",
       "html": "<label class=\"ds-editor\"><span>片段着色器</span><textarea spellcheck=\"false\">outColor = vec4(0.38, 0.82, 0.95, 1.0);</textarea></label>",
       "css": ".ds-editor{display:grid;gap:.5rem;color:var(--color-text);font:700 .82rem var(--font-sans)}.ds-editor textarea{min-height:120px;resize:vertical;border:1px solid var(--color-border-strong);border-radius:var(--radius-md);padding:1rem;background:var(--color-surface-code);color:#e8f1f5;font:400 .84rem/1.65 var(--font-code)}.ds-editor textarea:focus-visible{outline:3px solid var(--color-focus);outline-offset:3px}"
+    },
+    {
+      "name": "Varying Playground",
+      "kind": "interactive-lab",
+      "refersTo": "card-lab",
+      "description": "通过三个顶点颜色控件和真实 WebGL2 画布，展示 a_color 经光栅化插值后如何成为片段着色器中的 v_color。",
+      "html": "<section class=\"ds-varying\"><label>左下顶点 <input type=\"color\" value=\"#ff5d73\"></label><canvas aria-label=\"插值颜色三角形\"></canvas></section>",
+      "css": ".ds-varying{display:grid;grid-template-columns:minmax(220px,.8fr) minmax(280px,1.2fr);overflow:hidden;border:1px solid var(--color-border-strong);border-radius:var(--radius-lg);background:var(--color-surface-code);color:white}.ds-varying label{display:flex;align-items:center;justify-content:space-between;padding:1rem}.ds-varying input{min-width:44px;min-height:44px}.ds-varying canvas{display:block;width:100%;min-height:280px;background:#081018}"
     },
     {
       "name": "Execution Flow",
