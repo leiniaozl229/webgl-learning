@@ -510,7 +510,9 @@ code:not(pre code) {
 .interpolation-sources > header { display: flex; min-height: 3.5rem; align-items: center; gap: var(--space-xs); padding: var(--space-xs) var(--space-md); border-bottom: 1px solid oklch(0.36 0.022 245); background: oklch(0.235 0.02 245); }
 .interpolation-sources > header strong { font-size: 0.9rem; }
 .interpolation-sources > header small { color: oklch(0.68 0.025 230); }
-.interpolation-sources .editor-tabs button { display: inline-flex; align-items: center; justify-content: center; min-width: 0; padding: 0 var(--space-sm); color: oklch(0.78 0.02 230); font-size: 0.78rem; font-weight: 650; }
+.interpolation-sources .editor-tabs button { display: inline-flex; min-width: 0; min-height: 2.75rem; align-items: center; justify-content: center; padding: 0 var(--space-sm); border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: transparent; color: oklch(0.78 0.02 230); cursor: pointer; font-size: 0.78rem; font-weight: 650; transition: background-color 160ms var(--ease-out), color 160ms var(--ease-out); }
+.interpolation-sources .editor-tabs button:hover { background: oklch(0.285 0.022 245); color: oklch(0.94 0.012 230); }
+.interpolation-sources .editor-tabs button[aria-selected="true"] { border-bottom-color: var(--color-accent); background: var(--color-surface-code); color: var(--color-accent); }
 .interpolation-sources__code { max-height: 36rem; overflow: auto; }
 .interpolation-sources__code pre { min-width: max-content; margin: 0; padding: var(--space-lg); font-size: 0.78rem; line-height: 1.72; }
 
