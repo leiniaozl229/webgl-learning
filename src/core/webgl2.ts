@@ -22,14 +22,51 @@ export const TRIANGLE_POINTS = [
   { x: 0.72, y: -0.62, position: '右下' },
 ] as const;
 
-export const TRIANGLE_VERTEX_DATA_SOURCE = `const positions = new Float32Array([
+export const TRIANGLE_VERTEX_DATA_SOURCE = `// gl 与 program 已在初始化阶段创建
+const positionLocation = gl.getAttribLocation(
+  program,
+  'a_position',
+);
+
+const vao = gl.createVertexArray();
+const positionBuffer = gl.createBuffer();
+
+if (positionLocation < 0 || !vao || !positionBuffer) {
+  throw new Error('无法创建顶点输入。');
+}
+
+gl.bindVertexArray(vao);
+
+const positions = new Float32Array([
   -0.72, -0.62, // 顶点 1 · 左下
    0.00,  0.72, // 顶点 2 · 顶部
    0.72, -0.62, // 顶点 3 · 右下
 ]);
 
-gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);`;
+gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+gl.bufferData(
+  gl.ARRAY_BUFFER,
+  positions,
+  gl.STATIC_DRAW,
+);
+
+gl.enableVertexAttribArray(positionLocation);
+gl.vertexAttribPointer(
+  positionLocation,
+  2,        // 每个顶点读取 x、y 两个数字
+  gl.FLOAT,
+  false,
+  0,
+  0,
+);
+
+gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+gl.clearColor(0.035, 0.055, 0.075, 1);
+gl.clear(gl.COLOR_BUFFER_BIT);
+
+gl.useProgram(program);
+gl.bindVertexArray(vao);
+gl.drawArrays(gl.TRIANGLES, 0, 3);`;
 
 function compileShader(gl: WebGL2RenderingContext, type: number, source: string): WebGLShader {
   const shader = gl.createShader(type);
@@ -81,7 +118,7 @@ export function drawTriangle(
   const vertexShader = compileShader(gl, gl.VERTEX_SHADER, vertexSource);
   let fragmentShader: WebGLShader | null = null;
   let program: WebGLProgram | null = null;
-  let buffer: WebGLBuffer | null = null;
+  let positionBuffer: WebGLBuffer | null = null;
   let vertexArray: WebGLVertexArrayObject | null = null;
 
   try {
@@ -91,11 +128,11 @@ export function drawTriangle(
     if (positionLocation < 0) throw new Error('没有找到 a_position 顶点属性。');
 
     vertexArray = gl.createVertexArray();
-    buffer = gl.createBuffer();
-    if (!vertexArray || !buffer) throw new Error('无法创建顶点数组或缓冲区。');
+    positionBuffer = gl.createBuffer();
+    if (!vertexArray || !positionBuffer) throw new Error('无法创建顶点数组或缓冲区。');
 
     gl.bindVertexArray(vertexArray);
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     gl.bufferData(
       gl.ARRAY_BUFFER,
       new Float32Array(TRIANGLE_POINTS.flatMap(({ x, y }) => [x, y])),
@@ -112,7 +149,7 @@ export function drawTriangle(
     gl.bindVertexArray(vertexArray);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   } catch (error) {
-    if (buffer) gl.deleteBuffer(buffer);
+    if (positionBuffer) gl.deleteBuffer(positionBuffer);
     if (vertexArray) gl.deleteVertexArray(vertexArray);
     if (program) gl.deleteProgram(program);
     if (fragmentShader) gl.deleteShader(fragmentShader);
@@ -123,7 +160,7 @@ export function drawTriangle(
   gl.deleteShader(vertexShader);
   gl.deleteShader(fragmentShader);
   return () => {
-    if (buffer) gl.deleteBuffer(buffer);
+    if (positionBuffer) gl.deleteBuffer(positionBuffer);
     if (vertexArray) gl.deleteVertexArray(vertexArray);
     if (program) gl.deleteProgram(program);
   };
