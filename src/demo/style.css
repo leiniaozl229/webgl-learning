@@ -254,7 +254,7 @@ code:not(pre code) {
 }
 
 .nav-item--active { background: var(--color-accent-soft); color: var(--color-accent-strong); }
-.nav-item--active svg { width: 1rem; height: 1rem; }
+.nav-item svg { flex: 0 0 auto; width: 1rem; height: 1rem; }
 .nav-item--disabled { color: var(--color-muted); }
 .nav-item small { font-size: 0.68rem; font-weight: 650; }
 
