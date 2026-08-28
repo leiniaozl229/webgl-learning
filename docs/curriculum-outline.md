@@ -24,7 +24,7 @@
 - [ ] 怎样使用 WebGL2
 - [x] WebGL2 基本原理
 - [x] WebGL2 如何工作
-- [ ] 着色器与 GLSL
+- [x] 着色器与 GLSL
 - [ ] WebGL2 状态图
 
 ## 2. WebGL2 与 WebGL1
@@ -264,4 +264,3 @@
 - [WebGL2 Fundamentals 中文教程](https://webgl2fundamentals.org/webgl/lessons/zh_cn/)
 - [WebGL2RenderingContext - MDN](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext)
 - [WebGL 2.0 Specification](https://registry.khronos.org/webgl/specs/latest/2.0/)
-

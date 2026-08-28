@@ -21,6 +21,7 @@ const vertices = new Float32Array([
 
 const stride = 5 * Float32Array.BYTES_PER_ELEMENT;
 
+gl.enableVertexAttribArray(positionLocation);
 gl.vertexAttribPointer(
   positionLocation,
   2,
@@ -30,6 +31,7 @@ gl.vertexAttribPointer(
   0,
 );
 
+gl.enableVertexAttribArray(colorLocation);
 gl.vertexAttribPointer(
   colorLocation,
   3,
@@ -112,7 +114,7 @@ export function HowItWorksArticle() {
       <section id="next-steps" className="lesson-section next-steps lesson-pagination">
         <LessonLink lessonId="fundamentals"><ArrowLeft aria-hidden="true" /> WebGL2 基本原理</LessonLink>
         <div><h2>接下来</h2><p>下一篇会系统拆解 GLSL 类型、函数、Attribute、Uniform 和 Varying。</p></div>
-        <span className="next-steps__link" aria-disabled="true">着色器与 GLSL <ArrowRight aria-hidden="true" /></span>
+        <LessonLink className="next-steps__link" lessonId="shaders-and-glsl">着色器与 GLSL <ArrowRight aria-hidden="true" /></LessonLink>
       </section>
 
       <footer className="lesson-footer">

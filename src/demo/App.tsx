@@ -3,12 +3,19 @@ import { useEffect, useState } from 'react';
 import { LESSON_NAVIGATION_EVENT } from './components/LessonLink';
 import { LessonArticle } from './components/LessonArticle';
 import { HowItWorksArticle } from './components/HowItWorksArticle';
+import { ShadersAndGlslArticle } from './components/ShadersAndGlslArticle';
 import { Sidebar } from './components/Sidebar';
 import { SiteHeader } from './components/SiteHeader';
 import { TableOfContents } from './components/TableOfContents';
-import { readLessonId, sourceByLesson, tableOfContentsByLesson } from './navigation';
+import { type LessonId, readLessonId, sourceByLesson, tableOfContentsByLesson } from './navigation';
 
 type Theme = 'light' | 'dark';
+
+const lessonTitles: Record<LessonId, string> = {
+  fundamentals: 'WebGL2 的基本原理',
+  'how-it-works': 'WebGL2 如何工作',
+  'shaders-and-glsl': '着色器与 GLSL',
+};
 
 function readInitialTheme(): Theme {
   const stored = window.localStorage.getItem('webgl-learning-theme');
@@ -42,9 +49,7 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    document.title = lessonId === 'how-it-works'
-      ? 'WebGL2 如何工作 · WebGL2 Learning'
-      : 'WebGL2 的基本原理 · WebGL2 Learning';
+    document.title = `${lessonTitles[lessonId]} · WebGL2 Learning`;
   }, [lessonId]);
 
   useEffect(() => {
@@ -106,7 +111,9 @@ export function App() {
         onClose={() => setMenuOpen(false)}
       />
       <main id="main-content" className="main-content">
-        {lessonId === 'how-it-works' ? <HowItWorksArticle /> : <LessonArticle />}
+        {lessonId === 'fundamentals' && <LessonArticle />}
+        {lessonId === 'how-it-works' && <HowItWorksArticle />}
+        {lessonId === 'shaders-and-glsl' && <ShadersAndGlslArticle />}
         <TableOfContents items={tableOfContentsByLesson[lessonId]} sourceHref={sourceByLesson[lessonId]} />
       </main>
     </div>

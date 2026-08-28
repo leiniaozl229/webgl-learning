@@ -70,6 +70,9 @@ gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.DYNAMIC_DRAW);
 
 const positionLocation = gl.getAttribLocation(program, 'a_position');
 const colorLocation = gl.getAttribLocation(program, 'a_color');
+if (positionLocation < 0 || colorLocation < 0) {
+  throw new Error('无法找到 a_position 或 a_color 顶点属性。');
+}
 const stride = 5 * Float32Array.BYTES_PER_ELEMENT; // 20 bytes
 
 // a_position 每次读取两个 float，从每组数据的第 0 字节开始
@@ -147,6 +150,14 @@ export function drawInterpolatedTriangle(
   const stride = 5 * Float32Array.BYTES_PER_ELEMENT;
   const positionLocation = gl.getAttribLocation(program, 'a_position');
   const colorLocation = gl.getAttribLocation(program, 'a_color');
+  if (positionLocation < 0 || colorLocation < 0) {
+    gl.deleteBuffer(buffer);
+    gl.deleteVertexArray(vao);
+    gl.deleteShader(vertexShader);
+    gl.deleteShader(fragmentShader);
+    gl.deleteProgram(program);
+    throw new Error('无法找到 a_position 或 a_color 顶点属性。');
+  }
   gl.enableVertexAttribArray(positionLocation);
   gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, stride, 0);
   gl.enableVertexAttribArray(colorLocation);
