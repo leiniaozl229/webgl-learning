@@ -184,9 +184,13 @@ components:
 - **Focus:** 由全局 3px 焦点轮廓明确标记。
 - **Error / Disabled:** 错误同时显示 Error 色与可复制的编译信息；禁用状态降低对比并保留文字说明。
 
+### Interaction Primitives
+
+Tabs、Collapsible、Dialog、Tooltip 等复合交互以 Base UI 提供行为、ARIA 语义、焦点管理和键盘路径。视觉层继续使用本项目的 CSS Token 与组件类，避免引入独立主题系统。组件状态优先通过 Base UI 提供的 `data-*` 属性设置样式。
+
 ### Code Surfaces
 
-TypeScript 和 GLSL 使用同一套 Prism token 语义色：紫色标记关键字、黄色标记函数、绿色标记字符串、橙色标记数字，注释保持较低对比。普通内容宽度上限为 52rem，实验与执行流程可扩展到 64rem，正文段落仍限制在 72ch 内。
+TypeScript 和 GLSL 使用同一套 Prism token 语义色：紫色标记关键字、黄色标记函数、绿色标记字符串、橙色标记数字，注释保持较低对比。代码实验统一使用 `code-workbench` 外壳、工具栏色值和 Tab 指示器。普通内容宽度上限为 52rem，实验与执行流程可扩展到 64rem，正文段落仍限制在 72ch 内。
 
 ### Navigation
 

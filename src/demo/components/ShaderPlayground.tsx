@@ -1,5 +1,6 @@
+import { Tabs } from '@base-ui/react/tabs';
 import { Play, RotateCcw } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import {
   DEFAULT_FRAGMENT_SHADER,
@@ -17,14 +18,41 @@ const editorTabs: Array<{ id: EditorTab; label: string }> = [
   { id: 'fragment', label: 'fragment.glsl' },
 ];
 
+interface ShaderSourcePanelProps {
+  id: 'vertex' | 'fragment';
+  source: string;
+  onChange: (source: string) => void;
+}
+
+function ShaderSourcePanel({ id, source, onChange }: ShaderSourcePanelProps) {
+  const highlightedSourceRef = useRef<HTMLPreElement>(null);
+  const label = id === 'vertex' ? '顶点着色器源码' : '片段着色器源码';
+
+  return (
+    <Tabs.Panel className="shader-source-panel" value={id}>
+      <label className="sr-only" htmlFor={`shader-editor-${id}`}>{label}</label>
+      <HighlightedCode ref={highlightedSourceRef} className="shader-source-highlight" code={source} language="glsl" ariaHidden />
+      <textarea
+        id={`shader-editor-${id}`}
+        value={source}
+        spellCheck={false}
+        onScroll={(event) => {
+          if (!highlightedSourceRef.current) return;
+          highlightedSourceRef.current.scrollTop = event.currentTarget.scrollTop;
+          highlightedSourceRef.current.scrollLeft = event.currentTarget.scrollLeft;
+        }}
+        onChange={(event) => onChange(event.target.value)}
+      />
+    </Tabs.Panel>
+  );
+}
+
 export function ShaderPlayground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const highlightedSourceRef = useRef<HTMLPreElement>(null);
   const disposeRef = useRef<(() => void) | null>(null);
   const sourceRef = useRef({ vertex: DEFAULT_VERTEX_SHADER, fragment: DEFAULT_FRAGMENT_SHADER });
   const [vertexSource, setVertexSource] = useState(DEFAULT_VERTEX_SHADER);
   const [fragmentSource, setFragmentSource] = useState(DEFAULT_FRAGMENT_SHADER);
-  const [activeTab, setActiveTab] = useState<EditorTab>('data');
   const [status, setStatus] = useState('准备编译');
   const [error, setError] = useState<string | null>(null);
 
@@ -62,72 +90,34 @@ export function ShaderPlayground() {
     renderSources(DEFAULT_VERTEX_SHADER, DEFAULT_FRAGMENT_SHADER);
   }
 
-  function switchTab(event: KeyboardEvent<HTMLButtonElement>, current: EditorTab) {
-    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
-    event.preventDefault();
-    const currentIndex = editorTabs.findIndex((tab) => tab.id === current);
-    let targetIndex = currentIndex;
-    if (event.key === 'Home') targetIndex = 0;
-    if (event.key === 'End') targetIndex = editorTabs.length - 1;
-    if (event.key === 'ArrowLeft') targetIndex = (currentIndex - 1 + editorTabs.length) % editorTabs.length;
-    if (event.key === 'ArrowRight') targetIndex = (currentIndex + 1) % editorTabs.length;
-    const target = editorTabs[targetIndex].id;
-    setActiveTab(target);
-    document.getElementById(`shader-tab-${target}`)?.focus();
-  }
-
-  const source = activeTab === 'vertex' ? vertexSource : fragmentSource;
-
   return (
-    <section className="playground" aria-labelledby="playground-title">
-      <div className="playground__header">
-        <div><span className="playground__status-dot" aria-hidden="true" /><strong id="playground-title">Hello Triangle</strong><small>顶点数据 + GLSL</small></div>
+    <section className="code-workbench playground" aria-labelledby="playground-title">
+      <div className="code-workbench__header playground__header">
+        <div className="code-workbench__heading"><span className="playground__status-dot" aria-hidden="true" /><strong id="playground-title">Hello Triangle</strong><small>顶点数据 + GLSL</small></div>
         <div className="playground__actions">
           <button type="button" onClick={reset}><RotateCcw aria-hidden="true" /> 重置</button>
           <button className="run-button" type="button" onClick={() => renderSources(vertexSource, fragmentSource)}><Play aria-hidden="true" /> 运行</button>
         </div>
       </div>
       <div className="playground__body">
-        <div className="editor-panel">
-          <div className="editor-tabs" role="tablist" aria-label="三角形绘制输入">
+        <Tabs.Root className="editor-panel" defaultValue="data">
+          <Tabs.List className="editor-tabs" aria-label="三角形绘制输入">
             {editorTabs.map((tab) => (
-              <button
-                id={`shader-tab-${tab.id}`}
+              <Tabs.Tab
                 key={tab.id}
-                type="button"
-                role="tab"
-                aria-selected={activeTab === tab.id}
-                aria-controls={`editor-panel-${tab.id}`}
-                tabIndex={activeTab === tab.id ? 0 : -1}
-                onClick={() => setActiveTab(tab.id)}
-                onKeyDown={(event) => switchTab(event, tab.id)}
+                value={tab.id}
               >
                 {tab.label}
-              </button>
+              </Tabs.Tab>
             ))}
-          </div>
-          {activeTab === 'data' ? (
-            <div id="editor-panel-data" className="vertex-data-panel" role="tabpanel" aria-labelledby="shader-tab-data">
-              <HighlightedCode code={TRIANGLE_VERTEX_DATA_SOURCE} language="typescript" />
-            </div>
-          ) : (
-            <div id={`editor-panel-${activeTab}`} className="shader-source-panel" role="tabpanel" aria-labelledby={`shader-tab-${activeTab}`}>
-              <label className="sr-only" htmlFor="shader-editor">{activeTab === 'vertex' ? '顶点着色器源码' : '片段着色器源码'}</label>
-              <HighlightedCode ref={highlightedSourceRef} className="shader-source-highlight" code={source} language="glsl" ariaHidden />
-              <textarea
-                id="shader-editor"
-                value={source}
-                spellCheck={false}
-                onScroll={(event) => {
-                  if (!highlightedSourceRef.current) return;
-                  highlightedSourceRef.current.scrollTop = event.currentTarget.scrollTop;
-                  highlightedSourceRef.current.scrollLeft = event.currentTarget.scrollLeft;
-                }}
-                onChange={(event) => activeTab === 'vertex' ? setVertexSource(event.target.value) : setFragmentSource(event.target.value)}
-              />
-            </div>
-          )}
-        </div>
+            <Tabs.Indicator className="editor-tabs__indicator" />
+          </Tabs.List>
+          <Tabs.Panel className="vertex-data-panel" value="data">
+            <HighlightedCode code={TRIANGLE_VERTEX_DATA_SOURCE} language="typescript" />
+          </Tabs.Panel>
+          <ShaderSourcePanel id="vertex" source={vertexSource} onChange={setVertexSource} />
+          <ShaderSourcePanel id="fragment" source={fragmentSource} onChange={setFragmentSource} />
+        </Tabs.Root>
         <div className="result-panel">
           <canvas ref={canvasRef} role="img" aria-label="WebGL2 绘制的蓝色三角形" />
           <div className="result-panel__meta" aria-hidden="true"><span>WebGL2</span><span>TRIANGLES · 3 vertices</span></div>

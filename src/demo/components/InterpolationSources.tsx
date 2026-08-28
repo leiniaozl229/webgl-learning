@@ -1,4 +1,4 @@
-import { useState, type KeyboardEvent } from 'react';
+import { Tabs } from '@base-ui/react/tabs';
 
 import {
   INTERPOLATION_FRAGMENT_SHADER,
@@ -22,56 +22,31 @@ const sources: Record<SourceTab, { code: string; language: 'typescript' | 'glsl'
 };
 
 export function InterpolationSources() {
-  const [activeTab, setActiveTab] = useState<SourceTab>('data');
-
-  function switchTab(event: KeyboardEvent<HTMLButtonElement>, current: SourceTab) {
-    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
-    event.preventDefault();
-    const currentIndex = sourceTabs.findIndex((tab) => tab.id === current);
-    let targetIndex = currentIndex;
-    if (event.key === 'Home') targetIndex = 0;
-    if (event.key === 'End') targetIndex = sourceTabs.length - 1;
-    if (event.key === 'ArrowLeft') targetIndex = (currentIndex - 1 + sourceTabs.length) % sourceTabs.length;
-    if (event.key === 'ArrowRight') targetIndex = (currentIndex + 1) % sourceTabs.length;
-    const target = sourceTabs[targetIndex].id;
-    setActiveTab(target);
-    document.getElementById(`interpolation-tab-${target}`)?.focus();
-  }
-
-  const source = sources[activeTab];
-
   return (
-    <section className="interpolation-sources" aria-labelledby="interpolation-sources-title">
-      <header>
-        <span className="playground__status-dot" aria-hidden="true" />
-        <strong id="interpolation-sources-title">Vertex Colors</strong>
-        <small>JavaScript 数据 + GLSL</small>
+    <Tabs.Root className="code-workbench interpolation-sources" defaultValue="data" aria-labelledby="interpolation-sources-title">
+      <header className="code-workbench__header">
+        <div className="code-workbench__heading">
+          <span className="playground__status-dot" aria-hidden="true" />
+          <strong id="interpolation-sources-title">Vertex Colors</strong>
+          <small>JavaScript 数据 + GLSL</small>
+        </div>
       </header>
-      <div className="editor-tabs" role="tablist" aria-label="颜色插值源码">
+      <Tabs.List className="editor-tabs" aria-label="颜色插值源码">
         {sourceTabs.map((tab) => (
-          <button
-            id={`interpolation-tab-${tab.id}`}
+          <Tabs.Tab
             key={tab.id}
-            type="button"
-            role="tab"
-            aria-selected={activeTab === tab.id}
-            aria-controls={`interpolation-panel-${tab.id}`}
-            tabIndex={activeTab === tab.id ? 0 : -1}
-            onClick={() => setActiveTab(tab.id)}
-            onKeyDown={(event) => switchTab(event, tab.id)}
+            value={tab.id}
           >
             {tab.label}
-          </button>
+          </Tabs.Tab>
         ))}
-      </div>
-      <div
-        id={`interpolation-panel-${activeTab}`}
-        className="interpolation-sources__code"
-        role="tabpanel"
-        aria-labelledby={`interpolation-tab-${activeTab}`}
-      >
-        <HighlightedCode code={source.code} language={source.language} />
-      </div>
-    </section>
+        <Tabs.Indicator className="editor-tabs__indicator" />
+      </Tabs.List>
+      {sourceTabs.map((tab) => (
+        <Tabs.Panel key={tab.id} className="interpolation-sources__code" value={tab.id}>
+          <HighlightedCode code={sources[tab.id].code} language={sources[tab.id].language} />
+        </Tabs.Panel>
+      ))}
+    </Tabs.Root>
   );
 }

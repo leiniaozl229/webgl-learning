@@ -1,4 +1,5 @@
-import { ChevronRight, X } from 'lucide-react';
+import { Collapsible } from '@base-ui/react/collapsible';
+import { ChevronDown, ChevronRight, X } from 'lucide-react';
 
 import { navigationGroups, type LessonId } from '../navigation';
 import { LessonLink } from './LessonLink';
@@ -29,22 +30,29 @@ export function Sidebar({ open, collapsed, isDesktop, lessonId, onClose }: Sideb
         </div>
         <nav>
           {navigationGroups.map((group) => (
-            <section className="nav-group" key={group.label} aria-labelledby={`nav-${group.label}`}>
-              <h2 id={`nav-${group.label}`}>{group.label}</h2>
-              <ul>
-                {group.items.map((item) => (
-                  <li key={item.label}>
-                    {item.href && item.id ? (
-                      <LessonLink className={`nav-item${item.id === lessonId ? ' nav-item--active' : ''}`} lessonId={item.id} onClick={onClose} aria-current={item.id === lessonId ? 'page' : undefined}>
-                        <span>{item.label}</span><ChevronRight aria-hidden="true" />
-                      </LessonLink>
-                    ) : (
-                      <span className="nav-item nav-item--disabled"><span>{item.label}</span>{item.badge ? <small>{item.badge}</small> : null}</span>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </section>
+            <Collapsible.Root className="nav-group" key={group.label} defaultOpen>
+              <h2>
+                <Collapsible.Trigger className="nav-group__trigger">
+                  <span>{group.label}</span>
+                  <ChevronDown aria-hidden="true" />
+                </Collapsible.Trigger>
+              </h2>
+              <Collapsible.Panel className="nav-group__panel">
+                <ul>
+                  {group.items.map((item) => (
+                    <li key={item.label}>
+                      {item.href && item.id ? (
+                        <LessonLink className={`nav-item${item.id === lessonId ? ' nav-item--active' : ''}`} lessonId={item.id} onClick={onClose} aria-current={item.id === lessonId ? 'page' : undefined}>
+                          <span>{item.label}</span><ChevronRight aria-hidden="true" />
+                        </LessonLink>
+                      ) : (
+                        <span className="nav-item nav-item--disabled"><span>{item.label}</span>{item.badge ? <small>{item.badge}</small> : null}</span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </Collapsible.Panel>
+            </Collapsible.Root>
           ))}
         </nav>
         <div className="sidebar__footer"><span className="status-dot" aria-hidden="true" /><span>使用 WebGL2 与 GLSL ES 3.00</span></div>

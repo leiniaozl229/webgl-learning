@@ -9,6 +9,7 @@
 ## 技术栈
 
 - React 19
+- Base UI
 - TypeScript
 - Vite
 - 原生 WebGL2 API
@@ -83,6 +84,7 @@ git diff --check
 - Tab、按钮、输入框必须有清晰的悬停、选中和键盘焦点状态。
 - 动画需要兼容 `prefers-reduced-motion`。
 - Canvas 需要处理设备像素比和容器尺寸变化。
+- Tabs、Collapsible、Dialog、Tooltip 等复合交互优先使用 Base UI primitives，并通过项目 CSS 定义视觉层。
 
 ## WebGL2 实现约定
 
@@ -100,4 +102,3 @@ git diff --check
 - 一个提交聚焦一个完整变化。
 - 提交前检查工作区差异和验证结果。
 - 禁止使用破坏性 Git 命令清除工作区。
-
