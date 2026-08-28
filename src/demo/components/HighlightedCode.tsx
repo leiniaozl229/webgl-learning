@@ -10,18 +10,18 @@ if (!Prism.languages.glsl) {
 
 const codeTheme: PrismTheme = {
   plain: {
-    color: 'oklch(0.88 0.025 220)',
+    color: 'var(--color-code-text)',
     backgroundColor: 'transparent',
   },
   styles: [
-    { types: ['comment', 'prolog', 'doctype', 'cdata'], style: { color: 'oklch(0.62 0.035 225)', fontStyle: 'italic' } },
-    { types: ['keyword', 'selector', 'important'], style: { color: 'oklch(0.76 0.14 300)' } },
-    { types: ['builtin', 'class-name', 'type'], style: { color: 'oklch(0.79 0.12 220)' } },
-    { types: ['function'], style: { color: 'oklch(0.82 0.13 95)' } },
-    { types: ['string', 'char', 'attr-value'], style: { color: 'oklch(0.78 0.13 155)' } },
-    { types: ['number', 'boolean', 'constant'], style: { color: 'oklch(0.77 0.14 45)' } },
-    { types: ['operator', 'punctuation'], style: { color: 'oklch(0.73 0.035 230)' } },
-    { types: ['property', 'tag'], style: { color: 'oklch(0.75 0.13 238)' } },
+    { types: ['comment', 'prolog', 'doctype', 'cdata'], style: { color: 'var(--syntax-comment)', fontStyle: 'italic' } },
+    { types: ['keyword', 'selector', 'important'], style: { color: 'var(--syntax-keyword)' } },
+    { types: ['builtin', 'class-name', 'type'], style: { color: 'var(--syntax-type)' } },
+    { types: ['function'], style: { color: 'var(--syntax-function)' } },
+    { types: ['string', 'char', 'attr-value'], style: { color: 'var(--syntax-string)' } },
+    { types: ['number', 'boolean', 'constant'], style: { color: 'var(--syntax-number)' } },
+    { types: ['operator', 'punctuation'], style: { color: 'var(--syntax-operator)' } },
+    { types: ['property', 'tag'], style: { color: 'var(--syntax-property)' } },
   ],
 };
 

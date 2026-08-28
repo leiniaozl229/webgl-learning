@@ -15,6 +15,7 @@ describe('HighlightedCode', () => {
 
     expect(markup).toContain('token keyword');
     expect(markup).toContain('token number');
+    expect(markup).toContain('var(--syntax-keyword)');
   });
 
   it('tokenizes GLSL built-ins', () => {

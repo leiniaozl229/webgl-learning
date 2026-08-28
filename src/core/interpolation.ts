@@ -118,7 +118,7 @@ export function drawInterpolatedTriangle(
   canvas: HTMLCanvasElement,
   colors: readonly [VertexColor, VertexColor, VertexColor],
 ): () => void {
-  const gl = canvas.getContext('webgl2', { antialias: true });
+  const gl = canvas.getContext('webgl2', { antialias: true, alpha: true });
   if (!gl) throw new Error('当前浏览器或设备没有可用的 WebGL2 上下文。');
 
   const vertexShader = compileShader(gl, gl.VERTEX_SHADER, INTERPOLATION_VERTEX_SHADER);
@@ -161,7 +161,7 @@ export function drawInterpolatedTriangle(
 
   resizeCanvasToDisplaySize(canvas);
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-  gl.clearColor(0.035, 0.055, 0.075, 1);
+  gl.clearColor(0, 0, 0, 0);
   gl.clear(gl.COLOR_BUFFER_BIT);
   gl.useProgram(program);
   gl.bindVertexArray(vao);

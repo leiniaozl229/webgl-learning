@@ -79,7 +79,8 @@ gl.vertexAttribPointer(
 
 // 6. 把裁剪空间映射到整个 Canvas，并清除上一帧
 gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-gl.clearColor(0.035, 0.055, 0.075, 1);
+// 使用透明清屏，让 Canvas 背景跟随页面的明暗主题
+gl.clearColor(0, 0, 0, 0);
 gl.clear(gl.COLOR_BUFFER_BIT);
 
 // 7. 选择着色程序和顶点输入配置，然后发出绘制命令
@@ -134,7 +135,7 @@ export function drawTriangle(
   vertexSource: string,
   fragmentSource: string,
 ): () => void {
-  const gl = canvas.getContext('webgl2', { antialias: true });
+  const gl = canvas.getContext('webgl2', { antialias: true, alpha: true });
   if (!gl) throw new Error('当前浏览器或设备没有可用的 WebGL2 上下文。');
 
   const vertexShader = compileShader(gl, gl.VERTEX_SHADER, vertexSource);
@@ -165,7 +166,7 @@ export function drawTriangle(
 
     resizeCanvasToDisplaySize(canvas);
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-    gl.clearColor(0.035, 0.055, 0.075, 1);
+    gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.useProgram(program);
     gl.bindVertexArray(vertexArray);

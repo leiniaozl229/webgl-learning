@@ -11,6 +11,7 @@ colors:
   lab-blue: "oklch(0.69 0.145 238)"
   lab-blue-strong: "oklch(0.52 0.17 244)"
   lab-blue-soft: "oklch(0.95 0.035 238)"
+  code-paper: "oklch(0.985 0.006 230)"
   code-night: "oklch(0.205 0.018 250)"
   success: "oklch(0.6 0.14 158)"
   error: "oklch(0.58 0.19 28)"
@@ -108,7 +109,7 @@ components:
 
 ## Colors
 
-色彩像光线充足的图形实验室：冷白纸面、深蓝灰文字和少量清透天空蓝组成主体，代码区使用安静的夜蓝提供专注对比。
+色彩像光线充足的图形实验室：冷白纸面、深蓝灰文字和少量清透天空蓝组成主体。代码区在浅色主题使用 Code Paper，在深色主题使用安静的 Code Night。
 
 ### Primary
 
@@ -122,7 +123,8 @@ components:
 - **Clean Surface** (`surface`): 文章、实验和浮层的内容表面。
 - **Deep Technical Ink** (`ink`): 正文与标题的主要文字色。
 - **Quiet Technical Ink** (`ink-soft`): 辅助信息与非激活控件。
-- **Code Night** (`code-night`): 代码展示和编辑器背景。
+- **Code Paper** (`code-paper`): 浅色主题的代码展示、编辑器和 Canvas 背景。
+- **Code Night** (`code-night`): 深色主题的代码展示、编辑器和 Canvas 背景。
 
 **The Ten Percent Blue Rule.** 蓝色在单个视窗中的占比保持在约 10% 内，只标记方向、状态和可操作位置。
 
@@ -190,7 +192,7 @@ Tabs、Collapsible、Dialog、Tooltip 等复合交互以 Base UI 提供行为、
 
 ### Code Surfaces
 
-TypeScript 和 GLSL 使用同一套 Prism token 语义色：紫色标记关键字、黄色标记函数、绿色标记字符串、橙色标记数字，注释保持较低对比。代码实验统一使用 `code-workbench` 外壳、工具栏色值和 Tab 指示器。普通内容宽度上限为 52rem，实验与执行流程可扩展到 64rem，正文段落仍限制在 72ch 内。
+TypeScript 和 GLSL 使用同一套 Prism token 语义角色：紫色标记关键字、黄色标记函数、绿色标记字符串、橙色标记数字，注释保持较低对比；每个角色在明暗主题中使用独立色值。代码实验统一使用 `code-workbench` 外壳、工具栏色值和 Tab 指示器。WebGL Canvas 使用透明清屏，让底层背景 Token 随主题即时变化。普通内容宽度上限为 52rem，实验与执行流程可扩展到 64rem，正文段落仍限制在 72ch 内。
 
 ### Navigation
 
