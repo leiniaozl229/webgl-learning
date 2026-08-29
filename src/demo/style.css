@@ -774,7 +774,7 @@ code:not(pre code) {
 .state-explorer__timeline button:hover { background: var(--color-code-hover); color: var(--color-code-text); }
 .state-explorer__timeline button[aria-current="step"] { background: var(--color-accent-soft); color: var(--color-accent-strong); }
 .state-explorer__timeline button > span { display: grid; width: 1.7rem; height: 1.7rem; place-items: center; border: 1px solid currentColor; border-radius: 50%; font: 700 0.68rem var(--font-code); }
-.state-explorer__timeline code { overflow: hidden; color: inherit; font-size: 0.7rem; text-overflow: ellipsis; white-space: nowrap; }
+.state-explorer__timeline code { overflow: hidden; padding: 0; border-radius: 0; background: transparent; color: inherit; font-size: 0.7rem; text-overflow: ellipsis; white-space: nowrap; }
 .state-explorer__snapshot { display: grid; align-content: start; gap: var(--space-lg); padding: var(--space-xl); }
 .state-explorer__call { min-height: 8rem; padding-bottom: var(--space-lg); border-bottom: 1px solid var(--color-code-border); }
 .state-explorer__call > small { display: block; margin-bottom: var(--space-xs); color: var(--color-code-muted); font: 700 0.68rem var(--font-code); text-transform: uppercase; }
