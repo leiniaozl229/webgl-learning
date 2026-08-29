@@ -21,11 +21,11 @@
 
 当前进度：
 
-- [ ] 怎样使用 WebGL2
+- [x] 怎样使用 WebGL2
 - [x] WebGL2 基本原理
 - [x] WebGL2 如何工作
 - [x] 着色器与 GLSL
-- [ ] WebGL2 状态图
+- [x] WebGL2 状态图
 
 ## 2. WebGL2 与 WebGL1
 

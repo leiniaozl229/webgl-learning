@@ -118,7 +118,7 @@ export function ShadersAndGlslArticle() {
       <section id="next-steps" className="lesson-section next-steps lesson-pagination">
         <LessonLink lessonId="how-it-works"><ArrowLeft aria-hidden="true" /> WebGL2 如何工作</LessonLink>
         <div><h2>接下来</h2><p>下一篇会用状态图整理 Program、VAO、Buffer、Texture 和 Framebuffer 的绑定关系。</p></div>
-        <span className="next-steps__link" aria-disabled="true">WebGL2 状态图 <ArrowRight aria-hidden="true" /></span>
+        <LessonLink className="next-steps__link" lessonId="state-diagram">WebGL2 状态图 <ArrowRight aria-hidden="true" /></LessonLink>
       </section>
 
       <footer className="lesson-footer">

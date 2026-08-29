@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 
 import { LESSON_NAVIGATION_EVENT } from './components/LessonLink';
+import { GettingWebgl2Article } from './components/GettingWebgl2Article';
 import { LessonArticle } from './components/LessonArticle';
 import { HowItWorksArticle } from './components/HowItWorksArticle';
 import { ShadersAndGlslArticle } from './components/ShadersAndGlslArticle';
+import { StateDiagramArticle } from './components/StateDiagramArticle';
 import { Sidebar } from './components/Sidebar';
 import { SiteHeader } from './components/SiteHeader';
 import { TableOfContents } from './components/TableOfContents';
@@ -12,9 +14,11 @@ import { type LessonId, readLessonId, sourceByLesson, tableOfContentsByLesson } 
 type Theme = 'light' | 'dark';
 
 const lessonTitles: Record<LessonId, string> = {
+  'getting-webgl2': '怎样使用 WebGL2',
   fundamentals: 'WebGL2 的基本原理',
   'how-it-works': 'WebGL2 如何工作',
   'shaders-and-glsl': '着色器与 GLSL',
+  'state-diagram': 'WebGL2 状态图',
 };
 
 function readInitialTheme(): Theme {
@@ -111,9 +115,11 @@ export function App() {
         onClose={() => setMenuOpen(false)}
       />
       <main id="main-content" className="main-content">
+        {lessonId === 'getting-webgl2' && <GettingWebgl2Article />}
         {lessonId === 'fundamentals' && <LessonArticle />}
         {lessonId === 'how-it-works' && <HowItWorksArticle />}
         {lessonId === 'shaders-and-glsl' && <ShadersAndGlslArticle />}
+        {lessonId === 'state-diagram' && <StateDiagramArticle />}
         <TableOfContents items={tableOfContentsByLesson[lessonId]} sourceHref={sourceByLesson[lessonId]} />
       </main>
     </div>
