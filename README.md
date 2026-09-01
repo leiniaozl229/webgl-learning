@@ -1,6 +1,8 @@
 # WebGL2 Learning
 
-用于系统学习 WebGL2、GLSL ES 3.00 和图形学基础的本地教程站。工程结构参考相邻的 `liquid-glass-gl`，内容路线参考 WebGL2 Fundamentals，界面采用适合长期阅读与动手实验的文档站布局。
+用于系统学习 WebGL2、GLSL ES 3.00 和图形学基础的中文教程站。内容路线参考 WebGL2 Fundamentals，界面采用适合长期阅读与动手实验的文档站布局。
+
+在线阅读：<https://leiniaozl229.github.io/webgl-learning/>
 
 当前课程包含：
 

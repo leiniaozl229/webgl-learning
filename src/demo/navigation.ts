@@ -17,15 +17,20 @@ export interface TableOfContentsItem {
   href: string;
 }
 
+export function lessonHref(lessonId: LessonId, hash = 'lesson-title'): string {
+  const baseUrl = import.meta.env.BASE_URL || '/';
+  return `${baseUrl}?lesson=${lessonId}#${hash}`;
+}
+
 export const navigationGroups: NavigationGroup[] = [
   {
     label: '开始',
     items: [
-      { id: 'getting-webgl2', label: '怎样使用 WebGL2', href: '/?lesson=getting-webgl2#lesson-title' },
-      { id: 'fundamentals', label: 'WebGL2 基本原理', href: '/?lesson=fundamentals#lesson-title' },
-      { id: 'how-it-works', label: 'WebGL2 如何工作', href: '/?lesson=how-it-works#lesson-title' },
-      { id: 'shaders-and-glsl', label: '着色器与 GLSL', href: '/?lesson=shaders-and-glsl#lesson-title' },
-      { id: 'state-diagram', label: 'WebGL2 状态图', href: '/?lesson=state-diagram#lesson-title' },
+      { id: 'getting-webgl2', label: '怎样使用 WebGL2', href: lessonHref('getting-webgl2') },
+      { id: 'fundamentals', label: 'WebGL2 基本原理', href: lessonHref('fundamentals') },
+      { id: 'how-it-works', label: 'WebGL2 如何工作', href: lessonHref('how-it-works') },
+      { id: 'shaders-and-glsl', label: '着色器与 GLSL', href: lessonHref('shaders-and-glsl') },
+      { id: 'state-diagram', label: 'WebGL2 状态图', href: lessonHref('state-diagram') },
     ],
   },
   {

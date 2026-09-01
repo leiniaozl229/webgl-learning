@@ -1,6 +1,6 @@
 import type { ComponentProps, MouseEvent } from 'react';
 
-import type { LessonId } from '../navigation';
+import { lessonHref, type LessonId } from '../navigation';
 
 export const LESSON_NAVIGATION_EVENT = 'webgl-learning:navigate';
 
@@ -10,7 +10,7 @@ interface LessonLinkProps extends Omit<ComponentProps<'a'>, 'href'> {
 }
 
 export function LessonLink({ lessonId, hash = 'lesson-title', onClick, ...props }: LessonLinkProps) {
-  const href = `/?lesson=${lessonId}#${hash}`;
+  const href = lessonHref(lessonId, hash);
 
   function navigate(event: MouseEvent<HTMLAnchorElement>) {
     onClick?.(event);
