@@ -1,4 +1,5 @@
 import { ArrowLeft, ArrowRight, Braces, Box, Cable, Cpu, Grid3X3, Image, SlidersHorizontal } from 'lucide-react';
+import type { ReactNode } from 'react';
 
 import { CodeBlock } from './CodeBlock';
 import { LessonLink } from './LessonLink';
@@ -50,7 +51,7 @@ gl.attachShader(program, vertexShader);
 gl.attachShader(program, fragmentShader);
 gl.linkProgram(program);`;
 
-export function ShadersAndGlslArticle() {
+export function ShadersAndGlslArticle({ toc }: { toc?: ReactNode }) {
   return (
     <article className="lesson-article">
       <header className="lesson-hero">
@@ -59,6 +60,8 @@ export function ShadersAndGlslArticle() {
         <p className="lesson-lead">把着色器看成运行在 GPU 上的强类型函数：理解数据从哪里进入、怎样在两个阶段之间传递，以及 JavaScript 如何为一次绘制设置参数。</p>
         <ul className="lesson-meta" aria-label="课程信息"><li>WebGL2</li><li>GLSL ES 3.00</li><li>约 20 分钟</li></ul>
       </header>
+
+      {toc}
 
       <section className="learning-note" aria-labelledby="shader-learn-heading">
         <div className="learning-note__icon" aria-hidden="true"><Braces /></div>

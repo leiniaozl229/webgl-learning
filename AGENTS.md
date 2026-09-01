@@ -4,6 +4,8 @@
 
 这是一个面向个人学习的中文 WebGL2 教程站点。内容参考 WebGL2 Fundamentals 的知识路线，使用现代技术栈重新编写，并通过动画、状态图和可交互实验解释 JavaScript、WebGL2 API、GLSL 与 GPU 之间的关系。
 
+参考教程：[WebGL2 Fundamentals 简体中文](https://webgl2fundamentals.org/webgl/lessons/zh_cn/)。
+
 完整课程规划见 `docs/curriculum-outline.md`。
 
 ## 技术栈

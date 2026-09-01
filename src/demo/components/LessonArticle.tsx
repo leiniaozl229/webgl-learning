@@ -1,4 +1,5 @@
 import { ArrowLeft, ArrowRight, Braces, Cpu, Database, Layers3, MonitorUp, ScanLine } from 'lucide-react';
+import type { ReactNode } from 'react';
 
 import { CodeBlock } from './CodeBlock';
 import { ExecutionFlow } from './ExecutionFlow';
@@ -64,7 +65,7 @@ gl.bindVertexArray(vertexArray);
 gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 gl.drawArrays(gl.TRIANGLES, 0, 3);`;
 
-export function LessonArticle() {
+export function LessonArticle({ toc }: { toc?: ReactNode }) {
   return (
     <article className="lesson-article">
       <header className="lesson-hero">
@@ -73,6 +74,8 @@ export function LessonArticle() {
         <p className="lesson-lead">从 GPU 真正执行的两段程序出发，建立完整渲染路径：创建 Program、上传顶点、画出三角形，再把像素坐标转换成可交互矩形。</p>
         <ul className="lesson-meta" aria-label="课程信息"><li>WebGL2</li><li>GLSL ES 3.00</li><li>约 28 分钟</li></ul>
       </header>
+
+      {toc}
 
       <section className="learning-note" aria-labelledby="learn-heading">
         <div className="learning-note__icon" aria-hidden="true"><Layers3 /></div>

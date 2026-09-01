@@ -1,4 +1,5 @@
 import { ArrowRight, CheckCircle2, Code2, MonitorCog, Server, ShieldCheck } from 'lucide-react';
+import type { ReactNode } from 'react';
 
 import { CodeBlock } from './CodeBlock';
 import { LessonLink } from './LessonLink';
@@ -32,7 +33,7 @@ npm test
 npm run check:types
 npm run build`;
 
-export function GettingWebgl2Article() {
+export function GettingWebgl2Article({ toc }: { toc?: ReactNode }) {
   return (
     <article className="lesson-article">
       <header className="lesson-hero">
@@ -41,6 +42,8 @@ export function GettingWebgl2Article() {
         <p className="lesson-lead">确认浏览器能够创建 WebGL2 上下文，理解 Canvas 与上下文选项，并准备一个可以持续实验和验证的本地开发环境。</p>
         <ul className="lesson-meta" aria-label="课程信息"><li>环境准备</li><li>WebGL2 Context</li><li>约 8 分钟</li></ul>
       </header>
+
+      {toc}
 
       <section className="learning-note" aria-labelledby="getting-learn-heading">
         <div className="learning-note__icon" aria-hidden="true"><CheckCircle2 /></div>

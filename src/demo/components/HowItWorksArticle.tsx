@@ -1,4 +1,5 @@
 import { ArrowLeft, ArrowRight, Braces, Cpu, Database, GitBranch, Layers3 } from 'lucide-react';
+import type { ReactNode } from 'react';
 
 import { CodeBlock } from './CodeBlock';
 import { InterpolationSources } from './InterpolationSources';
@@ -41,7 +42,7 @@ gl.vertexAttribPointer(
   2 * Float32Array.BYTES_PER_ELEMENT,
 );`;
 
-export function HowItWorksArticle() {
+export function HowItWorksArticle({ toc }: { toc?: ReactNode }) {
   return (
     <article className="lesson-article">
       <header className="lesson-hero">
@@ -50,6 +51,8 @@ export function HowItWorksArticle() {
         <p className="lesson-lead">从一次 <code>drawArrays</code> 出发，跟踪 GPU 怎样拉取顶点数据、运行着色器，并在三角形内为每个片段插值颜色。</p>
         <ul className="lesson-meta" aria-label="课程信息"><li>WebGL2</li><li>Attributes + Varyings</li><li>约 18 分钟</li></ul>
       </header>
+
+      {toc}
 
       <section className="learning-note" aria-labelledby="how-learn-heading">
         <div className="learning-note__icon" aria-hidden="true"><GitBranch /></div>

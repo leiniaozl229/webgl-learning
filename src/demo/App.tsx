@@ -61,7 +61,7 @@ export function App() {
     document.documentElement.style.colorScheme = theme;
     document.querySelector('meta[name="theme-color"]')?.setAttribute(
       'content',
-      theme === 'dark' ? '#20232a' : '#f7f9fb',
+      theme === 'dark' ? '#23272f' : '#ffffff',
     );
     window.localStorage.setItem('webgl-learning-theme', theme);
   }, [theme]);
@@ -83,18 +83,54 @@ export function App() {
   useEffect(() => {
     if (!menuOpen || isDesktop) return;
     const previousOverflow = document.body.style.overflow;
+    const outsideElements = [
+      document.querySelector<HTMLElement>('.skip-link'),
+      document.querySelector<HTMLElement>('.site-header'),
+      document.querySelector<HTMLElement>('.main-content'),
+    ].filter((element): element is HTMLElement => element !== null);
+    const previousInert = outsideElements.map((element) => element.inert);
+    const sidebar = document.getElementById('course-sidebar');
     document.body.style.overflow = 'hidden';
+    outsideElements.forEach((element) => { element.inert = true; });
     document.querySelector<HTMLButtonElement>('.sidebar__mobile-header button')?.focus();
-    const close = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setMenuOpen(false);
+
+    const handleDialogKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMenuOpen(false);
+        return;
+      }
+      if (event.key !== 'Tab' || !sidebar) return;
+      const focusable = Array.from(sidebar.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ));
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement;
+      if (event.shiftKey && (active === first || !sidebar.contains(active))) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (active === last || !sidebar.contains(active))) {
+        event.preventDefault();
+        first.focus();
+      }
     };
-    window.addEventListener('keydown', close);
+    window.addEventListener('keydown', handleDialogKey);
     return () => {
       document.body.style.overflow = previousOverflow;
-      window.removeEventListener('keydown', close);
+      outsideElements.forEach((element, index) => { element.inert = previousInert[index]; });
+      window.removeEventListener('keydown', handleDialogKey);
       document.querySelector<HTMLButtonElement>('.mobile-menu-button')?.focus();
     };
   }, [isDesktop, menuOpen]);
+
+  const inlineTableOfContents = (
+    <TableOfContents
+      items={tableOfContentsByLesson[lessonId]}
+      sourceHref={sourceByLesson[lessonId]}
+      variant="inline"
+    />
+  );
 
   return (
     <div className={`app-shell${sidebarCollapsed ? ' app-shell--sidebar-collapsed' : ''}`}>
@@ -114,13 +150,17 @@ export function App() {
         lessonId={lessonId}
         onClose={() => setMenuOpen(false)}
       />
-      <main id="main-content" className="main-content">
-        {lessonId === 'getting-webgl2' && <GettingWebgl2Article />}
-        {lessonId === 'fundamentals' && <LessonArticle />}
-        {lessonId === 'how-it-works' && <HowItWorksArticle />}
-        {lessonId === 'shaders-and-glsl' && <ShadersAndGlslArticle />}
-        {lessonId === 'state-diagram' && <StateDiagramArticle />}
-        <TableOfContents items={tableOfContentsByLesson[lessonId]} sourceHref={sourceByLesson[lessonId]} />
+      <main id="main-content" className="main-content" tabIndex={-1}>
+        {lessonId === 'getting-webgl2' && <GettingWebgl2Article toc={inlineTableOfContents} />}
+        {lessonId === 'fundamentals' && <LessonArticle toc={inlineTableOfContents} />}
+        {lessonId === 'how-it-works' && <HowItWorksArticle toc={inlineTableOfContents} />}
+        {lessonId === 'shaders-and-glsl' && <ShadersAndGlslArticle toc={inlineTableOfContents} />}
+        {lessonId === 'state-diagram' && <StateDiagramArticle toc={inlineTableOfContents} />}
+        <TableOfContents
+          items={tableOfContentsByLesson[lessonId]}
+          sourceHref={sourceByLesson[lessonId]}
+          variant="sidebar"
+        />
       </main>
     </div>
   );

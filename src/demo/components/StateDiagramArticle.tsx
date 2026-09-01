@@ -1,4 +1,5 @@
 import { ArrowLeft, Boxes, Braces, Database, Frame, Image, Layers3 } from 'lucide-react';
+import type { ReactNode } from 'react';
 
 import { CodeBlock } from './CodeBlock';
 import { LessonLink } from './LessonLink';
@@ -26,7 +27,7 @@ gl.viewport(0, 0, targetWidth, targetHeight);
 // drawElements 读取此刻已经准备好的整组状态
 gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);`;
 
-export function StateDiagramArticle() {
+export function StateDiagramArticle({ toc }: { toc?: ReactNode }) {
   return (
     <article className="lesson-article">
       <header className="lesson-hero">
@@ -35,6 +36,8 @@ export function StateDiagramArticle() {
         <p className="lesson-lead">把一串分散的 WebGL2 调用整理成可追踪的状态：对象被绑定到哪里、哪些配置保存在 VAO 中，以及 draw call 最终读取了什么。</p>
         <ul className="lesson-meta" aria-label="课程信息"><li>WebGL2</li><li>状态机</li><li>约 16 分钟</li></ul>
       </header>
+
+      {toc}
 
       <section className="learning-note" aria-labelledby="state-learn-heading">
         <div className="learning-note__icon" aria-hidden="true"><Boxes /></div>

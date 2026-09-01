@@ -21,6 +21,8 @@ export function Sidebar({ open, collapsed, isDesktop, lessonId, onClose }: Sideb
         id="course-sidebar"
         className={`sidebar${open ? ' sidebar--open' : ''}${collapsed ? ' sidebar--collapsed' : ''}`}
         aria-label="课程导航"
+        role={!isDesktop && open ? 'dialog' : undefined}
+        aria-modal={!isDesktop && open ? true : undefined}
         aria-hidden={hidden}
         inert={hidden}
       >
@@ -28,7 +30,7 @@ export function Sidebar({ open, collapsed, isDesktop, lessonId, onClose }: Sideb
           <strong>课程目录</strong>
           <button className="icon-button" type="button" onClick={onClose} aria-label="关闭课程导航"><X aria-hidden="true" /></button>
         </div>
-        <nav>
+        <nav aria-label="课程目录">
           {navigationGroups.map((group) => (
             <Collapsible.Root className="nav-group" key={group.label} defaultOpen>
               <h2>
@@ -57,7 +59,7 @@ export function Sidebar({ open, collapsed, isDesktop, lessonId, onClose }: Sideb
         </nav>
         <div className="sidebar__footer"><span className="status-dot" aria-hidden="true" /><span>使用 WebGL2 与 GLSL ES 3.00</span></div>
       </aside>
-      {open ? <button className="nav-scrim" type="button" aria-label="关闭课程导航" onClick={onClose} /> : null}
+      {open ? <button className="nav-scrim" type="button" tabIndex={-1} aria-label="关闭课程导航" onClick={onClose} /> : null}
     </>
   );
 }
