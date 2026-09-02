@@ -30,6 +30,11 @@ const labels: Record<PresetName, string> = {
 };
 
 const presetNames: PresetName[] = ['normal', 'boxBlur', 'sharpen', 'edgeDetect', 'emboss', 'shiftDown'];
+const borderLabels: Record<BorderMode, string> = {
+  extend: '扩展（Extend）',
+  wrap: '环绕（Wrap）',
+  crop: '裁剪（Crop）',
+};
 
 function normalizationFor(kernel: readonly number[]) {
   const sum = kernel.reduce((total, value) => total + value, 0);
@@ -73,7 +78,7 @@ export function ConvolutionMatrixPlayground() {
       draw();
       const observer = new ResizeObserver(draw);
       observer.observe(canvas);
-      setStatus(`绘制完成 · Divisor ${effective.divisor.toFixed(2)} · Offset ${effective.offset}`);
+      setStatus(`绘制完成 · 除数（Divisor）${effective.divisor.toFixed(2)} · 偏移量（Offset）${effective.offset}`);
       return () => {
         observer.disconnect();
         renderer?.dispose();
@@ -113,7 +118,7 @@ export function ConvolutionMatrixPlayground() {
   return (
     <section className="convolution-matrix-lab" aria-label="卷积矩阵高级实验">
       <header>
-        <div><strong>Convolution Matrix Lab</strong><small>3×3 Kernel · Divisor · Offset · Border · Channels</small></div>
+        <div><strong>卷积矩阵实验（Convolution Matrix Lab）</strong><small>3×3 卷积核（Kernel）· 除数（Divisor）· 偏移量（Offset）· 边缘处理（Border）· 通道（Channels）</small></div>
         <button type="button" onClick={reset}><RotateCcw aria-hidden="true" /> 重置</button>
       </header>
       <div className="convolution-matrix-lab__body">
@@ -126,7 +131,7 @@ export function ConvolutionMatrixPlayground() {
           </fieldset>
 
           <fieldset>
-            <legend>3×3 Matrix</legend>
+            <legend>3×3 卷积矩阵（Matrix）</legend>
             <div className="kernel-editor">
               {kernel.map((value, index) => <label key={index}><span className="sr-only">矩阵第 {index + 1} 项</span><input type="number" step="0.25" value={value} onChange={(event) => updateKernel(index, event.target.value)} /></label>)}
             </div>
@@ -134,22 +139,22 @@ export function ConvolutionMatrixPlayground() {
 
           <fieldset className="convolution-settings">
             <legend>结果调整</legend>
-            <label><span>Divisor</span><input type="number" step="0.25" value={effective.divisor} disabled={normalize} onChange={(event) => setDivisor(Number(event.target.value))} /></label>
-            <label><span>Offset</span><input type="range" min="-255" max="255" step="1" value={effective.offset} disabled={normalize} onChange={(event) => setOffset(Number(event.target.value))} /><code>{effective.offset}</code></label>
-            <label className="convolution-checkbox"><input type="checkbox" checked={normalize} onChange={(event) => setNormalize(event.target.checked)} /><span>自动 Normalize</span></label>
+            <label><span>除数（Divisor）</span><input type="number" step="0.25" value={effective.divisor} disabled={normalize} onChange={(event) => setDivisor(Number(event.target.value))} /></label>
+            <label><span>偏移量（Offset）</span><input type="range" min="-255" max="255" step="1" value={effective.offset} disabled={normalize} onChange={(event) => setOffset(Number(event.target.value))} /><code>{effective.offset}</code></label>
+            <label className="convolution-checkbox"><input type="checkbox" checked={normalize} onChange={(event) => setNormalize(event.target.checked)} /><span>自动归一化（Normalize）</span></label>
           </fieldset>
 
           <fieldset className="convolution-settings">
-            <legend>边缘与通道</legend>
-            <label><span>Border</span><select value={border} onChange={(event) => setBorder(event.target.value as BorderMode)}><option value="extend">Extend</option><option value="wrap">Wrap</option><option value="crop">Crop</option></select></label>
-            <div className="channel-switches" aria-label="参与卷积的颜色通道">
+            <legend>边缘处理（Border）与通道（Channels）</legend>
+            <label><span>边缘处理（Border）</span><select value={border} onChange={(event) => setBorder(event.target.value as BorderMode)}><option value="extend">扩展（Extend）</option><option value="wrap">环绕（Wrap）</option><option value="crop">裁剪（Crop）</option></select></label>
+            <div className="channel-switches" aria-label="参与卷积的颜色通道（Channels）">
               {['R', 'G', 'B', 'A'].map((label, index) => <label key={label}><input type="checkbox" checked={channels[index]} onChange={() => setChannels((current) => current.map((value, itemIndex) => itemIndex === index ? !value : value))} /><span>{label}</span></label>)}
             </div>
           </fieldset>
         </div>
         <div className="convolution-matrix-lab__canvas">
           <canvas ref={canvasRef} aria-label="卷积矩阵处理结果" />
-          <span>{border.toUpperCase()} · RGBA {channels.map((value) => value ? '1' : '0').join('')}</span>
+          <span>{borderLabels[border]} · 红绿蓝透明度（RGBA）{channels.map((value) => value ? '1' : '0').join('')}</span>
         </div>
       </div>
       <footer>{status}</footer>

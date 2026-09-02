@@ -1,7 +1,6 @@
 import { ArrowLeft, ArrowRight, CheckCircle2, Cpu, Grid3X3, Images, Layers3, ScanSearch, SlidersHorizontal } from 'lucide-react';
 import type { ReactNode } from 'react';
 
-import { IMAGE_VERTEX_SHADER } from '../../core/imageProcessing';
 import { CodeBlock } from './CodeBlock';
 import { ImageProcessingPlayground } from './ImageProcessingPlayground';
 import { LessonLink } from './LessonLink';
@@ -38,6 +37,30 @@ gl.bindTexture(gl.TEXTURE_2D, texture);
 // sampler2D 保存纹理单元编号，0 对应 TEXTURE0。
 gl.uniform1i(gl.getUniformLocation(program, 'u_image'), 0);
 gl.drawArrays(gl.TRIANGLES, 0, 6);`;
+
+const textureCoordinatesCode = `// 两个三角形共有 6 个顶点，重复的角点需要重复 UV。
+const textureCoordinates = new Float32Array([
+  0, 0,  // 左下
+  1, 0,  // 右下
+  0, 1,  // 左上
+  0, 1,  // 左上
+  1, 0,  // 右下
+  1, 1,  // 右上
+]);
+
+gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, textureCoordinates, gl.STATIC_DRAW);
+gl.enableVertexAttribArray(texCoordLocation);
+gl.vertexAttribPointer(texCoordLocation, 2, gl.FLOAT, false, 0, 0);`;
+
+const textureSamplingCode = `// 顶点着色器把每个顶点的 UV 送入光栅化阶段。
+out vec2 v_texCoord;
+v_texCoord = a_texCoord;
+
+// 片段着色器收到插值后的 UV，并读取对应颜色。
+in vec2 v_texCoord;
+out vec4 outColor;
+outColor = texture(u_image, v_texCoord);`;
 
 const colorFragmentCode = `#version 300 es
 precision highp float;
@@ -177,15 +200,55 @@ function Footer({ continued = false }: { continued?: boolean }) {
 export function TextureSamplingArticle({ toc }: { toc?: ReactNode }) {
   return (
     <article className="lesson-article">
-      <header className="lesson-hero"><nav className="breadcrumb" aria-label="面包屑"><a href="#lesson-title">学习 WebGL2</a><span aria-hidden="true">/</span><span>图像处理</span></nav><h1 id="lesson-title" tabIndex={-1}>图像上传与纹理采样</h1><p className="lesson-lead">把 Canvas 生成的 RGBA 像素上传为 Texture，用 UV 坐标连接矩形顶点与图像位置，再由片段着色器逐像素采样。</p><ul className="lesson-meta" aria-label="课程信息"><li>Texture</li><li>UV</li><li>约 18 分钟</li></ul></header>
+      <header className="lesson-hero"><nav className="breadcrumb" aria-label="面包屑"><a href="#lesson-title">学习 WebGL2</a><span aria-hidden="true">/</span><span>图像处理</span></nav><h1 id="lesson-title" tabIndex={-1}>图像上传与纹理采样</h1><p className="lesson-lead">把 Canvas 生成的 RGBA 像素上传为 Texture，用 UV 坐标连接矩形顶点与图像位置，再由片段着色器逐像素采样。</p><ul className="lesson-meta" aria-label="课程信息"><li>Texture</li><li>UV</li><li>约 24 分钟</li></ul></header>
       {toc}
-      <LearningNote id="texture-learning"><ul><li>能追踪像素从 CPU 图像源进入 GPU Texture 的路径</li><li>理解 UV、Texel、Sampler 与纹理单元的职责</li><li>能解释 <code>NEAREST</code> 和 <code>LINEAR</code> 的视觉差异</li><li>能清理 Texture、Buffer、VAO 与 Program</li></ul></LearningNote>
+      <LearningNote id="texture-learning"><ul><li>能追踪像素从 CPU 图像源进入 GPU Texture 的路径</li><li>理解 UV 如何把几何位置映射到纹理位置</li><li>理解 UV 插值、Texel、Sampler 与纹理单元的职责</li><li>能解释 <code>NEAREST</code> 和 <code>LINEAR</code> 的视觉差异</li><li>能清理 Texture、Buffer、VAO 与 Program</li></ul></LearningNote>
 
       <section id="texture-data-flow" className="lesson-section"><h2>一张图像如何进入绘制流程</h2><p>图像源先存在浏览器管理的 Canvas 2D 中。<code>texImage2D</code> 把像素复制到当前绑定的 GPU Texture；绘制时，<code>sampler2D</code> 通过纹理单元访问它。片段着色器收到插值后的 UV，并用 <code>texture</code> 取回一个颜色。</p><ol className="image-data-flow" aria-label="纹理数据流"><li><span><Images aria-hidden="true" /></span><strong>Canvas 2D</strong><small>512 × 336 RGBA 像素</small></li><li><span><Cpu aria-hidden="true" /></span><strong>texImage2D</strong><small>复制到 GPU Texture</small></li><li><span><ScanSearch aria-hidden="true" /></span><strong>texture()</strong><small>UV → 颜色样本</small></li><li><span><Layers3 aria-hidden="true" /></span><strong>Canvas</strong><small>片段写入默认 Framebuffer</small></li></ol></section>
 
       <section id="upload-texture" className="lesson-section"><h2>创建并上传 Texture</h2><p>Texture 是 GPU 端的图像存储对象。先用 <code>activeTexture</code> 选择纹理单元，再把 Texture 绑定到 <code>TEXTURE_2D</code>。<code>texImage2D</code> 会读取当前绑定目标和传入的图像源。</p><CodeBlock label="texture-upload.ts">{textureUploadCode}</CodeBlock><p>示例图像宽高都可被常见 GPU 接受。环绕方式设为 <code>CLAMP_TO_EDGE</code>，超出 0–1 的 UV 会停在边缘 Texel。组件卸载时会删除所有 GPU 对象。</p></section>
 
-      <section id="uv-and-sampling" className="lesson-section"><h2>UV 把矩形位置映射到图像位置</h2><p>矩形仍由六个顶点组成。每个位置旁边再提供一组 UV：左下角是 <code>(0, 0)</code>，右上角是 <code>(1, 1)</code>。顶点着色器把 UV 写入 <code>v_texCoord</code>，光栅化阶段会为矩形内部的每个片段插值。</p><CodeBlock label="vertex.glsl" language="glsl">{IMAGE_VERTEX_SHADER}</CodeBlock></section>
+      <section id="uv-and-sampling" className="lesson-section">
+        <h2>UV 是纹理内部的二维坐标</h2>
+        <p>几何位置使用 X、Y 描述顶点最终画在哪里，UV 描述该顶点对应纹理中的哪个位置。U 沿纹理水平方向变化，V 沿纹理垂直方向变化。两组坐标各自承担一层映射职责。</p>
+        <p>UV 通常使用 0–1 的归一化范围，所以同一组数据可以映射不同分辨率的纹理。对于当前 512 × 336 纹理，<code>(0.5, 0.5)</code> 位于图像中心；换成 1024 × 672 后仍然指向中心。</p>
+        <div className="uv-map" role="img" aria-label="UV 四个角点与纹理位置的对应关系">
+          <span data-position="top-left"><code>(0, 1)</code><small>左上</small></span>
+          <span data-position="top-right"><code>(1, 1)</code><small>右上</small></span>
+          <span data-position="center"><code>(0.5, 0.5)</code><small>中心</small></span>
+          <span data-position="bottom-left"><code>(0, 0)</code><small>左下</small></span>
+          <span data-position="bottom-right"><code>(1, 0)</code><small>右下</small></span>
+          <i className="uv-map__u" aria-hidden="true">U →</i>
+          <i className="uv-map__v" aria-hidden="true">V →</i>
+        </div>
+      </section>
+
+      <section id="uv-vertex-data" className="lesson-section">
+        <h2>六个顶点需要六组 UV</h2>
+        <p>矩形由两个三角形组成，共提交六个顶点。左上和右下被两个三角形共享，因此它们的几何位置与 UV 都会在数组中各出现两次。UV 存入独立的 GPU Buffer，VAO 记录它如何连接到 <code>a_texCoord</code>。</p>
+        <CodeBlock label="texture-coordinates.ts">{textureCoordinatesCode}</CodeBlock>
+        <p>几何 Buffer 与 UV Buffer 的顶点顺序必须逐项对齐。第 N 个 <code>a_position</code> 会和第 N 个 <code>a_texCoord</code> 一起进入同一次顶点着色器调用。</p>
+      </section>
+
+      <section id="uv-interpolation" className="lesson-section">
+        <h2>GPU 为矩形内部自动插值 UV</h2>
+        <p>顶点只提供四个角上的 UV。顶点着色器把它写入 <code>v_texCoord</code> 后，光栅化阶段会根据片段在三角形中的位置生成连续数值。矩形中心附近的片段会收到接近 <code>(0.5, 0.5)</code> 的 UV。</p>
+        <CodeBlock label="UV 从顶点到片段" language="glsl">{textureSamplingCode}</CodeBlock>
+        <div className="uv-data-path" aria-label="UV 从 JavaScript 到纹理颜色的数据路径"><span><strong>Float32Array</strong><small>六组 UV</small></span><i>→</i><span><strong>a_texCoord</strong><small>逐顶点读取</small></span><i>→</i><span><strong>v_texCoord</strong><small>光栅化插值</small></span><i>→</i><span><strong>texture()</strong><small>读取 RGBA</small></span></div>
+        <p>纹理像素称为 Texel。对于宽度为 <code>width</code> 的纹理，第 i 个 Texel 中心对应 <code>U = (i + 0.5) / width</code>。当 UV 落在 Texel 之间时，纹理过滤决定选取一个颜色或混合多个颜色。</p>
+      </section>
+
+      <section id="uv-direction" className="lesson-section">
+        <h2>V 方向由 UV 数据和上传方式共同确定</h2>
+        <p>浏览器图像通常从左上角开始排列像素，当前 UV 把 <code>V = 0</code> 放在矩形底边。上传时设置 <code>UNPACK_FLIP_Y_WEBGL</code>，会沿 Y 方向翻转来源像素，让纹理顶部最终显示在矩形顶部。</p>
+        <CodeBlock label="上传时对齐 V 方向">{`gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);\ngl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);`}</CodeBlock>
+        <p>如果图片上下颠倒，可以调整上传翻转状态，也可以交换顶部和底部顶点的 V。项目应固定一种约定，后续模型和图片都沿用它。</p>
+      </section>
+
+      <section id="uv-outside-range" className="lesson-section">
+        <h2>超出 0–1 的 UV 由环绕模式处理</h2>
+        <p>UV 可以小于 0 或大于 1。当前纹理使用 <code>CLAMP_TO_EDGE</code>，超出范围的坐标会停在最近边缘。<code>REPEAT</code> 会让纹理重复平铺，<code>MIRRORED_REPEAT</code> 会交替镜像。环绕模式分别通过 <code>TEXTURE_WRAP_S</code> 和 <code>TEXTURE_WRAP_T</code> 控制 U、V 两个方向。</p>
+      </section>
 
       <section id="sampling-lab" className="lesson-section lesson-section--wide"><h2>观察纹理过滤</h2><p>缩放图像时，一个屏幕像素通常落在多个 Texel 之间。<code>NEAREST</code> 选取最近的 Texel，边缘会呈现清晰色块；<code>LINEAR</code> 混合相邻 Texel，缩放结果更平滑。</p><ImageProcessingPlayground variant="sampling" /></section>
 
