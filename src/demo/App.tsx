@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { LESSON_NAVIGATION_EVENT } from './components/LessonLink';
+import { ConvolutionMatrixArticle } from './components/ConvolutionMatrixArticle';
 import { GettingWebgl2Article } from './components/GettingWebgl2Article';
 import {
   ConvolutionKernelsArticle,
@@ -36,6 +37,7 @@ const lessonTitles: Record<LessonId, string> = {
   'texture-sampling': '图像上传与纹理采样',
   'image-processing-basics': '图像处理基础',
   'convolution-kernels': '卷积核',
+  'convolution-matrix-guide': '卷积矩阵详解',
   'image-effects': '模糊、锐化与边缘检测',
   'multi-pass-image-processing': '多阶段图像处理',
   'translation-2d': '二维平移',
@@ -183,6 +185,7 @@ export function App() {
         {lessonId === 'texture-sampling' && <TextureSamplingArticle toc={inlineTableOfContents} />}
         {lessonId === 'image-processing-basics' && <ImageProcessingBasicsArticle toc={inlineTableOfContents} />}
         {lessonId === 'convolution-kernels' && <ConvolutionKernelsArticle toc={inlineTableOfContents} />}
+        {lessonId === 'convolution-matrix-guide' && <ConvolutionMatrixArticle toc={inlineTableOfContents} />}
         {lessonId === 'image-effects' && <ImageEffectsArticle toc={inlineTableOfContents} />}
         {lessonId === 'multi-pass-image-processing' && <MultiPassImageProcessingArticle toc={inlineTableOfContents} />}
         {lessonId === 'translation-2d' && <Translation2DArticle toc={inlineTableOfContents} />}

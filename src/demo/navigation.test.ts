@@ -22,6 +22,7 @@ describe('parseLessonId', () => {
     'texture-sampling',
     'image-processing-basics',
     'convolution-kernels',
+    'convolution-matrix-guide',
     'image-effects',
     'multi-pass-image-processing',
   ] as const)('selects the image-processing lesson %s', (lesson) => {

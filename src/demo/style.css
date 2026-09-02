@@ -882,6 +882,50 @@ code:not(pre code) {
 .resource-checklist li div { display: grid; gap: 0.15rem; }
 .resource-checklist span { color: var(--color-text-soft); }
 
+.convolution-overview { display: grid; gap: var(--space-xs); margin-top: var(--space-lg); }
+.convolution-overview span { display: grid; min-height: 7rem; place-content: center; justify-items: center; gap: var(--space-xs); padding: var(--space-md); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); text-align: center; }
+.convolution-overview span > svg { width: 1.3rem; color: var(--color-accent-strong); }
+.convolution-overview span small { font-size: 0.72rem; }
+.convolution-overview i { align-self: center; color: var(--color-accent-strong); font: 700 0.9rem var(--font-code); font-style: normal; text-align: center; }
+.convolution-option-cards { display: grid; gap: var(--space-sm); margin-top: var(--space-lg); }
+.convolution-option-cards article { padding: var(--space-lg); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); }
+.convolution-option-cards article > svg { width: 1.2rem; margin-bottom: var(--space-sm); color: var(--color-accent-strong); }
+.convolution-option-cards h3 { margin: 0 0 var(--space-xs); font-size: 0.95rem; }
+.convolution-option-cards p { font-size: 0.86rem; }
+.border-mode-list { display: grid; gap: 1px; overflow: hidden; margin: var(--space-lg) 0; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-border); }
+.border-mode-list div { padding: var(--space-lg); background: var(--color-surface); }
+.border-mode-list dt { color: var(--color-text); font: 700 0.86rem var(--font-code); }
+.border-mode-list dd { margin: var(--space-xs) 0 0; color: var(--color-text-soft); font-size: 0.86rem; }
+
+.convolution-matrix-lab { overflow: hidden; margin-top: var(--space-lg); border: 1px solid var(--color-border-strong); border-radius: var(--radius-lg); background: var(--color-surface-code); color: var(--color-code-text); }
+.convolution-matrix-lab > header { display: flex; min-height: 4rem; align-items: center; justify-content: space-between; gap: var(--space-md); padding: var(--space-sm) var(--space-md); border-bottom: 1px solid var(--color-code-border); background: var(--color-code-toolbar); }
+.convolution-matrix-lab > header > div { display: grid; min-width: 0; gap: 0.1rem; }
+.convolution-matrix-lab > header strong { color: var(--color-code-text); font-size: 0.88rem; }
+.convolution-matrix-lab > header small { overflow: hidden; color: var(--color-code-muted); font-size: 0.7rem; text-overflow: ellipsis; white-space: nowrap; }
+.convolution-matrix-lab button { display: inline-flex; min-height: 2.6rem; align-items: center; justify-content: center; gap: 0.35rem; padding: 0 var(--space-sm); border: 1px solid transparent; border-radius: var(--radius-sm); background: transparent; color: var(--color-code-muted); cursor: pointer; font-size: 0.74rem; font-weight: 700; }
+.convolution-matrix-lab button:hover { background: var(--color-code-hover); color: var(--color-code-text); }
+.convolution-matrix-lab button svg { width: 1rem; }
+.convolution-matrix-lab__body { display: grid; min-height: 36rem; }
+.convolution-matrix-lab__controls { display: grid; align-content: start; gap: var(--space-lg); max-height: 45rem; overflow-y: auto; padding: var(--space-lg); border-bottom: 1px solid var(--color-code-border); }
+.convolution-matrix-lab fieldset { min-width: 0; padding: 0; border: 0; margin: 0; }
+.convolution-matrix-lab legend { margin-bottom: var(--space-xs); color: var(--color-code-muted); font: 700 0.66rem var(--font-code); letter-spacing: 0.08em; text-transform: uppercase; }
+.convolution-presets { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-xs); }
+.convolution-presets button { border-color: var(--color-code-border); }
+.convolution-presets button[aria-pressed="true"] { border-color: var(--color-accent); background: var(--color-accent-soft); color: var(--color-accent-strong); }
+.convolution-settings > label { display: grid; min-height: 3.4rem; grid-template-columns: minmax(5rem, 0.7fr) minmax(0, 1.3fr) auto; align-items: center; gap: var(--space-xs); border-top: 1px solid var(--color-code-border); color: var(--color-code-text); font-size: 0.76rem; }
+.convolution-settings > label:last-of-type { border-bottom: 1px solid var(--color-code-border); }
+.convolution-settings input[type="number"], .convolution-settings select { width: 100%; min-height: 2.4rem; padding: 0 var(--space-xs); border: 1px solid var(--color-code-border); border-radius: var(--radius-sm); background: var(--color-code-toolbar); color: var(--color-code-text); }
+.convolution-settings input[type="range"] { width: 100%; accent-color: var(--color-accent); }
+.convolution-settings code { min-width: 2.7rem; color: var(--color-accent-strong); font-size: 0.7rem; text-align: right; }
+.convolution-settings .convolution-checkbox { display: flex; gap: var(--space-sm); }
+.convolution-settings input[type="checkbox"], .channel-switches input { width: 1.05rem; height: 1.05rem; accent-color: var(--color-accent); }
+.channel-switches { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-xs); margin-top: var(--space-sm); }
+.channel-switches label { display: flex; min-height: 2.7rem; align-items: center; justify-content: center; gap: 0.3rem; border: 1px solid var(--color-code-border); border-radius: var(--radius-sm); color: var(--color-code-text); font: 700 0.7rem var(--font-code); cursor: pointer; }
+.convolution-matrix-lab__canvas { position: relative; min-height: 26rem; overflow: hidden; background: var(--color-code-canvas); }
+.convolution-matrix-lab__canvas canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+.convolution-matrix-lab__canvas > span { position: absolute; right: var(--space-sm); bottom: var(--space-sm); padding: 0.16rem 0.4rem; border-radius: 0.3rem; background: oklch(0.1 0.02 245 / 0.72); color: oklch(0.93 0 0); font: 400 0.65rem var(--font-code); }
+.convolution-matrix-lab > footer { min-height: 2.75rem; padding: var(--space-sm) var(--space-md); border-top: 1px solid var(--color-code-border); background: var(--color-code-toolbar); color: var(--color-code-success); font: 400 0.72rem var(--font-code); }
+
 .transform-lab { overflow: hidden; margin-top: var(--space-lg); border: 1px solid var(--color-border-strong); border-radius: var(--radius-lg); background: var(--color-surface-code); color: var(--color-code-text); }
 .transform-lab > header { display: flex; min-height: 4rem; align-items: center; justify-content: space-between; gap: var(--space-md); padding: var(--space-sm) var(--space-md); border-bottom: 1px solid var(--color-code-border); background: var(--color-code-toolbar); }
 .transform-lab > header > div { display: grid; min-width: 0; gap: 0.1rem; }
@@ -1103,6 +1147,11 @@ code:not(pre code) {
   .pixel-equation { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr); }
   .effect-families { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .pass-pipeline { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; }
+  .convolution-overview { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; }
+  .convolution-option-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .border-mode-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .convolution-matrix-lab__body { grid-template-columns: minmax(19rem, 0.9fr) minmax(0, 1.1fr); }
+  .convolution-matrix-lab__controls { border-right: 1px solid var(--color-code-border); border-bottom: 0; }
   .transform-lab__body { grid-template-columns: minmax(17rem, 0.8fr) minmax(0, 1.2fr); }
   .transform-lab__controls { border-right: 1px solid var(--color-code-border); border-bottom: 0; }
   .matrix-readout { grid-template-columns: minmax(13rem, 0.6fr) minmax(0, 1.4fr); align-items: center; }
@@ -1155,6 +1204,7 @@ code:not(pre code) {
   .playground__header > div:first-child { padding-top: 0.65rem; }
   .playground__actions button { width: 2.75rem; padding: 0; font-size: 0; }
   .transform-lab > header > button { flex: 0 0 2.75rem; width: 2.75rem; padding: 0; font-size: 0; }
+  .convolution-matrix-lab > header > button { flex: 0 0 2.75rem; width: 2.75rem; padding: 0; font-size: 0; }
   .execution-flow__header { align-items: flex-start; }
   .execution-flow__controls .execution-flow__play span { display: none; }
 }

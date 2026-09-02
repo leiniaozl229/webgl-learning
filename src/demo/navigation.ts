@@ -7,6 +7,7 @@ export type LessonId =
   | 'texture-sampling'
   | 'image-processing-basics'
   | 'convolution-kernels'
+  | 'convolution-matrix-guide'
   | 'image-effects'
   | 'multi-pass-image-processing'
   | 'translation-2d'
@@ -54,6 +55,7 @@ export const navigationGroups: NavigationGroup[] = [
       { id: 'texture-sampling', label: '图像上传与纹理采样', href: lessonHref('texture-sampling') },
       { id: 'image-processing-basics', label: '图像处理基础', href: lessonHref('image-processing-basics') },
       { id: 'convolution-kernels', label: '卷积核', href: lessonHref('convolution-kernels') },
+      { id: 'convolution-matrix-guide', label: '卷积矩阵详解', href: lessonHref('convolution-matrix-guide') },
       { id: 'image-effects', label: '模糊、锐化与边缘检测', href: lessonHref('image-effects') },
       { id: 'multi-pass-image-processing', label: '多阶段图像处理', href: lessonHref('multi-pass-image-processing') },
       { id: 'translation-2d', label: '二维平移', href: lessonHref('translation-2d') },
@@ -137,6 +139,17 @@ export const tableOfContentsByLesson: Record<LessonId, TableOfContentsItem[]> = 
     { label: '权重与亮度', href: '#kernel-weight' },
     { label: '继续学习', href: '#next-steps' },
   ],
+  'convolution-matrix-guide': [
+    { label: '图像与 Kernel', href: '#image-and-kernel' },
+    { label: '单像素计算示例', href: '#one-pixel-example' },
+    { label: 'Divisor 与 Offset', href: '#divisor-and-offset' },
+    { label: 'Border 模式', href: '#border-modes' },
+    { label: 'Channels 与 Alpha', href: '#channels-and-alpha' },
+    { label: 'Normalize', href: '#normalise' },
+    { label: '完整实验', href: '#convolution-matrix-lab' },
+    { label: 'WebGL2 映射', href: '#webgl-mapping' },
+    { label: '继续学习', href: '#next-steps' },
+  ],
   'image-effects': [
     { label: '四类效果', href: '#effect-families' },
     { label: '预设数值', href: '#preset-values' },
@@ -200,6 +213,7 @@ export const sourceByLesson: Record<LessonId, string> = {
   'texture-sampling': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-image-processing.html',
   'image-processing-basics': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-image-processing.html',
   'convolution-kernels': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-image-processing.html',
+  'convolution-matrix-guide': 'https://docs.gimp.org/2.6/en/plug-in-convmatrix.html',
   'image-effects': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-image-processing.html',
   'multi-pass-image-processing': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-image-processing-continued.html',
   'translation-2d': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-2d-translation.html',
@@ -219,6 +233,7 @@ export function parseLessonId(search: string): LessonId {
     lesson === 'texture-sampling' ||
     lesson === 'image-processing-basics' ||
     lesson === 'convolution-kernels' ||
+    lesson === 'convolution-matrix-guide' ||
     lesson === 'image-effects' ||
     lesson === 'multi-pass-image-processing' ||
     lesson === 'translation-2d' ||

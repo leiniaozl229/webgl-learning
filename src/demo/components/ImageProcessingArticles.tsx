@@ -233,7 +233,7 @@ export function ConvolutionKernelsArticle({ toc }: { toc?: ReactNode }) {
 
       <section id="kernel-weight" className="lesson-section"><h2>权重决定整体亮度</h2><p>均值模糊的九项都为 1，除以 9 后平均亮度保持稳定。高斯模糊权重和为 16。锐化核权重和为 1，因此无需额外缩放。边缘检测核的权重和为 0，平坦区域相互抵消，只留下颜色发生变化的位置。</p></section>
 
-      <section id="next-steps" className="lesson-section next-steps lesson-pagination"><LessonLink lessonId="image-processing-basics"><ArrowLeft aria-hidden="true" /> 图像处理基础</LessonLink><div><h2>接下来</h2><p>卷积的计算框架已经固定。下一页比较几组经典权重，建立视觉结果与数值结构之间的联系。</p></div><LessonLink className="next-steps__link" lessonId="image-effects">模糊、锐化与边缘检测 <ArrowRight aria-hidden="true" /></LessonLink></section>
+      <section id="next-steps" className="lesson-section next-steps lesson-pagination"><LessonLink lessonId="image-processing-basics"><ArrowLeft aria-hidden="true" /> 图像处理基础</LessonLink><div><h2>接下来</h2><p>卷积的计算框架已经固定。下一页引入 Divisor、Offset、Border、Channels 与 Normalize，完整拆解卷积矩阵参数。</p></div><LessonLink className="next-steps__link" lessonId="convolution-matrix-guide">卷积矩阵详解 <ArrowRight aria-hidden="true" /></LessonLink></section>
       <Footer />
     </article>
   );
@@ -254,7 +254,7 @@ export function ImageEffectsArticle({ toc }: { toc?: ReactNode }) {
 
       <section id="texture-edges" className="lesson-section"><h2>图像边缘也需要采样规则</h2><p>靠近四条边时，3×3 邻域会包含范围外的 UV。当前 Texture 使用 <code>CLAMP_TO_EDGE</code>，范围外采样会重复最靠近的边缘 Texel，避免从另一侧绕回或引入默认颜色。</p></section>
 
-      <section id="next-steps" className="lesson-section next-steps lesson-pagination"><LessonLink lessonId="convolution-kernels"><ArrowLeft aria-hidden="true" /> 卷积核</LessonLink><div><h2>接下来</h2><p>单次绘制已经能应用一种卷积效果。下一页加入 Framebuffer 与两张中间纹理，把多个效果串成管线。</p></div><LessonLink className="next-steps__link" lessonId="multi-pass-image-processing">多阶段图像处理 <ArrowRight aria-hidden="true" /></LessonLink></section>
+      <section id="next-steps" className="lesson-section next-steps lesson-pagination"><LessonLink lessonId="convolution-matrix-guide"><ArrowLeft aria-hidden="true" /> 卷积矩阵详解</LessonLink><div><h2>接下来</h2><p>单次绘制已经能应用一种卷积效果。下一页加入 Framebuffer 与两张中间纹理，把多个效果串成管线。</p></div><LessonLink className="next-steps__link" lessonId="multi-pass-image-processing">多阶段图像处理 <ArrowRight aria-hidden="true" /></LessonLink></section>
       <Footer />
     </article>
   );

@@ -70,7 +70,10 @@ precision highp float;
 
 uniform sampler2D u_image;
 uniform float u_kernel[9];
-uniform float u_kernelWeight;
+uniform float u_divisor;
+uniform float u_offset;
+uniform vec4 u_channelMask;
+uniform int u_borderMode;
 uniform float u_brightness;
 uniform float u_grayscale;
 
@@ -79,6 +82,16 @@ out vec4 outColor;
 
 void main() {
   vec2 onePixel = 1.0 / vec2(textureSize(u_image, 0));
+  vec4 centerSample = texture(u_image, v_texCoord);
+
+  if (u_borderMode == 2 && (
+    v_texCoord.x < onePixel.x || v_texCoord.x > 1.0 - onePixel.x ||
+    v_texCoord.y < onePixel.y || v_texCoord.y > 1.0 - onePixel.y
+  )) {
+    outColor = centerSample;
+    return;
+  }
+
   vec4 colorSum =
       texture(u_image, v_texCoord + onePixel * vec2(-1, -1)) * u_kernel[0] +
       texture(u_image, v_texCoord + onePixel * vec2( 0, -1)) * u_kernel[1] +
@@ -90,10 +103,12 @@ void main() {
       texture(u_image, v_texCoord + onePixel * vec2( 0,  1)) * u_kernel[7] +
       texture(u_image, v_texCoord + onePixel * vec2( 1,  1)) * u_kernel[8];
 
-  vec3 color = colorSum.rgb / u_kernelWeight + u_brightness;
+  vec4 convolved = colorSum / u_divisor + vec4(u_offset);
+  vec4 selected = mix(centerSample, convolved, u_channelMask);
+  vec3 color = selected.rgb + u_brightness;
   float luminance = dot(color, vec3(0.2126, 0.7152, 0.0722));
   color = mix(color, vec3(luminance), u_grayscale);
-  outColor = vec4(color, colorSum.a);
+  outColor = vec4(color, selected.a);
 }`;
 
 export interface ImageProcessingOptions {
@@ -101,6 +116,10 @@ export interface ImageProcessingOptions {
   kernels: readonly (readonly number[])[];
   brightness: number;
   grayscale: number;
+  divisor?: number;
+  offset?: number;
+  channelMask?: readonly [number, number, number, number];
+  border?: 'extend' | 'wrap' | 'crop';
 }
 
 export interface ImageProcessingRenderer {
@@ -226,23 +245,44 @@ export function createImageProcessingRenderer(canvas: HTMLCanvasElement): ImageP
 
   const imageLocation = requireUniform(gl, program, 'u_image');
   const kernelLocation = requireUniform(gl, program, 'u_kernel[0]');
-  const kernelWeightLocation = requireUniform(gl, program, 'u_kernelWeight');
+  const divisorLocation = requireUniform(gl, program, 'u_divisor');
+  const offsetLocation = requireUniform(gl, program, 'u_offset');
+  const channelMaskLocation = requireUniform(gl, program, 'u_channelMask');
+  const borderModeLocation = requireUniform(gl, program, 'u_borderMode');
   const brightnessLocation = requireUniform(gl, program, 'u_brightness');
   const grayscaleLocation = requireUniform(gl, program, 'u_grayscale');
 
-  function configureTexture(texture: WebGLTexture, filter: ImageProcessingOptions['filter']) {
+  function configureTexture(texture: WebGLTexture, filter: ImageProcessingOptions['filter'], border: ImageProcessingOptions['border']) {
     const glFilter = filter === 'nearest' ? gl.NEAREST : gl.LINEAR;
+    const glWrap = border === 'wrap' ? gl.REPEAT : gl.CLAMP_TO_EDGE;
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, glFilter);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, glFilter);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, glWrap);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, glWrap);
   }
 
-  function drawPass(texture: WebGLTexture, framebuffer: WebGLFramebuffer | null, kernel: readonly number[], width: number, height: number, brightness = 0, grayscale = 0) {
+  function drawPass(
+    texture: WebGLTexture,
+    framebuffer: WebGLFramebuffer | null,
+    kernel: readonly number[],
+    width: number,
+    height: number,
+    brightness = 0,
+    grayscale = 0,
+    divisor = computeKernelWeight(kernel),
+    offset = 0,
+    channelMask: readonly [number, number, number, number] = [1, 1, 1, 0],
+    borderMode = 0,
+  ) {
     gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
     gl.viewport(0, 0, width, height);
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.uniform1fv(kernelLocation, kernel);
-    gl.uniform1f(kernelWeightLocation, computeKernelWeight(kernel));
+    gl.uniform1f(divisorLocation, Math.abs(divisor) < Number.EPSILON ? 1 : divisor);
+    gl.uniform1f(offsetLocation, offset);
+    gl.uniform4fv(channelMaskLocation, channelMask);
+    gl.uniform1i(borderModeLocation, borderMode);
     gl.uniform1f(brightnessLocation, brightness);
     gl.uniform1f(grayscaleLocation, grayscale);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
@@ -251,7 +291,7 @@ export function createImageProcessingRenderer(canvas: HTMLCanvasElement): ImageP
   return {
     draw(options) {
       resizeCanvasToDisplaySize(canvas);
-      configureTexture(sourceTexture, options.filter);
+      configureTexture(sourceTexture, options.filter, options.border);
       gl.useProgram(program);
       gl.bindVertexArray(vertexArray);
       gl.activeTexture(gl.TEXTURE0);
@@ -260,7 +300,19 @@ export function createImageProcessingRenderer(canvas: HTMLCanvasElement): ImageP
       let inputTexture = sourceTexture;
       options.kernels.forEach((kernel, index) => {
         const outputIndex = index % 2;
-        drawPass(inputTexture, framebuffers[outputIndex], kernel, sourceWidth, sourceHeight);
+        drawPass(
+          inputTexture,
+          framebuffers[outputIndex],
+          kernel,
+          sourceWidth,
+          sourceHeight,
+          0,
+          0,
+          options.divisor ?? computeKernelWeight(kernel),
+          options.offset ?? 0,
+          options.channelMask ?? [1, 1, 1, 0],
+          options.border === 'crop' ? 2 : 0,
+        );
         inputTexture = pingTextures[outputIndex];
       });
 
