@@ -1,4 +1,19 @@
-export type LessonId = 'getting-webgl2' | 'fundamentals' | 'how-it-works' | 'shaders-and-glsl' | 'state-diagram';
+export type LessonId =
+  | 'getting-webgl2'
+  | 'fundamentals'
+  | 'how-it-works'
+  | 'shaders-and-glsl'
+  | 'state-diagram'
+  | 'texture-sampling'
+  | 'image-processing-basics'
+  | 'convolution-kernels'
+  | 'image-effects'
+  | 'multi-pass-image-processing'
+  | 'translation-2d'
+  | 'rotation-2d'
+  | 'scale-2d'
+  | 'matrices-2d'
+  | 'unified-2d-transforms';
 
 export interface NavigationItem {
   id?: LessonId;
@@ -35,7 +50,18 @@ export const navigationGroups: NavigationGroup[] = [
   },
   {
     label: '二维',
-    items: [{ label: '平移' }, { label: '旋转' }, { label: '缩放与矩阵' }],
+    items: [
+      { id: 'texture-sampling', label: '图像上传与纹理采样', href: lessonHref('texture-sampling') },
+      { id: 'image-processing-basics', label: '图像处理基础', href: lessonHref('image-processing-basics') },
+      { id: 'convolution-kernels', label: '卷积核', href: lessonHref('convolution-kernels') },
+      { id: 'image-effects', label: '模糊、锐化与边缘检测', href: lessonHref('image-effects') },
+      { id: 'multi-pass-image-processing', label: '多阶段图像处理', href: lessonHref('multi-pass-image-processing') },
+      { id: 'translation-2d', label: '二维平移', href: lessonHref('translation-2d') },
+      { id: 'rotation-2d', label: '二维旋转', href: lessonHref('rotation-2d') },
+      { id: 'scale-2d', label: '二维缩放', href: lessonHref('scale-2d') },
+      { id: 'matrices-2d', label: '二维矩阵', href: lessonHref('matrices-2d') },
+      { id: 'unified-2d-transforms', label: '统一表达二维变换', href: lessonHref('unified-2d-transforms') },
+    ],
   },
   {
     label: '三维',
@@ -89,6 +115,80 @@ export const tableOfContentsByLesson: Record<LessonId, TableOfContentsItem[]> = 
     { label: 'draw call 读取什么', href: '#draw-snapshot' },
     { label: '继续学习', href: '#next-steps' },
   ],
+  'texture-sampling': [
+    { label: '纹理数据流', href: '#texture-data-flow' },
+    { label: '创建并上传 Texture', href: '#upload-texture' },
+    { label: 'UV 与采样', href: '#uv-and-sampling' },
+    { label: '纹理过滤实验', href: '#sampling-lab' },
+    { label: 'Sampler 与纹理单元', href: '#sampler-binding' },
+    { label: '继续学习', href: '#next-steps' },
+  ],
+  'image-processing-basics': [
+    { label: '像素函数', href: '#pixel-function' },
+    { label: '颜色运算', href: '#color-operation' },
+    { label: '颜色实验', href: '#color-lab' },
+    { label: '重新绘制边界', href: '#redraw-boundary' },
+    { label: '继续学习', href: '#next-steps' },
+  ],
+  'convolution-kernels': [
+    { label: '3×3 采样邻域', href: '#neighborhood' },
+    { label: '加权求和', href: '#weighted-sum' },
+    { label: '卷积核实验', href: '#kernel-lab' },
+    { label: '权重与亮度', href: '#kernel-weight' },
+    { label: '继续学习', href: '#next-steps' },
+  ],
+  'image-effects': [
+    { label: '四类效果', href: '#effect-families' },
+    { label: '预设数值', href: '#preset-values' },
+    { label: '效果实验', href: '#effects-lab' },
+    { label: '纹理边缘', href: '#texture-edges' },
+    { label: '继续学习', href: '#next-steps' },
+  ],
+  'multi-pass-image-processing': [
+    { label: '为何需要多个 Pass', href: '#why-multipass' },
+    { label: 'Framebuffer 目标', href: '#framebuffer-target' },
+    { label: 'Ping-Pong 纹理', href: '#ping-pong' },
+    { label: '多阶段实验', href: '#pipeline-lab' },
+    { label: '切换目标状态', href: '#target-switch' },
+    { label: '本章完成', href: '#next-steps' },
+  ],
+  'translation-2d': [
+    { label: '局部几何', href: '#local-geometry' },
+    { label: '平移 Uniform', href: '#translation-uniform' },
+    { label: '平移实验', href: '#translation-lab' },
+    { label: '重新绘制', href: '#translation-redraw' },
+    { label: '继续学习', href: '#next-steps' },
+  ],
+  'rotation-2d': [
+    { label: '单位圆', href: '#unit-circle' },
+    { label: '角度与弧度', href: '#radians' },
+    { label: '旋转公式', href: '#rotation-formula' },
+    { label: '旋转实验', href: '#rotation-lab' },
+    { label: '继续学习', href: '#next-steps' },
+  ],
+  'scale-2d': [
+    { label: '缩放与距离', href: '#scale-distance' },
+    { label: '变换顺序', href: '#scale-order' },
+    { label: '缩放实验', href: '#scale-lab' },
+    { label: '负缩放', href: '#negative-scale' },
+    { label: '继续学习', href: '#next-steps' },
+  ],
+  'matrices-2d': [
+    { label: '齐次坐标', href: '#homogeneous-coordinate' },
+    { label: '变换矩阵', href: '#matrix-factories' },
+    { label: '投影矩阵', href: '#projection-matrix' },
+    { label: '矩阵 Shader', href: '#matrix-shader' },
+    { label: '矩阵实验', href: '#matrix-lab' },
+    { label: '继续学习', href: '#next-steps' },
+  ],
+  'unified-2d-transforms': [
+    { label: '组合矩阵', href: '#composition' },
+    { label: 'CPU 端组合', href: '#cpu-composition' },
+    { label: '顺序影响结果', href: '#order-matters' },
+    { label: '顺序实验', href: '#order-lab' },
+    { label: '完整数据流', href: '#complete-flow' },
+    { label: '二维章节完成', href: '#next-steps' },
+  ],
 };
 
 export const sourceByLesson: Record<LessonId, string> = {
@@ -97,6 +197,16 @@ export const sourceByLesson: Record<LessonId, string> = {
   'how-it-works': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-how-it-works.html',
   'shaders-and-glsl': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-shaders-and-glsl.html',
   'state-diagram': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-state-diagram.html',
+  'texture-sampling': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-image-processing.html',
+  'image-processing-basics': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-image-processing.html',
+  'convolution-kernels': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-image-processing.html',
+  'image-effects': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-image-processing.html',
+  'multi-pass-image-processing': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-image-processing-continued.html',
+  'translation-2d': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-2d-translation.html',
+  'rotation-2d': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-2d-rotation.html',
+  'scale-2d': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-2d-scale.html',
+  'matrices-2d': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-2d-matrices.html',
+  'unified-2d-transforms': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-2d-matrices.html',
 };
 
 export function parseLessonId(search: string): LessonId {
@@ -105,7 +215,17 @@ export function parseLessonId(search: string): LessonId {
     lesson === 'getting-webgl2' ||
     lesson === 'how-it-works' ||
     lesson === 'shaders-and-glsl' ||
-    lesson === 'state-diagram'
+    lesson === 'state-diagram' ||
+    lesson === 'texture-sampling' ||
+    lesson === 'image-processing-basics' ||
+    lesson === 'convolution-kernels' ||
+    lesson === 'image-effects' ||
+    lesson === 'multi-pass-image-processing' ||
+    lesson === 'translation-2d' ||
+    lesson === 'rotation-2d' ||
+    lesson === 'scale-2d' ||
+    lesson === 'matrices-2d' ||
+    lesson === 'unified-2d-transforms'
   ) return lesson;
   return 'fundamentals';
 }

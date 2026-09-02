@@ -2,6 +2,13 @@ import { useEffect, useState } from 'react';
 
 import { LESSON_NAVIGATION_EVENT } from './components/LessonLink';
 import { GettingWebgl2Article } from './components/GettingWebgl2Article';
+import {
+  ConvolutionKernelsArticle,
+  ImageEffectsArticle,
+  ImageProcessingBasicsArticle,
+  MultiPassImageProcessingArticle,
+  TextureSamplingArticle,
+} from './components/ImageProcessingArticles';
 import { LessonArticle } from './components/LessonArticle';
 import { HowItWorksArticle } from './components/HowItWorksArticle';
 import { ShadersAndGlslArticle } from './components/ShadersAndGlslArticle';
@@ -9,6 +16,13 @@ import { StateDiagramArticle } from './components/StateDiagramArticle';
 import { Sidebar } from './components/Sidebar';
 import { SiteHeader } from './components/SiteHeader';
 import { TableOfContents } from './components/TableOfContents';
+import {
+  Matrices2DArticle,
+  Rotation2DArticle,
+  Scale2DArticle,
+  Translation2DArticle,
+  Unified2DTransformsArticle,
+} from './components/Transform2DArticles';
 import { type LessonId, readLessonId, sourceByLesson, tableOfContentsByLesson } from './navigation';
 
 type Theme = 'light' | 'dark';
@@ -19,6 +33,16 @@ const lessonTitles: Record<LessonId, string> = {
   'how-it-works': 'WebGL2 如何工作',
   'shaders-and-glsl': '着色器与 GLSL',
   'state-diagram': 'WebGL2 状态图',
+  'texture-sampling': '图像上传与纹理采样',
+  'image-processing-basics': '图像处理基础',
+  'convolution-kernels': '卷积核',
+  'image-effects': '模糊、锐化与边缘检测',
+  'multi-pass-image-processing': '多阶段图像处理',
+  'translation-2d': '二维平移',
+  'rotation-2d': '二维旋转',
+  'scale-2d': '二维缩放',
+  'matrices-2d': '二维矩阵',
+  'unified-2d-transforms': '使用矩阵统一表达二维变换',
 };
 
 function readInitialTheme(): Theme {
@@ -156,6 +180,16 @@ export function App() {
         {lessonId === 'how-it-works' && <HowItWorksArticle toc={inlineTableOfContents} />}
         {lessonId === 'shaders-and-glsl' && <ShadersAndGlslArticle toc={inlineTableOfContents} />}
         {lessonId === 'state-diagram' && <StateDiagramArticle toc={inlineTableOfContents} />}
+        {lessonId === 'texture-sampling' && <TextureSamplingArticle toc={inlineTableOfContents} />}
+        {lessonId === 'image-processing-basics' && <ImageProcessingBasicsArticle toc={inlineTableOfContents} />}
+        {lessonId === 'convolution-kernels' && <ConvolutionKernelsArticle toc={inlineTableOfContents} />}
+        {lessonId === 'image-effects' && <ImageEffectsArticle toc={inlineTableOfContents} />}
+        {lessonId === 'multi-pass-image-processing' && <MultiPassImageProcessingArticle toc={inlineTableOfContents} />}
+        {lessonId === 'translation-2d' && <Translation2DArticle toc={inlineTableOfContents} />}
+        {lessonId === 'rotation-2d' && <Rotation2DArticle toc={inlineTableOfContents} />}
+        {lessonId === 'scale-2d' && <Scale2DArticle toc={inlineTableOfContents} />}
+        {lessonId === 'matrices-2d' && <Matrices2DArticle toc={inlineTableOfContents} />}
+        {lessonId === 'unified-2d-transforms' && <Unified2DTransformsArticle toc={inlineTableOfContents} />}
         <TableOfContents
           items={tableOfContentsByLesson[lessonId]}
           sourceHref={sourceByLesson[lessonId]}

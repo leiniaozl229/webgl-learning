@@ -18,6 +18,26 @@ describe('parseLessonId', () => {
     expect(parseLessonId('?lesson=state-diagram')).toBe('state-diagram');
   });
 
+  it.each([
+    'texture-sampling',
+    'image-processing-basics',
+    'convolution-kernels',
+    'image-effects',
+    'multi-pass-image-processing',
+  ] as const)('selects the image-processing lesson %s', (lesson) => {
+    expect(parseLessonId(`?lesson=${lesson}`)).toBe(lesson);
+  });
+
+  it.each([
+    'translation-2d',
+    'rotation-2d',
+    'scale-2d',
+    'matrices-2d',
+    'unified-2d-transforms',
+  ] as const)('selects the 2D transform lesson %s', (lesson) => {
+    expect(parseLessonId(`?lesson=${lesson}`)).toBe(lesson);
+  });
+
   it('falls back to fundamentals for unknown lessons', () => {
     expect(parseLessonId('?lesson=unknown')).toBe('fundamentals');
     expect(parseLessonId('')).toBe('fundamentals');
