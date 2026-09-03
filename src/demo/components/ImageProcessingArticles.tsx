@@ -1,7 +1,10 @@
+import { Tabs } from '@base-ui/react/tabs';
 import { ArrowLeft, ArrowRight, CheckCircle2, Cpu, Grid3X3, Images, Layers3, ScanSearch, SlidersHorizontal } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
+import textureSamplingTwoslashHtml from 'virtual:texture-sampling-twoslash';
 
 import { CodeBlock } from './CodeBlock';
+import { HighlightedCode } from './HighlightedCode';
 import { ImageProcessingPlayground } from './ImageProcessingPlayground';
 import { LessonLink } from './LessonLink';
 
@@ -61,6 +64,305 @@ v_texCoord = a_texCoord;
 in vec2 v_texCoord;
 out vec4 outColor;
 outColor = texture(u_image, v_texCoord);`;
+
+const textureSamplingVertexCode = `#version 300 es
+
+in vec2 a_position;
+in vec2 a_texCoord;
+
+out vec2 v_texCoord;
+
+void main() {
+  // 位置已经是裁剪空间坐标，可以直接写入 gl_Position。
+  gl_Position = vec4(a_position, 0.0, 1.0);
+
+  // 光栅化阶段会为三角形内部的片段插值这组 UV。
+  v_texCoord = a_texCoord;
+}`;
+
+const textureSamplingFragmentCode = `#version 300 es
+
+precision highp float;
+
+uniform sampler2D u_image;
+in vec2 v_texCoord;
+out vec4 outColor;
+
+void main() {
+  // u_image 找到纹理单元，v_texCoord 决定读取 Texture 的位置。
+  outColor = texture(u_image, v_texCoord);
+}`;
+
+const textureSamplingCompleteCode = `// Vite 的 ?raw 会把 GLSL 文件作为字符串导入，之后交给 WebGL2 编译。
+// Shader 源码仍保存在独立文件中，便于分别阅读 Vertex 和 Fragment 阶段。
+import vertexSource from './vertex.glsl?raw';
+import fragmentSource from './fragment.glsl?raw';
+
+// querySelector 的返回值可能为 null。这个辅助函数在初始化阶段统一检查，
+// 后续代码便可以安全地使用确定类型的 DOM 元素。
+function requireElement<ElementType extends Element>(selector: string): ElementType {
+  const element = document.querySelector<ElementType>(selector);
+  if (!element) throw new Error('页面缺少元素：' + selector);
+  return element;
+}
+
+const canvas = requireElement<HTMLCanvasElement>('#texture-canvas');
+const filterSelect = requireElement<HTMLSelectElement>('#texture-filter');
+
+// 一个 Canvas 只能建立一种上下文。这里明确请求 WebGL2，创建失败就停止初始化。
+// alpha: true 允许默认 Framebuffer 保存透明度；关闭 antialias 便于观察纹理过滤本身。
+const context = canvas.getContext('webgl2', {
+  alpha: true,
+  antialias: false,
+});
+if (!context) {
+  throw new Error('当前浏览器或设备无法创建 WebGL2 上下文。');
+}
+const gl: WebGL2RenderingContext = context;
+
+// Shader 的生命周期分为：创建对象 → 提交源码 → 编译 → 检查结果。
+// type 决定源码进入 VERTEX_SHADER 或 FRAGMENT_SHADER 编译器。
+function compileShader(type: number, source: string): WebGLShader {
+  const shader = gl.createShader(type);
+  if (!shader) throw new Error('无法创建 Shader。');
+
+  // shaderSource 只保存文本；compileShader 才真正发起 GLSL 编译。
+  gl.shaderSource(shader, source);
+  gl.compileShader(shader);
+
+  // COMPILE_STATUS 为 false 时保留完整日志，方便定位具体 GLSL 行号。
+  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+    const stage = type === gl.VERTEX_SHADER ? 'Vertex Shader' : 'Fragment Shader';
+    const log = gl.getShaderInfoLog(shader) ?? '没有编译日志';
+    gl.deleteShader(shader);
+    throw new Error(stage + ' 编译失败：\\n' + log);
+  }
+  return shader;
+}
+
+// Program 把两个已编译 Shader 连接成一条可绘制的 GPU 管线。
+// 链接阶段会核对 Vertex Shader 输出与 Fragment Shader 输入是否匹配。
+function createProgram(vertexShader: WebGLShader, fragmentShader: WebGLShader): WebGLProgram {
+  const program = gl.createProgram();
+  if (!program) throw new Error('无法创建 Program。');
+
+  gl.attachShader(program, vertexShader);
+  gl.attachShader(program, fragmentShader);
+  gl.linkProgram(program);
+
+  // 链接日志会报告 Attribute、Varying、Uniform 等接口之间的问题。
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    const log = gl.getProgramInfoLog(program) ?? '没有链接日志';
+    gl.deleteProgram(program);
+    throw new Error('Program 链接失败：\\n' + log);
+  }
+  return program;
+}
+
+// 这一步在 CPU 侧生成 512 × 336 的 RGBA 图像。
+// 返回值满足 TexImageSource，因此换成 HTMLImageElement 或 ImageBitmap 后，
+// 后面的 texImage2D 上传与采样流程可以保持一致。
+function createSourceCanvas(): HTMLCanvasElement {
+  const source = document.createElement('canvas');
+  source.width = 512;
+  source.height = 336;
+
+  const context2d = source.getContext('2d');
+  if (!context2d) throw new Error('无法创建 2D Canvas。');
+
+  // 先写入浅色底图，保证纹理的每个 Texel 都有已知颜色。
+  context2d.fillStyle = '#e8f7fc';
+  context2d.fillRect(0, 0, source.width, source.height);
+
+  // 棋盘格提供频繁变化的硬边缘，放大时能清楚比较 NEAREST 与 LINEAR。
+  const cellSize = 24;
+  for (let y = 0; y < source.height; y += cellSize) {
+    for (let x = 0; x < source.width; x += cellSize) {
+      if ((x / cellSize + y / cellSize) % 2 === 0) {
+        context2d.fillStyle = '#d4eef7';
+        context2d.fillRect(x, y, cellSize, cellSize);
+      }
+    }
+  }
+
+  context2d.fillStyle = '#087ea4';
+  context2d.fillRect(42, 44, 174, 116);
+  context2d.fillStyle = '#ffffff';
+  context2d.font = '700 34px system-ui, sans-serif';
+  context2d.fillText('UV', 105, 112);
+
+  // 斜线覆盖许多非整数采样位置，缩放时更容易观察插值结果。
+  context2d.strokeStyle = '#23272f';
+  context2d.lineWidth = 12;
+  context2d.beginPath();
+  context2d.moveTo(72, 260);
+  context2d.lineTo(206, 194);
+  context2d.lineTo(278, 276);
+  context2d.lineTo(432, 190);
+  context2d.stroke();
+  return source;
+}
+
+// CPU 在这里完成 Shader 编译与 Program 链接。
+// drawArrays 执行时，GPU 会通过 program 找到两段已经链接的机器指令。
+const vertexShader = compileShader(gl.VERTEX_SHADER, vertexSource);
+const fragmentShader = compileShader(gl.FRAGMENT_SHADER, fragmentSource);
+const program = createProgram(vertexShader, fragmentShader);
+
+// Program 已经保存链接结果，单独的 Shader 对象可以立即释放。
+gl.deleteShader(vertexShader);
+gl.deleteShader(fragmentShader);
+
+// VAO 保存 Attribute 对 Buffer 的读取规则。
+// 两个 Buffer 分别存放裁剪空间位置和 UV；Texture 保存上传后的 RGBA Texel。
+const vao = gl.createVertexArray();
+const positionBuffer = gl.createBuffer();
+const uvBuffer = gl.createBuffer();
+const texture = gl.createTexture();
+if (!vao || !positionBuffer || !uvBuffer || !texture) {
+  throw new Error('无法创建绘制所需的 VAO、Buffer 或 Texture。');
+}
+
+// 链接后查询 Shader 变量的位置。Attribute 返回数字索引，Uniform 返回位置对象。
+// -1 或 null 表示变量未进入最终 Program，继续绘制会产生无效状态。
+const positionLocation = gl.getAttribLocation(program, 'a_position');
+const uvLocation = gl.getAttribLocation(program, 'a_texCoord');
+const imageLocation = gl.getUniformLocation(program, 'u_image');
+if (positionLocation < 0 || uvLocation < 0 || imageLocation === null) {
+  throw new Error('Program 缺少需要的 Attribute 或 Uniform。');
+}
+
+// 后续 enableVertexAttribArray 和 vertexAttribPointer 的配置都会记录进这个 VAO。
+gl.bindVertexArray(vao);
+
+// 六个裁剪空间坐标组成两个三角形。坐标范围 -1 到 1，刚好覆盖 Canvas。
+// 数据只在初始化时上传一次，所以 usage 使用 STATIC_DRAW。
+gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+  -1, -1,   1, -1,  -1,  1,
+  -1,  1,   1, -1,   1,  1,
+]), gl.STATIC_DRAW);
+gl.enableVertexAttribArray(positionLocation);
+
+// 每个顶点读取 2 个 FLOAT；数据紧密排列，所以 stride 和 offset 都是 0 字节。
+gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+
+// UV 数组必须与位置数组保持相同顶点顺序。
+// 第 N 组 UV 会与第 N 个位置一起进入同一次 Vertex Shader 调用。
+gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+  0, 0,  1, 0,  0, 1, // 第一个三角形：左下、右下、左上
+  0, 1,  1, 0,  1, 1, // 第二个三角形：左上、右下、右上
+]), gl.STATIC_DRAW);
+gl.enableVertexAttribArray(uvLocation);
+
+// a_texCoord 同样每个顶点读取 2 个 FLOAT，数值保持原样，无需归一化。
+gl.vertexAttribPointer(uvLocation, 2, gl.FLOAT, false, 0, 0);
+
+// source 此时仍是 CPU/浏览器内存中的 Canvas 2D 像素。
+const source = createSourceCanvas();
+
+// activeTexture 选择纹理单元 0；bindTexture 把 texture 放到该单元的 2D 绑定点。
+// 之后所有针对 TEXTURE_2D 的上传和参数设置都会修改这个 Texture 对象。
+gl.activeTexture(gl.TEXTURE0);
+gl.bindTexture(gl.TEXTURE_2D, texture);
+
+// Canvas 2D 的像素从左上向下排列；翻转后与当前 V 向上的 UV 约定一致。
+gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+
+// texImage2D 把 source 的 RGBA 像素复制到当前绑定的 GPU Texture：
+// level = 0 表示基础层；RGBA 是内部格式与来源格式；
+// UNSIGNED_BYTE 表示每个颜色通道由一个 0–255 的无符号字节提供。
+gl.texImage2D(
+  gl.TEXTURE_2D,
+  0,
+  gl.RGBA,
+  gl.RGBA,
+  gl.UNSIGNED_BYTE,
+  source,
+);
+
+// UV 超出 0–1 时钳制到边缘 Texel，避免从另一侧重复平铺。
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+// CSS 尺寸负责页面布局，canvas.width/height 决定真实绘图缓冲区分辨率。
+// 乘以 DPR 可以让高密度屏幕保持清晰；上限 2 用于控制示例的像素开销。
+function resizeCanvasToDisplaySize(): void {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+  // 限制尺寸，避免请求超过当前设备允许的最大二维纹理边长。
+  const maxSize = gl.getParameter(gl.MAX_TEXTURE_SIZE) as number;
+  const width = Math.min(maxSize, Math.max(1, Math.round(canvas.clientWidth * dpr)));
+  const height = Math.min(maxSize, Math.max(1, Math.round(canvas.clientHeight * dpr)));
+
+  if (canvas.width !== width || canvas.height !== height) {
+    canvas.width = width;
+    canvas.height = height;
+  }
+}
+
+function draw(): void {
+  // ResizeObserver 与首次初始化都会进入这里，绘制前先同步缓冲区尺寸。
+  resizeCanvasToDisplaySize();
+
+  // Select 改变当前 Texture 的采样状态，原始像素仍留在同一个 GPU Texture 中。
+  // MIN_FILTER 用于缩小，MAG_FILTER 用于放大；这里让两种情况使用相同算法。
+  const filter = filterSelect.value === 'nearest' ? gl.NEAREST : gl.LINEAR;
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
+
+  // viewport 把裁剪空间映射到当前绘图缓冲区全部像素。
+  // clear 先把默认 Framebuffer 清成透明色，便于明确观察本次绘制输出。
+  gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+  gl.clearColor(0, 0, 0, 0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  // useProgram 选择 Shader 管线，bindVertexArray 恢复两组 Attribute 的读取规则。
+  gl.useProgram(program);
+  gl.bindVertexArray(vao);
+
+  // sampler2D Uniform 保存纹理单元编号。整数 0 对应 TEXTURE0，
+  // Fragment Shader 的 texture(u_image, uv) 因而能够找到上面绑定的 texture。
+  gl.uniform1i(imageLocation, 0);
+
+  // 提交一次 Draw Call：GPU 读取 6 个顶点，组装 2 个三角形，
+  // 光栅化并插值 UV，最后由 Fragment Shader 把采样颜色写入默认 Framebuffer。
+  gl.drawArrays(gl.TRIANGLES, 0, 6);
+}
+
+// 过滤选项变化时复用现有 GPU 资源，只更新状态并重新绘制。
+filterSelect.addEventListener('change', draw);
+
+// Canvas 的 CSS 尺寸变化时同步绘图缓冲区和 viewport。
+const resizeObserver = new ResizeObserver(draw);
+resizeObserver.observe(canvas);
+
+// 初始化完成后主动执行第一次绘制，页面无需等待任何交互。
+draw();
+
+// 页面离开后先解除 CPU 侧监听，再删除本示例创建的全部 GPU 对象。
+// delete* 解除 WebGL2 对资源的引用，浏览器可在 GPU 完成已有命令后回收内存。
+function dispose(): void {
+  resizeObserver.disconnect();
+  filterSelect.removeEventListener('change', draw);
+  gl.deleteTexture(texture);
+  gl.deleteBuffer(uvBuffer);
+  gl.deleteBuffer(positionBuffer);
+  gl.deleteVertexArray(vao);
+  gl.deleteProgram(program);
+  window.removeEventListener('pagehide', dispose);
+}
+
+window.addEventListener('pagehide', dispose, { once: true });`;
+
+const textureSourceTabs = [
+  { id: 'typescript', label: 'texture-sampling.ts', code: textureSamplingCompleteCode, language: 'typescript' as const },
+  { id: 'vertex', label: 'vertex.glsl', code: textureSamplingVertexCode, language: 'glsl' as const },
+  { id: 'fragment', label: 'fragment.glsl', code: textureSamplingFragmentCode, language: 'glsl' as const },
+];
 
 const colorFragmentCode = `#version 300 es
 precision highp float;
@@ -190,6 +492,37 @@ function LearningNote({ children, id }: { children: ReactNode; id: string }) {
   return <section className="learning-note" aria-labelledby={id}><div className="learning-note__icon" aria-hidden="true"><CheckCircle2 /></div><div><h2 id={id}>完成这一节后</h2>{children}</div></section>;
 }
 
+function TwoslashHighlightedCode({ html }: { html: string }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const hoverTargets = containerRef.current?.querySelectorAll<HTMLElement>('.twoslash-hover');
+    hoverTargets?.forEach((target) => {
+      target.tabIndex = 0;
+    });
+  }, [html]);
+
+  return <div ref={containerRef} className="complete-source__twoslash" dangerouslySetInnerHTML={{ __html: html }} />;
+}
+
+function TextureSamplingSourceTabs() {
+  return (
+    <Tabs.Root className="complete-source__tabs" defaultValue="typescript">
+      <Tabs.List className="editor-tabs" aria-label="纹理采样完整源码">
+        {textureSourceTabs.map((tab) => <Tabs.Tab key={tab.id} value={tab.id}>{tab.label}</Tabs.Tab>)}
+        <Tabs.Indicator className="editor-tabs__indicator" />
+      </Tabs.List>
+      {textureSourceTabs.map((tab) => (
+        <Tabs.Panel key={tab.id} className="complete-source__panel" value={tab.id}>
+          {tab.id === 'typescript'
+            ? <TwoslashHighlightedCode html={textureSamplingTwoslashHtml} />
+            : <HighlightedCode code={tab.code} language={tab.language} />}
+        </Tabs.Panel>
+      ))}
+    </Tabs.Root>
+  );
+}
+
 function Footer({ continued = false }: { continued?: boolean }) {
   const href = continued
     ? 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-image-processing-continued.html'
@@ -253,6 +586,14 @@ export function TextureSamplingArticle({ toc }: { toc?: ReactNode }) {
       <section id="sampling-lab" className="lesson-section lesson-section--wide"><h2>观察纹理过滤</h2><p>缩放图像时，一个屏幕像素通常落在多个 Texel 之间。<code>NEAREST</code> 选取最近的 Texel，边缘会呈现清晰色块；<code>LINEAR</code> 混合相邻 Texel，缩放结果更平滑。</p><ImageProcessingPlayground variant="sampling" /></section>
 
       <section id="sampler-binding" className="lesson-section"><h2>Sampler 保存纹理单元编号</h2><p><code>u_image</code> 的值是整数 0，指向 <code>TEXTURE0</code>。Texture 对象通过该单元的 <code>TEXTURE_2D</code> 绑定点参与绘制。以后使用多张纹理时，每张图可以分配到不同单元。</p><CodeBlock label="draw-texture.ts">{textureBindingCode}</CodeBlock></section>
+
+      <section id="texture-complete-source" className="lesson-section complete-source">
+        <h2>完整代码：从图像源到 Canvas</h2>
+        <p>三个 Tab 分别展示 TypeScript、Vertex Shader 和 Fragment Shader。页面只需提供 ID 为 <code>texture-canvas</code> 的 Canvas 与 ID 为 <code>texture-filter</code> 的 Select；TypeScript 包含图像生成、Shader 编译与链接、Buffer 和 VAO 配置、Texture 上传、绘制、尺寸同步和清理逻辑。</p>
+        <p className="complete-source__hint">在 TypeScript Tab 中悬停带虚线的名称，或使用 Tab 键聚焦它，即可查看编译器给出的类型与函数签名。</p>
+        <TextureSamplingSourceTabs />
+        <p>执行顺序可以沿着 <code>source Canvas → texImage2D → Texture → texture() → outColor → 默认 Framebuffer</code> 阅读。切换过滤选项时，只更新 Texture 的采样参数并重新绘制。</p>
+      </section>
 
       <section id="next-steps" className="lesson-section next-steps lesson-pagination"><LessonLink lessonId="state-diagram"><ArrowLeft aria-hidden="true" /> WebGL2 状态图</LessonLink><div><h2>接下来</h2><p>纹理已经能稳定显示。下一页让片段着色器对每个采样颜色执行亮度和灰度运算。</p></div><LessonLink className="next-steps__link" lessonId="image-processing-basics">图像处理基础 <ArrowRight aria-hidden="true" /></LessonLink></section>
       <Footer />

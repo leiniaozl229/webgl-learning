@@ -380,6 +380,16 @@ code:not(pre code) {
 .code-block button:hover { background: var(--color-code-hover); color: var(--color-code-text); }
 .code-block button svg { width: 0.95rem; height: 0.95rem; }
 .code-block pre { overflow-x: auto; margin: 0; padding: var(--space-lg); font-size: 0.86rem; line-height: 1.75; tab-size: 2; }
+.complete-source__tabs { overflow: hidden; margin-top: var(--space-lg); border: 1px solid var(--color-code-border); border-radius: var(--radius-lg); background: var(--color-surface-code); color: var(--color-code-text); }
+.complete-source__panel { max-height: 42rem; overflow: auto; }
+.complete-source__panel pre { min-width: max-content; margin: 0; padding: var(--space-lg); font-size: 0.82rem; line-height: 1.75; }
+.complete-source__hint { padding-left: var(--space-md); border-left: 3px solid var(--color-accent); color: var(--color-text-soft); }
+.complete-source__twoslash { --twoslash-popup-bg: var(--color-surface); --twoslash-popup-color: var(--color-text); --twoslash-docs-color: var(--color-muted); --twoslash-code-font: var(--font-code); }
+.complete-source__twoslash .shiki { background: transparent !important; }
+.complete-source__twoslash .twoslash-hover:focus { border-color: var(--color-accent); outline: 2px solid var(--color-focus); outline-offset: 2px; }
+.complete-source__twoslash .twoslash-hover:focus .twoslash-popup-container { opacity: 1; pointer-events: auto; }
+:root[data-theme="dark"] .complete-source__twoslash .shiki,
+:root[data-theme="dark"] .complete-source__twoslash .shiki span { color: var(--shiki-dark) !important; font-style: var(--shiki-dark-font-style) !important; font-weight: var(--shiki-dark-font-weight) !important; text-decoration: var(--shiki-dark-text-decoration) !important; }
 
 .pipeline { display: grid; gap: 1px; overflow: hidden; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-border); }
 .pipeline li { display: grid; grid-template-columns: 2.5rem 1fr; grid-template-rows: auto auto; column-gap: var(--space-sm); padding: var(--space-md); background: var(--color-surface); }

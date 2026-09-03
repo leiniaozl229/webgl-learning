@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import '@fontsource-variable/atkinson-hyperlegible-next';
+import '@shikijs/twoslash/style-rich.css';
 
 import { App } from './App';
 import './style.css';

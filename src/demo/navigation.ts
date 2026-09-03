@@ -127,6 +127,7 @@ export const tableOfContentsByLesson: Record<LessonId, TableOfContentsItem[]> = 
     { label: '超出范围的 UV', href: '#uv-outside-range' },
     { label: '纹理过滤实验', href: '#sampling-lab' },
     { label: 'Sampler 与纹理单元', href: '#sampler-binding' },
+    { label: '完整代码', href: '#texture-complete-source' },
     { label: '继续学习', href: '#next-steps' },
   ],
   'image-processing-basics': [
