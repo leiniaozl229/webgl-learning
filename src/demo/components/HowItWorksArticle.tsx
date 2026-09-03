@@ -62,7 +62,7 @@ export function HowItWorksArticle({ toc }: { toc?: ReactNode }) {
       <section id="vertex-invocations" className="lesson-section">
         <h2>一条命令，三次顶点调用</h2>
         <p><code>drawArrays</code> 不会直接接收顶点数组。它读取当前 Program、VAO 和其他 WebGL 状态，再根据 <code>first</code> 和 <code>count</code> 发起顶点着色器调用。</p>
-        <CodeBlock label="发起三次顶点处理">{drawCountCode}</CodeBlock>
+        <CodeBlock label="发起三次顶点处理" twoslashId="how-draw-count">{drawCountCode}</CodeBlock>
         <ol className="invocation-list" aria-label="三次顶点着色器调用">
           <li><span>0</span><div><strong>gl_VertexID = 0</strong><small>a_position = 左下坐标</small></div></li>
           <li><span>1</span><div><strong>gl_VertexID = 1</strong><small>a_position = 顶部坐标</small></div></li>
@@ -95,7 +95,7 @@ export function HowItWorksArticle({ toc }: { toc?: ReactNode }) {
       <section id="stride-offset" className="lesson-section lesson-section--wide">
         <h2>stride 和 offset 在读什么</h2>
         <p>当位置和颜色交错放在同一个 Buffer 中，每个顶点占用 5 个 <code>float</code>。position 从每组的第 0 字节开始，color 跳过前 2 个 <code>float</code>，从第 8 字节开始。</p>
-        <CodeBlock label="交错顶点数据">{interleavedCode}</CodeBlock>
+        <CodeBlock label="交错顶点数据" twoslashId="how-interleaved-data">{interleavedCode}</CodeBlock>
         <div className="buffer-layout" aria-label="一个顶点的交错数据布局">
           <span data-kind="position">x</span><span data-kind="position">y</span><span data-kind="color">r</span><span data-kind="color">g</span><span data-kind="color">b</span>
           <small>stride = 20 bytes</small>

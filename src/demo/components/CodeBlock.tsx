@@ -1,15 +1,18 @@
 import { Check, Copy } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import startLessonTwoslashHtml from 'virtual:start-lessons-twoslash';
 
 import { HighlightedCode } from './HighlightedCode';
+import { TwoslashHighlightedCode } from './TwoslashHighlightedCode';
 
 interface CodeBlockProps {
   children: string;
   language?: string;
   label?: string;
+  twoslashId?: string;
 }
 
-export function CodeBlock({ children, language = 'ts', label }: CodeBlockProps) {
+export function CodeBlock({ children, language = 'ts', label, twoslashId }: CodeBlockProps) {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -31,7 +34,9 @@ export function CodeBlock({ children, language = 'ts', label }: CodeBlockProps) 
           {copied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}<span>{copied ? '已复制' : '复制'}</span>
         </button>
       </figcaption>
-      <HighlightedCode code={children} language={language === 'glsl' ? 'glsl' : 'typescript'} />
+      {twoslashId
+        ? <TwoslashHighlightedCode html={startLessonTwoslashHtml[twoslashId]} />
+        : <HighlightedCode code={children} language={language === 'glsl' ? 'glsl' : 'typescript'} />}
     </figure>
   );
 }

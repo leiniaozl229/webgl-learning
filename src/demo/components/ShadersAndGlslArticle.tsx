@@ -39,14 +39,20 @@ mat4 transform = mat4(1.0);
 vec4 position = transform * vec4(0.0, 0.0, 0.0, 1.0);`;
 
 const compileCode = `const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+if (!vertexShader || !fragmentShader) {
+  throw new Error('无法创建 Shader');
+}
+
 gl.shaderSource(vertexShader, vertexSource);
 gl.compileShader(vertexShader);
 
-const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
 gl.shaderSource(fragmentShader, fragmentSource);
 gl.compileShader(fragmentShader);
 
 const program = gl.createProgram();
+if (!program) throw new Error('无法创建 Program');
+
 gl.attachShader(program, vertexShader);
 gl.attachShader(program, fragmentShader);
 gl.linkProgram(program);`;
@@ -76,7 +82,7 @@ export function ShadersAndGlslArticle({ toc }: { toc?: ReactNode }) {
           <ArrowRight aria-hidden="true" />
           <article><span><Grid3X3 aria-hidden="true" /></span><div><strong>Fragment Shader</strong><p>栅格化后按片段调用，计算颜色并写入自定义的 <code>out vec4</code> 输出。</p></div></article>
         </div>
-        <CodeBlock label="两种着色器的最小结构">{stageCode}</CodeBlock>
+        <CodeBlock label="两种着色器的最小结构" language="glsl">{stageCode}</CodeBlock>
         <p><code>#version 300 es</code> 必须位于第一行。片段着色器还要为浮点计算声明精度，例如 <code>precision highp float</code>。</p>
       </section>
 
@@ -101,16 +107,16 @@ export function ShadersAndGlslArticle({ toc }: { toc?: ReactNode }) {
       <section id="glsl-types" className="lesson-section">
         <h2>GLSL 为并行数学而设计</h2>
         <p>GLSL 内置 <code>vec2</code>、<code>vec3</code>、<code>vec4</code> 和 <code>mat2</code> 到 <code>mat4</code>。向量运算会按分量执行，矩阵与向量可以直接相乘。</p>
-        <CodeBlock label="向量分量与 swizzle">{swizzleCode}</CodeBlock>
+        <CodeBlock label="向量分量与 swizzle" language="glsl">{swizzleCode}</CodeBlock>
         <p><code>xyzw</code>、<code>rgba</code> 和 <code>stpq</code> 是同一组分量的不同命名习惯。连续选择多个分量称为 swizzle，可以重排、截取或重复向量内容。</p>
-        <CodeBlock label="严格类型与数学运算">{strictTypeCode}</CodeBlock>
+        <CodeBlock label="严格类型与数学运算" language="glsl">{strictTypeCode}</CodeBlock>
         <p>GLSL 会严格检查类型。浮点数通常写成 <code>1.0</code>，整数转浮点数要显式使用 <code>float(...)</code>。这种约束可以在编译阶段暴露很多输入错误。</p>
       </section>
 
       <section id="compile-and-link" className="lesson-section">
         <h2>源码要经过编译和链接</h2>
         <p>JavaScript 负责创建着色器对象、提供 GLSL 源码并触发编译。两段着色器都编译成功后，再链接成 Program。链接阶段会核对顶点着色器的输出与片段着色器的输入。</p>
-        <CodeBlock label="Shader → Program">{compileCode}</CodeBlock>
+        <CodeBlock label="Shader → Program" twoslashId="shader-program">{compileCode}</CodeBlock>
         <ul className="shader-error-list">
           <li><strong>编译错误</strong><span>语法、类型或当前 GLSL 版本不符合要求，查看 <code>getShaderInfoLog</code>。</span></li>
           <li><strong>链接错误</strong><span>阶段接口无法匹配，或程序整体超出设备限制，查看 <code>getProgramInfoLog</code>。</span></li>

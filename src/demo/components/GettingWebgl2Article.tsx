@@ -63,13 +63,13 @@ export function GettingWebgl2Article({ toc }: { toc?: ReactNode }) {
       <section id="create-context" className="lesson-section">
         <h2>从 Canvas 获取 WebGL2 上下文</h2>
         <p><code>WebGL2RenderingContext</code> 是 JavaScript 操作 WebGL2 状态和 GPU 资源的入口。同一个 Canvas 第一次确定上下文模式后，后续不能再切换成另一种绘图模式。</p>
-        <CodeBlock label="创建并检查 WebGL2 上下文">{contextCode}</CodeBlock>
+        <CodeBlock label="创建并检查 WebGL2 上下文" twoslashId="getting-context">{contextCode}</CodeBlock>
       </section>
 
       <section id="context-options" className="lesson-section">
         <h2>上下文选项在创建时确定</h2>
         <p>第二个参数用于向浏览器请求绘图缓冲区特性。它们是请求偏好，最终结果应通过 <code>gl.getContextAttributes()</code> 检查。初学阶段保留默认值通常足够。</p>
-        <CodeBlock label="常用 WebGL 上下文选项">{optionsCode}</CodeBlock>
+        <CodeBlock label="常用 WebGL 上下文选项" twoslashId="getting-options">{optionsCode}</CodeBlock>
         <p><code>preserveDrawingBuffer</code> 会影响性能和内存策略，日常渲染建议保持 <code>false</code>。需要截图时可以在绘制完成后立即读取或使用专门的截图流程。</p>
       </section>
 

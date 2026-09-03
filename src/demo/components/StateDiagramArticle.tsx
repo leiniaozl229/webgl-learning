@@ -75,13 +75,13 @@ export function StateDiagramArticle({ toc }: { toc?: ReactNode }) {
       <section id="vao-state" className="lesson-section">
         <h2>VAO 保存顶点输入配置</h2>
         <p>每个 Attribute 是否启用、分量数量、类型、stride、offset 和数据来源 Buffer 都记录在当前 VAO 中。<code>ELEMENT_ARRAY_BUFFER</code> 的绑定也属于 VAO；普通 <code>ARRAY_BUFFER</code> 绑定本身属于全局状态。</p>
-        <CodeBlock label="配置并恢复 VAO">{vaoCode}</CodeBlock>
+        <CodeBlock label="配置并恢复 VAO" twoslashId="state-vao">{vaoCode}</CodeBlock>
       </section>
 
       <section id="draw-snapshot" className="lesson-section">
         <h2>draw call 读取此刻的组合状态</h2>
         <p>调用绘制命令时，WebGL 会组合当前 Program、VAO、Uniform、纹理单元、Framebuffer、viewport、混合和深度测试等状态。任何遗漏都可能让结果写到错误目标，或使用上一轮渲染残留的配置。</p>
-        <CodeBlock label="绘制前显式准备关键状态">{drawCode}</CodeBlock>
+        <CodeBlock label="绘制前显式准备关键状态" twoslashId="state-draw">{drawCode}</CodeBlock>
         <ul className="state-rules">
           <li><strong>配置阶段</strong><span>创建资源并把稳定关系记录进 VAO、Texture 或 Framebuffer。</span></li>
           <li><strong>绘制阶段</strong><span>选择 Program 与目标，设置本次变化的 Uniform 和全局状态。</span></li>

@@ -1,4 +1,5 @@
 import { Tabs } from '@base-ui/react/tabs';
+import startLessonTwoslashHtml from 'virtual:start-lessons-twoslash';
 
 import {
   INTERPOLATION_FRAGMENT_SHADER,
@@ -6,6 +7,7 @@ import {
   INTERPOLATION_VERTEX_SHADER,
 } from '../../core/interpolation';
 import { HighlightedCode } from './HighlightedCode';
+import { TwoslashHighlightedCode } from './TwoslashHighlightedCode';
 
 type SourceTab = 'data' | 'vertex' | 'fragment';
 
@@ -44,7 +46,9 @@ export function InterpolationSources() {
       </Tabs.List>
       {sourceTabs.map((tab) => (
         <Tabs.Panel key={tab.id} className="interpolation-sources__code" value={tab.id}>
-          <HighlightedCode code={sources[tab.id].code} language={sources[tab.id].language} />
+          {tab.id === 'data'
+            ? <TwoslashHighlightedCode html={startLessonTwoslashHtml['interpolation-vertex-data']} />
+            : <HighlightedCode code={sources[tab.id].code} language={sources[tab.id].language} />}
         </Tabs.Panel>
       ))}
     </Tabs.Root>

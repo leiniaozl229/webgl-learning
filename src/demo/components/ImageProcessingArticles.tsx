@@ -1,12 +1,13 @@
 import { Tabs } from '@base-ui/react/tabs';
 import { ArrowLeft, ArrowRight, CheckCircle2, Cpu, Grid3X3, Images, Layers3, ScanSearch, SlidersHorizontal } from 'lucide-react';
-import { useEffect, useRef, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import textureSamplingTwoslashHtml from 'virtual:texture-sampling-twoslash';
 
 import { CodeBlock } from './CodeBlock';
 import { HighlightedCode } from './HighlightedCode';
 import { ImageProcessingPlayground } from './ImageProcessingPlayground';
 import { LessonLink } from './LessonLink';
+import { TwoslashHighlightedCode } from './TwoslashHighlightedCode';
 
 const textureUploadCode = `const texture = gl.createTexture();
 if (!texture) throw new Error('无法创建 Texture');
@@ -187,9 +188,12 @@ function createSourceCanvas(): HTMLCanvasElement {
 
   context2d.fillStyle = '#087ea4';
   context2d.fillRect(42, 44, 174, 116);
-  context2d.fillStyle = '#ffffff';
-  context2d.font = '700 34px system-ui, sans-serif';
-  context2d.fillText('UV', 105, 112);
+
+  // 黄色圆形与 Image Lab 使用相同的圆心、半径和填充色。
+  context2d.fillStyle = '#ffd166';
+  context2d.beginPath();
+  context2d.arc(352, 105, 61, 0, Math.PI * 2);
+  context2d.fill();
 
   // 斜线覆盖许多非整数采样位置，缩放时更容易观察插值结果。
   context2d.strokeStyle = '#23272f';
@@ -200,6 +204,14 @@ function createSourceCanvas(): HTMLCanvasElement {
   context2d.lineTo(278, 276);
   context2d.lineTo(432, 190);
   context2d.stroke();
+
+  context2d.fillStyle = '#ffffff';
+  context2d.font = '700 34px system-ui, sans-serif';
+  context2d.fillText('RGB', 91, 112);
+
+  context2d.fillStyle = '#23272f';
+  context2d.font = '700 22px system-ui, sans-serif';
+  context2d.fillText('纹理像素', 334, 272);
   return source;
 }
 
@@ -490,19 +502,6 @@ gl.drawArrays(gl.TRIANGLES, 0, 6);`;
 
 function LearningNote({ children, id }: { children: ReactNode; id: string }) {
   return <section className="learning-note" aria-labelledby={id}><div className="learning-note__icon" aria-hidden="true"><CheckCircle2 /></div><div><h2 id={id}>完成这一节后</h2>{children}</div></section>;
-}
-
-function TwoslashHighlightedCode({ html }: { html: string }) {
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const hoverTargets = containerRef.current?.querySelectorAll<HTMLElement>('.twoslash-hover');
-    hoverTargets?.forEach((target) => {
-      target.tabIndex = 0;
-    });
-  }, [html]);
-
-  return <div ref={containerRef} className="complete-source__twoslash" dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
 function TextureSamplingSourceTabs() {

@@ -86,7 +86,7 @@ export function LessonArticle({ toc }: { toc?: ReactNode }) {
         <h2>WebGL2 在做什么</h2>
         <p>WebGL2 是浏览器暴露给 JavaScript 的 GPU 光栅化接口。它接收顶点数据和着色器程序，把点、线或三角形转换成画布上的像素。三维场景、材质和光照都建立在这条基础能力之上。</p>
         <p>因此第一步要掌握的，是如何准备 GPU 状态并发起一次绘制。场景图、模型加载和相机可以稍后加入。</p>
-        <CodeBlock label="获取 WebGL2 上下文">{contextCode}</CodeBlock>
+        <CodeBlock label="获取 WebGL2 上下文" twoslashId="fundamentals-context">{contextCode}</CodeBlock>
       </section>
 
       <section id="pipeline" className="lesson-section">
@@ -110,7 +110,7 @@ export function LessonArticle({ toc }: { toc?: ReactNode }) {
           <div><span>3</span><strong>compileShader</strong><small>分别编译两个阶段</small></div>
           <div><span>4</span><strong>linkProgram</strong><small>核对接口并完成链接</small></div>
         </div>
-        <CodeBlock label="编译 Shader 并链接 Program">{programCode}</CodeBlock>
+        <CodeBlock label="编译 Shader 并链接 Program" twoslashId="fundamentals-program">{programCode}</CodeBlock>
         <p>编译状态和链接状态都必须检查。发生错误时，<code>getShaderInfoLog</code> 与 <code>getProgramInfoLog</code> 会给出具体行号或接口问题，页面上的代码实验也会把这些信息显示在底部。</p>
       </section>
 
@@ -135,7 +135,7 @@ export function LessonArticle({ toc }: { toc?: ReactNode }) {
         <h2>第一个三角形</h2>
         <p>先打开 <code>vertex-data.ts</code>，查看组成三角形的三个坐标以及它们如何上传到 GPU。随后可以修改两段 GLSL 并点击“运行”；切换到片段着色器，调整 <code>vec4</code> 中前三个 0–1 颜色值，就能观察颜色变化。</p>
         <ShaderPlayground />
-        <details className="code-details"><summary>绘制命令做了什么</summary><div><CodeBlock label="一次绘制">{drawCode}</CodeBlock><p><code>useProgram</code> 选择着色程序，<code>bindVertexArray</code> 恢复顶点属性状态，<code>viewport</code> 建立裁剪空间到画布像素的映射。最后，<code>drawArrays(gl.TRIANGLES, 0, 3)</code> 请求处理三个顶点：三个坐标会分别进入同一段顶点着色器，然后组成一个三角形。</p></div></details>
+        <details className="code-details"><summary>绘制命令做了什么</summary><div><CodeBlock label="一次绘制" twoslashId="fundamentals-draw">{drawCode}</CodeBlock><p><code>useProgram</code> 选择着色程序，<code>bindVertexArray</code> 恢复顶点属性状态，<code>viewport</code> 建立裁剪空间到画布像素的映射。最后，<code>drawArrays(gl.TRIANGLES, 0, 3)</code> 请求处理三个顶点：三个坐标会分别进入同一段顶点着色器，然后组成一个三角形。</p></div></details>
       </section>
 
       <section id="canvas-and-viewport" className="lesson-section">
@@ -145,7 +145,7 @@ export function LessonArticle({ toc }: { toc?: ReactNode }) {
           <article><span><MonitorUp aria-hidden="true" /></span><div><strong>CSS display size</strong><p>参与网页布局，单位是 CSS px。</p></div></article>
           <article><span><ScanLine aria-hidden="true" /></span><div><strong>drawing buffer</strong><p>WebGL 真正渲染的像素网格。</p></div></article>
         </div>
-        <CodeBlock label="同步绘图缓冲区与 viewport">{canvasSizeCode}</CodeBlock>
+        <CodeBlock label="同步绘图缓冲区与 viewport" twoslashId="fundamentals-canvas-size">{canvasSizeCode}</CodeBlock>
         <p><code>viewport</code> 定义裁剪空间映射到绘图缓冲区的哪一块区域。Canvas 调整尺寸后要再次调用它，否则图形可能只使用旧尺寸对应的区域。</p>
       </section>
 
@@ -176,7 +176,7 @@ export function LessonArticle({ toc }: { toc?: ReactNode }) {
           <i aria-hidden="true">− 1</i>
           <span><strong>裁剪空间</strong><small>−1 → +1</small></span>
         </div>
-        <CodeBlock label="像素坐标转换">{coordinateCode}</CodeBlock>
+        <CodeBlock label="像素坐标转换" language="glsl">{coordinateCode}</CodeBlock>
         <PixelRectanglePlayground />
       </section>
 

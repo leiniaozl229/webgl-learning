@@ -1,6 +1,7 @@
 import { Tabs } from '@base-ui/react/tabs';
 import { RotateCcw } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import startLessonTwoslashHtml from 'virtual:start-lessons-twoslash';
 
 import {
   drawUniformTriangle,
@@ -9,6 +10,7 @@ import {
   UNIFORM_VERTEX_SHADER,
 } from '../../core/uniforms';
 import { HighlightedCode } from './HighlightedCode';
+import { TwoslashHighlightedCode } from './TwoslashHighlightedCode';
 
 type SourceTab = 'data' | 'vertex' | 'fragment';
 
@@ -97,7 +99,9 @@ export function UniformPlayground() {
         </Tabs.List>
         {tabs.map((tab) => (
           <Tabs.Panel key={tab.id} className="uniform-lab__code" value={tab.id}>
-            <HighlightedCode code={sources[tab.id].code} language={sources[tab.id].language} />
+            {tab.id === 'data'
+              ? <TwoslashHighlightedCode html={startLessonTwoslashHtml['uniform-data']} />
+              : <HighlightedCode code={sources[tab.id].code} language={sources[tab.id].language} />}
           </Tabs.Panel>
         ))}
       </Tabs.Root>

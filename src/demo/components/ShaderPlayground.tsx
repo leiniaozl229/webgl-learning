@@ -1,14 +1,15 @@
 import { Tabs } from '@base-ui/react/tabs';
 import { Play, RotateCcw } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import startLessonTwoslashHtml from 'virtual:start-lessons-twoslash';
 
 import {
   DEFAULT_FRAGMENT_SHADER,
   DEFAULT_VERTEX_SHADER,
-  TRIANGLE_VERTEX_DATA_SOURCE,
   drawTriangle,
 } from '../../core/webgl2';
 import { HighlightedCode } from './HighlightedCode';
+import { TwoslashHighlightedCode } from './TwoslashHighlightedCode';
 
 type EditorTab = 'data' | 'vertex' | 'fragment';
 
@@ -113,7 +114,7 @@ export function ShaderPlayground() {
             <Tabs.Indicator className="editor-tabs__indicator" />
           </Tabs.List>
           <Tabs.Panel className="vertex-data-panel" value="data">
-            <HighlightedCode code={TRIANGLE_VERTEX_DATA_SOURCE} language="typescript" />
+            <TwoslashHighlightedCode html={startLessonTwoslashHtml['triangle-vertex-data']} />
           </Tabs.Panel>
           <ShaderSourcePanel id="vertex" source={vertexSource} onChange={setVertexSource} />
           <ShaderSourcePanel id="fragment" source={fragmentSource} onChange={setFragmentSource} />
