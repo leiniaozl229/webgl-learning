@@ -9,6 +9,7 @@ import {
   drawTriangle,
 } from '../../core/webgl2';
 import { HighlightedCode } from './HighlightedCode';
+import { FullscreenButton } from './FullscreenButton';
 import { TwoslashHighlightedCode } from './TwoslashHighlightedCode';
 
 type EditorTab = 'data' | 'vertex' | 'fragment';
@@ -92,10 +93,11 @@ export function ShaderPlayground() {
   }
 
   return (
-    <section className="code-workbench playground" aria-labelledby="playground-title">
+    <section className="code-workbench playground" aria-labelledby="playground-title" data-fullscreen-target>
       <div className="code-workbench__header playground__header">
         <div className="code-workbench__heading"><span className="playground__status-dot" aria-hidden="true" /><strong id="playground-title">Hello Triangle</strong><small>顶点数据 + GLSL</small></div>
         <div className="playground__actions">
+          <FullscreenButton />
           <button type="button" onClick={reset}><RotateCcw aria-hidden="true" /> 重置</button>
           <button className="run-button" type="button" onClick={() => renderSources(vertexSource, fragmentSource)}><Play aria-hidden="true" /> 运行</button>
         </div>

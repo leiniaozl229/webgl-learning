@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import startLessonTwoslashHtml from 'virtual:start-lessons-twoslash';
 
 import { HighlightedCode } from './HighlightedCode';
+import { FullscreenButton } from './FullscreenButton';
 import { TwoslashHighlightedCode } from './TwoslashHighlightedCode';
 
 interface CodeBlockProps {
@@ -27,12 +28,15 @@ export function CodeBlock({ children, language = 'ts', label, twoslashId }: Code
   }
 
   return (
-    <figure className="code-block">
+    <figure className="code-block" data-fullscreen-target>
       <figcaption>
         <span>{label ?? language}</span>
-        <button type="button" onClick={copyCode} aria-label="复制代码">
-          {copied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}<span>{copied ? '已复制' : '复制'}</span>
-        </button>
+        <div className="code-block__actions">
+          <FullscreenButton />
+          <button type="button" onClick={copyCode} aria-label="复制代码">
+            {copied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}<span>{copied ? '已复制' : '复制'}</span>
+          </button>
+        </div>
       </figcaption>
       {twoslashId
         ? <TwoslashHighlightedCode html={startLessonTwoslashHtml[twoslashId]} />

@@ -10,6 +10,7 @@ import {
   UNIFORM_VERTEX_SHADER,
 } from '../../core/uniforms';
 import { HighlightedCode } from './HighlightedCode';
+import { FullscreenButton } from './FullscreenButton';
 import { TwoslashHighlightedCode } from './TwoslashHighlightedCode';
 
 type SourceTab = 'data' | 'vertex' | 'fragment';
@@ -69,13 +70,16 @@ export function UniformPlayground() {
   }
 
   return (
-    <section className="uniform-lab" aria-labelledby="uniform-lab-title">
+    <section className="uniform-lab" aria-labelledby="uniform-lab-title" data-fullscreen-target>
       <header>
         <div>
           <span className="playground__status-dot" aria-hidden="true" />
           <div><strong id="uniform-lab-title">Uniform 调色实验</strong><small>JavaScript → u_tint → Fragment Shader</small></div>
         </div>
-        <button type="button" onClick={reset}><RotateCcw aria-hidden="true" /> 重置</button>
+        <div className="uniform-lab__actions">
+          <FullscreenButton />
+          <button type="button" onClick={reset}><RotateCcw aria-hidden="true" /> 重置</button>
+        </div>
       </header>
       <div className="uniform-lab__preview">
         <div className="uniform-lab__control">

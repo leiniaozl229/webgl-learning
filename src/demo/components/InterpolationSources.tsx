@@ -7,6 +7,7 @@ import {
   INTERPOLATION_VERTEX_SHADER,
 } from '../../core/interpolation';
 import { HighlightedCode } from './HighlightedCode';
+import { FullscreenButton } from './FullscreenButton';
 import { TwoslashHighlightedCode } from './TwoslashHighlightedCode';
 
 type SourceTab = 'data' | 'vertex' | 'fragment';
@@ -25,13 +26,14 @@ const sources: Record<SourceTab, { code: string; language: 'typescript' | 'glsl'
 
 export function InterpolationSources() {
   return (
-    <Tabs.Root className="code-workbench interpolation-sources" defaultValue="data" aria-labelledby="interpolation-sources-title">
+    <Tabs.Root className="code-workbench interpolation-sources" defaultValue="data" aria-labelledby="interpolation-sources-title" data-fullscreen-target>
       <header className="code-workbench__header">
         <div className="code-workbench__heading">
           <span className="playground__status-dot" aria-hidden="true" />
           <strong id="interpolation-sources-title">Vertex Colors</strong>
           <small>JavaScript 数据 + GLSL</small>
         </div>
+        <FullscreenButton />
       </header>
       <Tabs.List className="editor-tabs" aria-label="颜色插值源码">
         {sourceTabs.map((tab) => (

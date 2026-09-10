@@ -12,6 +12,7 @@ import {
   type PixelRectangle,
 } from '../../core/pixelRectangles';
 import { HighlightedCode } from './HighlightedCode';
+import { FullscreenButton } from './FullscreenButton';
 import { TwoslashHighlightedCode } from './TwoslashHighlightedCode';
 
 type SourceTab = 'data' | 'vertex' | 'fragment';
@@ -116,13 +117,14 @@ export function PixelRectanglePlayground() {
   }
 
   return (
-    <section className="pixel-playground" aria-labelledby="pixel-playground-title">
+    <section className="pixel-playground" aria-labelledby="pixel-playground-title" data-fullscreen-target>
       <header>
         <div>
           <span className="playground__status-dot" aria-hidden="true" />
           <div><strong id="pixel-playground-title">Pixel Rectangle</strong><small>像素坐标 → 裁剪空间 → Canvas</small></div>
         </div>
         <div>
+          <FullscreenButton />
           <button type="button" onClick={reset}><RotateCcw aria-hidden="true" /> 单个矩形</button>
           <button className="pixel-playground__many" type="button" onClick={drawMany}><Dices aria-hidden="true" /> 随机 20 个</button>
         </div>

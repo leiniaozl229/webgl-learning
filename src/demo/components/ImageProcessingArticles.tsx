@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import textureSamplingTwoslashHtml from 'virtual:texture-sampling-twoslash';
 
 import { CodeBlock } from './CodeBlock';
+import { FullscreenButton } from './FullscreenButton';
 import { HighlightedCode } from './HighlightedCode';
 import { ImageProcessingPlayground } from './ImageProcessingPlayground';
 import { LessonLink } from './LessonLink';
@@ -506,11 +507,14 @@ function LearningNote({ children, id }: { children: ReactNode; id: string }) {
 
 function TextureSamplingSourceTabs() {
   return (
-    <Tabs.Root className="complete-source__tabs" defaultValue="typescript">
-      <Tabs.List className="editor-tabs" aria-label="纹理采样完整源码">
-        {textureSourceTabs.map((tab) => <Tabs.Tab key={tab.id} value={tab.id}>{tab.label}</Tabs.Tab>)}
-        <Tabs.Indicator className="editor-tabs__indicator" />
-      </Tabs.List>
+    <Tabs.Root className="complete-source__tabs" defaultValue="typescript" data-fullscreen-target>
+      <div className="complete-source__toolbar">
+        <Tabs.List className="editor-tabs" aria-label="纹理采样完整源码">
+          {textureSourceTabs.map((tab) => <Tabs.Tab key={tab.id} value={tab.id}>{tab.label}</Tabs.Tab>)}
+          <Tabs.Indicator className="editor-tabs__indicator" />
+        </Tabs.List>
+        <FullscreenButton />
+      </div>
       {textureSourceTabs.map((tab) => (
         <Tabs.Panel key={tab.id} className="complete-source__panel" value={tab.id}>
           {tab.id === 'typescript'

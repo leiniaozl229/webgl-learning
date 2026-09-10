@@ -7,6 +7,7 @@ import react from '@vitejs/plugin-react';
 import { codeToHtml } from 'shiki';
 import typescriptTwoslash from 'typescript-twoslash';
 import { defineConfig, type Plugin } from 'vite';
+import type { ElementContent } from 'hast';
 
 const textureSamplingArticlePath = fileURLToPath(
   new URL('./src/demo/components/ImageProcessingArticles.tsx', import.meta.url),
@@ -86,7 +87,6 @@ const startLessonSnippets: TwoslashSnippetSpec[] = [
       'declare const gl: WebGL2RenderingContext;',
       'declare const program: WebGLProgram;',
       'declare const canvas: HTMLCanvasElement;',
-      'declare const rectangles: ReadonlyArray<{ x: number; y: number; width: number; height: number; color: Float32List }>;',
       'declare function resizeCanvasToDisplaySize(canvas: HTMLCanvasElement): boolean;',
     ].join('\n'),
   },
@@ -167,37 +167,58 @@ const startLessonSnippets: TwoslashSnippetSpec[] = [
   },
 ];
 
-function renderMarkdownLinks(markdown: string) {
-  const children: Array<
-    | { type: 'text'; value: string }
-    | {
-        type: 'element';
-        tagName: 'a';
-        properties: { href: string; target: '_blank'; rel: ['noreferrer', 'noopener'] };
-        children: Array<{ type: 'text'; value: string }>;
-      }
-  > = [];
-  const linkPattern = /\[([^\]]+)]\((https?:\/\/[^\s)]+)\)/g;
+function renderMarkdownInline(markdown: string): ElementContent[] {
+  const children: ElementContent[] = [];
+  const tokenPattern = /\*\*([^*]+)\*\*|`([^`]+)`|\[([^\]]+)]\((https?:\/\/[^\s)]+)\)/g;
   let cursor = 0;
 
-  for (const match of markdown.matchAll(linkPattern)) {
+  for (const match of markdown.matchAll(tokenPattern)) {
     const index = match.index ?? 0;
     if (index > cursor) children.push({ type: 'text', value: markdown.slice(cursor, index) });
-    children.push({
-      type: 'element',
-      tagName: 'a',
-      properties: {
-        href: match[2],
-        target: '_blank',
-        rel: ['noreferrer', 'noopener'],
-      },
-      children: [{ type: 'text', value: match[1] }],
-    });
+
+    if (match[1]) {
+      children.push({
+        type: 'element',
+        tagName: 'strong',
+        properties: {},
+        children: renderMarkdownInline(match[1]),
+      });
+    } else if (match[2]) {
+      children.push({
+        type: 'element',
+        tagName: 'code',
+        properties: {},
+        children: [{ type: 'text', value: match[2] }],
+      });
+    } else {
+      children.push({
+        type: 'element',
+        tagName: 'a',
+        properties: {
+          href: match[4],
+          target: '_blank',
+          rel: ['noreferrer', 'noopener'],
+        },
+        children: [{ type: 'text', value: match[3] }],
+      });
+    }
     cursor = index + match[0].length;
   }
 
   if (cursor < markdown.length) children.push({ type: 'text', value: markdown.slice(cursor) });
   return children;
+}
+
+function renderMarkdown(markdown: string): ElementContent[] {
+  return markdown
+    .split(/\n{2,}/)
+    .filter((paragraph) => paragraph.trim())
+    .map((paragraph) => ({
+      type: 'element' as const,
+      tagName: 'p',
+      properties: {},
+      children: renderMarkdownInline(paragraph.replace(/\n/g, ' ')),
+    }));
 }
 
 function readTemplateConstant(source: string, constant: string): string {
@@ -235,8 +256,8 @@ async function renderTwoslashCode(code: string, prelude = ''): Promise<string> {
       transformerTwoslash({
         tsModule: typescriptTwoslash as unknown as NonNullable<Parameters<typeof transformerTwoslash>[0]>['tsModule'],
         rendererRich: {
-          renderMarkdown: renderMarkdownLinks,
-          renderMarkdownInline: renderMarkdownLinks,
+          renderMarkdown,
+          renderMarkdownInline,
         },
         twoslashOptions: {
           compilerOptions: { noLib: true },

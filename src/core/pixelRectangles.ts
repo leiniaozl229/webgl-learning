@@ -66,6 +66,17 @@ gl.vertexAttribPointer(
   0,
 );
 
+// 每个矩形包含像素坐标和归一化后的 RGBA 颜色
+const rectangles = [
+  {
+    x: 48,
+    y: 42,
+    width: 180,
+    height: 116,
+    color: new Float32Array([0.24, 0.62, 0.95, 1]),
+  },
+];
+
 // 一个矩形由两个三角形组成，所以需要 6 个顶点
 function createRectangleVertices(
   x: number,

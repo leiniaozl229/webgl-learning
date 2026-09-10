@@ -25,7 +25,7 @@ export const TRIANGLE_POINTS = [
 export const TRIANGLE_VERTEX_DATA_SOURCE = `// gl 是 WebGL2 上下文，program 是已链接的着色程序
 
 // 1. 找到顶点着色器中 in vec2 a_position 的属性位置
-// 后面通过这个数字，把 Buffer 数据连接到 a_position
+// 后面通过这个属性槽编号，把 Buffer 数据连接到 a_position
 const positionLocation = gl.getAttribLocation(
   program,
   'a_position',
@@ -69,7 +69,7 @@ gl.enableVertexAttribArray(positionLocation);
 // 告诉 GPU 应该怎样把当前 Buffer 解释成 a_position
 // 这次配置会记录在当前绑定的 VAO 中
 gl.vertexAttribPointer(
-  positionLocation, // 数据送给 a_position
+  positionLocation, // 记录 a_position 如何读取当前 Buffer
   2,                // 每个顶点读取 x、y 两个分量
   gl.FLOAT,         // 每个分量都是 32 位浮点数
   false,            // 不对数据做归一化转换
