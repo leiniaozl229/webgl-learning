@@ -34,7 +34,7 @@ export function CodeBlock({ children, language = 'ts', label, twoslashId }: Code
         <div className="code-block__actions">
           <FullscreenButton />
           <button type="button" onClick={copyCode} aria-label="复制代码">
-            {copied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}<span>{copied ? '已复制' : '复制'}</span>
+            {copied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
           </button>
         </div>
       </figcaption>

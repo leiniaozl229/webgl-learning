@@ -33,6 +33,30 @@ export function TableOfContents({ items, sourceHref, variant = 'sidebar' }: Tabl
     return () => observer.disconnect();
   }, [items]);
 
+  useEffect(() => {
+    if (variant !== 'inline') return;
+
+    const closeOnOutsidePointer = (event: PointerEvent) => {
+      const details = detailsRef.current;
+      if (!details?.open || details.contains(event.target as Node)) return;
+      details.open = false;
+    };
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      const details = detailsRef.current;
+      if (!details?.open) return;
+      details.open = false;
+    };
+
+    document.addEventListener('pointerdown', closeOnOutsidePointer);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsidePointer);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [variant]);
+
   const links = (
     <nav aria-label="本页章节">
       <ol>
@@ -61,7 +85,6 @@ export function TableOfContents({ items, sourceHref, variant = 'sidebar' }: Tabl
         <summary>本页内容 <ChevronDown aria-hidden="true" /></summary>
         <div className="toc__popover">
           {links}
-          <a className="toc__source" href={sourceHref} target="_blank" rel="noreferrer">参考原文</a>
         </div>
       </details>
     );

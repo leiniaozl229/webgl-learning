@@ -1,4 +1,5 @@
 import { Maximize2, Minimize2 } from 'lucide-react';
+import { createPortal } from 'react-dom';
 import { useEffect, useRef, useState } from 'react';
 
 function findFullscreenTarget(button: HTMLButtonElement | null): HTMLElement | null {
@@ -7,52 +8,54 @@ function findFullscreenTarget(button: HTMLButtonElement | null): HTMLElement | n
 
 export function FullscreenButton() {
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isSupported, setIsSupported] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
-    const syncState = () => {
-      const target = findFullscreenTarget(buttonRef.current);
-      setIsFullscreen(document.fullscreenElement === target);
-      setIsSupported(Boolean(target?.requestFullscreen) && document.fullscreenEnabled !== false);
-    };
-
-    syncState();
-    document.addEventListener('fullscreenchange', syncState);
-    return () => document.removeEventListener('fullscreenchange', syncState);
-  }, []);
-
-  async function toggleFullscreen() {
     const target = findFullscreenTarget(buttonRef.current);
-    if (!target || !isSupported) return;
+    if (!target || !isExpanded) return;
 
-    try {
-      if (document.fullscreenElement === target) {
-        await document.exitFullscreen();
-        return;
-      }
+    target.dataset.codeWindowExpanded = 'true';
+    document.body.classList.add('code-window-open');
 
-      if (document.fullscreenElement) await document.exitFullscreen();
-      await target.requestFullscreen();
-    } catch {
-      setIsSupported(false);
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') setIsExpanded(false);
     }
+
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      delete target.dataset.codeWindowExpanded;
+      document.body.classList.remove('code-window-open');
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [isExpanded]);
+
+  function toggleExpanded() {
+    const target = findFullscreenTarget(buttonRef.current);
+    if (target) setIsExpanded((expanded) => !expanded);
   }
 
-  const label = isFullscreen ? '退出全屏' : '全屏查看';
+  const label = isExpanded ? '关闭大窗口' : '打开大窗口';
   return (
-    <button
-      ref={buttonRef}
-      className="fullscreen-button"
-      type="button"
-      onClick={toggleFullscreen}
-      disabled={!isSupported}
-      aria-label={label}
-      title={isSupported ? label : '当前环境不支持全屏'}
-      aria-pressed={isFullscreen}
-    >
-      {isFullscreen ? <Minimize2 aria-hidden="true" /> : <Maximize2 aria-hidden="true" />}
-      <span>{label}</span>
-    </button>
+    <>
+      <button
+        ref={buttonRef}
+        className="fullscreen-button"
+        type="button"
+        onClick={toggleExpanded}
+        aria-label={label}
+        title={label}
+        aria-pressed={isExpanded}
+      >
+        {isExpanded ? <Minimize2 aria-hidden="true" /> : <Maximize2 aria-hidden="true" />}
+      </button>
+      {isExpanded && createPortal(
+        <div
+          className="code-window-backdrop"
+          aria-hidden="true"
+          onMouseDown={() => setIsExpanded(false)}
+        />,
+        document.body,
+      )}
+    </>
   );
 }

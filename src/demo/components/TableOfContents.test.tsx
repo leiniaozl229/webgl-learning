@@ -17,7 +17,7 @@ describe('TableOfContents', () => {
     expect(html).toContain('<details');
     expect(html).toContain('href="#overview"');
     expect(html).toContain('aria-current="location"');
-    expect(html).toContain('参考原文');
+    expect(html).not.toContain('参考原文');
   });
 
   it('renders the same anchors in the wide sidebar variant', () => {
