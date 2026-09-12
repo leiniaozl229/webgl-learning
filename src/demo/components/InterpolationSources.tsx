@@ -47,7 +47,7 @@ export function InterpolationSources() {
         <Tabs.Indicator className="editor-tabs__indicator" />
       </Tabs.List>
       {sourceTabs.map((tab) => (
-        <Tabs.Panel key={tab.id} className="interpolation-sources__code" value={tab.id}>
+        <Tabs.Panel key={tab.id} className="interpolation-sources__code" value={tab.id} keepMounted>
           {tab.id === 'data'
             ? <TwoslashHighlightedCode html={startLessonTwoslashHtml['interpolation-vertex-data']} />
             : <HighlightedCode code={sources[tab.id].code} language={sources[tab.id].language} />}

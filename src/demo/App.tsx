@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { LESSON_NAVIGATION_EVENT } from './components/LessonLink';
 import { ConvolutionMatrixArticle } from './components/ConvolutionMatrixArticle';
+import { CommonApisArticle } from './components/CommonApisArticle';
 import { GettingWebgl2Article } from './components/GettingWebgl2Article';
 import {
   ConvolutionKernelsArticle,
@@ -30,6 +31,7 @@ type Theme = 'light' | 'dark';
 
 const lessonTitles: Record<LessonId, string> = {
   'getting-webgl2': '怎样使用 WebGL2',
+  'common-apis': '常用 WebGL2 API',
   fundamentals: 'WebGL2 的基本原理',
   'how-it-works': 'WebGL2 如何工作',
   'shaders-and-glsl': '着色器与 GLSL',
@@ -178,6 +180,7 @@ export function App() {
       />
       <main id="main-content" className="main-content" tabIndex={-1}>
         {lessonId === 'getting-webgl2' && <GettingWebgl2Article toc={inlineTableOfContents} />}
+        {lessonId === 'common-apis' && <CommonApisArticle toc={inlineTableOfContents} />}
         {lessonId === 'fundamentals' && <LessonArticle toc={inlineTableOfContents} />}
         {lessonId === 'how-it-works' && <HowItWorksArticle toc={inlineTableOfContents} />}
         {lessonId === 'shaders-and-glsl' && <ShadersAndGlslArticle toc={inlineTableOfContents} />}

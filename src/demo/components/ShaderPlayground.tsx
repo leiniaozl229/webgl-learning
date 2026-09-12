@@ -31,7 +31,7 @@ function ShaderSourcePanel({ id, source, onChange }: ShaderSourcePanelProps) {
   const label = id === 'vertex' ? '顶点着色器源码' : '片段着色器源码';
 
   return (
-    <Tabs.Panel className="shader-source-panel" value={id}>
+    <Tabs.Panel className="shader-source-panel" value={id} keepMounted>
       <label className="sr-only" htmlFor={`shader-editor-${id}`}>{label}</label>
       <HighlightedCode ref={highlightedSourceRef} className="shader-source-highlight" code={source} language="glsl" ariaHidden />
       <textarea
@@ -115,7 +115,7 @@ export function ShaderPlayground() {
             ))}
             <Tabs.Indicator className="editor-tabs__indicator" />
           </Tabs.List>
-          <Tabs.Panel className="vertex-data-panel" value="data">
+          <Tabs.Panel className="vertex-data-panel" value="data" keepMounted>
             <TwoslashHighlightedCode html={startLessonTwoslashHtml['triangle-vertex-data']} />
           </Tabs.Panel>
           <ShaderSourcePanel id="vertex" source={vertexSource} onChange={setVertexSource} />

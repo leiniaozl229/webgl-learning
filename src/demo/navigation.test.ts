@@ -6,6 +6,10 @@ describe('parseLessonId', () => {
   it('selects the getting started lesson from the query string', () => {
     expect(parseLessonId('?lesson=getting-webgl2')).toBe('getting-webgl2');
   });
+
+  it('selects the standalone common API lesson from the query string', () => {
+    expect(parseLessonId('?lesson=common-apis')).toBe('common-apis');
+  });
   it('selects the second lesson from the query string', () => {
     expect(parseLessonId('?lesson=how-it-works')).toBe('how-it-works');
   });

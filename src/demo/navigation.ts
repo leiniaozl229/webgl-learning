@@ -1,5 +1,6 @@
 export type LessonId =
   | 'getting-webgl2'
+  | 'common-apis'
   | 'fundamentals'
   | 'how-it-works'
   | 'shaders-and-glsl'
@@ -47,6 +48,7 @@ export const navigationGroups: NavigationGroup[] = [
       { id: 'how-it-works', label: 'WebGL2 如何工作', href: lessonHref('how-it-works') },
       { id: 'shaders-and-glsl', label: '着色器与 GLSL', href: lessonHref('shaders-and-glsl') },
       { id: 'state-diagram', label: 'WebGL2 状态图', href: lessonHref('state-diagram') },
+      { id: 'common-apis', label: '常用 WebGL2 API', href: lessonHref('common-apis') },
     ],
   },
   {
@@ -78,6 +80,11 @@ export const tableOfContentsByLesson: Record<LessonId, TableOfContentsItem[]> = 
     { label: '上下文选项', href: '#context-options' },
     { label: '设备能力检查', href: '#capability-check' },
     { label: '本项目的学习环境', href: '#project-workflow' },
+    { label: '继续学习', href: '#next-steps' },
+  ],
+  'common-apis': [
+    { label: 'API 速查', href: '#api-reference' },
+    { label: '数据流运行架构', href: '#api-architecture' },
     { label: '继续学习', href: '#next-steps' },
   ],
   fundamentals: [
@@ -211,6 +218,7 @@ export const tableOfContentsByLesson: Record<LessonId, TableOfContentsItem[]> = 
 
 export const sourceByLesson: Record<LessonId, string> = {
   'getting-webgl2': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-getting-webgl2.html',
+  'common-apis': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-fundamentals.html',
   fundamentals: 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-fundamentals.html',
   'how-it-works': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-how-it-works.html',
   'shaders-and-glsl': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-shaders-and-glsl.html',
@@ -232,6 +240,7 @@ export function parseLessonId(search: string): LessonId {
   const lesson = new URLSearchParams(search).get('lesson');
   if (
     lesson === 'getting-webgl2' ||
+    lesson === 'common-apis' ||
     lesson === 'how-it-works' ||
     lesson === 'shaders-and-glsl' ||
     lesson === 'state-diagram' ||

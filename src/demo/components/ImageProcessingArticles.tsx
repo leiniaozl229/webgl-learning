@@ -516,7 +516,7 @@ function TextureSamplingSourceTabs() {
         <FullscreenButton />
       </div>
       {textureSourceTabs.map((tab) => (
-        <Tabs.Panel key={tab.id} className="complete-source__panel" value={tab.id}>
+        <Tabs.Panel key={tab.id} className="complete-source__panel" value={tab.id} keepMounted>
           {tab.id === 'typescript'
             ? <TwoslashHighlightedCode html={textureSamplingTwoslashHtml} />
             : <HighlightedCode code={tab.code} language={tab.language} />}

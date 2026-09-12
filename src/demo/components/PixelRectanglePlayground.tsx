@@ -169,7 +169,7 @@ export function PixelRectanglePlayground() {
           <Tabs.Indicator className="editor-tabs__indicator" />
         </Tabs.List>
         {tabs.map((tab) => (
-          <Tabs.Panel key={tab.id} className="pixel-playground__code" value={tab.id}>
+          <Tabs.Panel key={tab.id} className="pixel-playground__code" value={tab.id} keepMounted>
             {tab.id === 'data'
               ? <TwoslashHighlightedCode html={startLessonTwoslashHtml['pixel-rectangle-data']} />
               : <HighlightedCode code={sources[tab.id].code} language={sources[tab.id].language} />}

@@ -102,7 +102,7 @@ export function UniformPlayground() {
           <Tabs.Indicator className="editor-tabs__indicator" />
         </Tabs.List>
         {tabs.map((tab) => (
-          <Tabs.Panel key={tab.id} className="uniform-lab__code" value={tab.id}>
+          <Tabs.Panel key={tab.id} className="uniform-lab__code" value={tab.id} keepMounted>
             {tab.id === 'data'
               ? <TwoslashHighlightedCode html={startLessonTwoslashHtml['uniform-data']} />
               : <HighlightedCode code={sources[tab.id].code} language={sources[tab.id].language} />}
