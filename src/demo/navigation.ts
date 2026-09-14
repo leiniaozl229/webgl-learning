@@ -84,6 +84,7 @@ export const tableOfContentsByLesson: Record<LessonId, TableOfContentsItem[]> = 
   ],
   'common-apis': [
     { label: 'API 速查', href: '#api-reference' },
+    { label: 'JavaScript 类型数组', href: '#typed-arrays' },
     { label: '数据流运行架构', href: '#api-architecture' },
     { label: '继续学习', href: '#next-steps' },
   ],

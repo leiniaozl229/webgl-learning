@@ -57,11 +57,64 @@ const commonApiGroups = [
   },
 ] as const;
 
+const typedArrayGroups = [
+  {
+    name: 'Float32Array',
+    bytes: '4 bytes / 元素',
+    description: '顶点位置、颜色、法线、纹理坐标，以及大多数浮点 Uniform。',
+    example: 'new Float32Array(positions)',
+  },
+  {
+    name: 'Uint16Array',
+    bytes: '2 bytes / 元素',
+    description: '常用索引数组，对应 gl.UNSIGNED_SHORT，单个索引最大为 65535。',
+    example: 'new Uint16Array([0, 1, 2])',
+  },
+  {
+    name: 'Uint32Array',
+    bytes: '4 bytes / 元素',
+    description: '大型索引数组，对应 gl.UNSIGNED_INT；WebGL2 可以直接使用。',
+    example: 'new Uint32Array(indices)',
+  },
+  {
+    name: 'Uint8Array',
+    bytes: '1 byte / 元素',
+    description: '纹理像素、RGBA 字节数据，以及需要按无符号字节上传的内容。',
+    example: 'new Uint8Array(pixelBytes)',
+  },
+] as const;
+
 function CodePanel({ label, children, language = 'typescript' }: { label: string; children: string; language?: 'typescript' | 'glsl' }) {
   return (
     <div className="api-infographic__code-panel">
       <h4>{label}</h4>
       <HighlightedCode code={children} language={language} className="api-infographic__code-highlight" />
+    </div>
+  );
+}
+
+function ApiColumn({ index, title, children }: { index: string; title: string; children: ReactNode }) {
+  return (
+    <div className="api-infographic__api-column">
+      <div className="api-infographic__api-column-heading"><span className="api-infographic__api-index">{index}</span><strong>{title}</strong></div>
+      <div className="api-infographic__api-column-content">{children}</div>
+    </div>
+  );
+}
+
+function VariableTrace({ label, flow, description }: { label: string; flow: string[]; description: string }) {
+  return (
+    <div className="api-infographic__variable-trace">
+      <small>{label}</small>
+      <div className="api-infographic__variable-trace-flow">
+        {flow.map((item, index) => (
+          <span key={item}>
+            {index > 0 ? <ArrowRight aria-hidden="true" /> : null}
+            <code>{item}</code>
+          </span>
+        ))}
+      </div>
+      <p>{description}</p>
     </div>
   );
 }
@@ -86,6 +139,22 @@ const indicesCode = lines('const indices = new Uint16Array([', '  0, 1, 2,', '])
 const offsetCode = lines('const offset = [0.2, 0.1];', '// Uniform：每次绘制使用');
 const typedArrayCode = lines('new Float32Array(positions)', '// 每个值 32 位浮点数');
 const indexArrayCode = lines('new Uint16Array(indices)', '// 每个索引 16 位无符号整数');
+const typedArrayUploadCode = lines(
+  'const positions = new Float32Array([',
+  '  0.0,  0.7,',
+  ' -0.6, -0.6,',
+  '  0.6, -0.6,',
+  ']);',
+  '',
+  'gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);',
+  'gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);',
+  '',
+  'const indices = new Uint16Array([0, 1, 2]);',
+  'gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);',
+  'gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);',
+  '',
+  'const stride = 5 * Float32Array.BYTES_PER_ELEMENT;',
+);
 const shaderProgramCode = lines(
   "const gl = canvas.getContext('webgl2');",
   'const vs = gl.createShader(gl.VERTEX_SHADER);',
@@ -99,6 +168,9 @@ const shaderProgramCode = lines(
   'gl.attachShader(program, fs);',
   'gl.linkProgram(program);',
   'gl.useProgram(program);',
+  "const positionLocation = gl.getAttribLocation(program, 'a_position');",
+  "const colorLocation = gl.getAttribLocation(program, 'a_color');",
+  "const offsetLocation = gl.getUniformLocation(program, 'u_offset');",
 );
 const uploadCode = lines(
   'const positionBuffer = gl.createBuffer();',
@@ -116,9 +188,10 @@ const vertexShaderCode = lines(
   '#version 300 es',
   'in vec2 a_position;',
   'in vec3 a_color;',
+  'uniform vec2 u_offset;',
   'out vec3 v_color;',
   'void main() {',
-  '  gl_Position = vec4(a_position, 0.0, 1.0);',
+  '  gl_Position = vec4(a_position + u_offset, 0.0, 1.0);',
   '  v_color = a_color;',
   '}',
 );
@@ -261,6 +334,33 @@ export function CommonApisArticle({ toc }: { toc?: ReactNode }) {
         </div>
       </section>
 
+      <section id="typed-arrays" className="lesson-section lesson-section--wide">
+        <h2>WebGL2 中常用的 JavaScript 类型数组</h2>
+        <p>WebGL2 的 Buffer 和纹理 API 接收的是连续的二进制数据。TypedArray 用固定的元素类型和字节宽度表达这批数据，上传后 GPU 才能按约定读取每个值。</p>
+        <div className="typed-array-guide">
+          <div className="typed-array-guide__cards" aria-label="常用 JavaScript 类型数组">
+            {typedArrayGroups.map((item) => (
+              <article className="typed-array-guide__card" key={item.name}>
+                <header><code>{item.name}</code><span>{item.bytes}</span></header>
+                <p>{item.description}</p>
+                <code className="typed-array-guide__example">{item.example}</code>
+              </article>
+            ))}
+          </div>
+          <div className="typed-array-guide__details">
+            <div className="typed-array-guide__code">
+              <h3>类型数组如何进入 Buffer</h3>
+              <HighlightedCode code={typedArrayUploadCode} language="typescript" className="typed-array-guide__highlight" />
+            </div>
+            <aside className="typed-array-guide__note">
+              <strong>记住两个关系</strong>
+              <p><code>BYTES_PER_ELEMENT</code> 表示单个元素占几个字节；<code>stride</code> 和 <code>offset</code> 则描述 Buffer 中的字节位置。</p>
+              <p>顶点浮点数据通常使用 <code>Float32Array</code>。JavaScript 的 <code>number</code> 默认是双精度浮点数，上传前需要转换成适合 GPU 读取的 32 位浮点布局。</p>
+            </aside>
+          </div>
+        </div>
+      </section>
+
       <section id="api-architecture" className="lesson-section lesson-section--wide">
         <h2>API 调用与数据流</h2>
         <p>每个 API 都会读取或更新当前 WebGL 状态。沿着下面的五个阶段观察，可以把 JavaScript 数据、资源绑定、GPU 执行和最终像素放在同一张图里。</p>
@@ -279,6 +379,11 @@ export function CommonApisArticle({ toc }: { toc?: ReactNode }) {
                 <CodePanel label="顶点索引">{indicesCode}</CodePanel>
                 <CodePanel label="绘制参数">{offsetCode}</CodePanel>
               </div>
+              <VariableTrace
+                label="变量当前在哪里"
+                flow={['positions / colors / offset', 'JavaScript 内存']}
+                description="此时数据还是 JavaScript 中的数组，尚未进入 GPU。"
+              />
             </div>
             <div className="api-infographic__stage-side">
               <div className="api-infographic__stage-heading"><strong>数据载体类型</strong><small>常见选择</small></div>
@@ -298,10 +403,15 @@ export function CommonApisArticle({ toc }: { toc?: ReactNode }) {
             <div className="api-infographic__stage-main">
               <div className="api-infographic__stage-heading"><strong>关键 API</strong><small>WebGL / WebGL2</small></div>
               <div className="api-infographic__api-columns">
-                <div className="api-infographic__api-column"><span className="api-infographic__api-index">1</span><strong>获取上下文</strong><code>canvas.getContext('webgl2')</code></div>
-                <div className="api-infographic__api-column"><span className="api-infographic__api-index">2</span><strong>着色器与程序</strong><div><code>gl.createShader()</code><code>gl.shaderSource()</code><code>gl.compileShader()</code><code>gl.createProgram()</code><code>gl.linkProgram()</code><code>gl.useProgram()</code></div></div>
-                <div className="api-infographic__api-column"><span className="api-infographic__api-index">3</span><strong>获取变量位置</strong><div><code>gl.getAttribLocation()</code><code>gl.getUniformLocation()</code></div></div>
+                <ApiColumn index="1" title="获取上下文"><code>canvas.getContext('webgl2')</code></ApiColumn>
+                <ApiColumn index="2" title="着色器与程序"><div><code>gl.createShader()</code><code>gl.shaderSource()</code><code>gl.compileShader()</code><code>gl.createProgram()</code><code>gl.linkProgram()</code><code>gl.useProgram()</code></div></ApiColumn>
+                <ApiColumn index="3" title="获取变量位置"><div><code>gl.getAttribLocation()</code><code>gl.getUniformLocation()</code></div></ApiColumn>
               </div>
+              <VariableTrace
+                label="变量名与 Program 建立对应"
+                flow={['a_position / a_color / u_offset', 'Location']}
+                description="getAttribLocation() 和 getUniformLocation() 返回后，JavaScript 才能找到 Shader 输入的更新入口。"
+              />
             </div>
             <div className="api-infographic__stage-side"><CodePanel label="最小调用顺序">{shaderProgramCode}</CodePanel></div>
           </section>
@@ -317,10 +427,15 @@ export function CommonApisArticle({ toc }: { toc?: ReactNode }) {
             <div className="api-infographic__stage-main">
               <div className="api-infographic__stage-heading"><strong>关键 API</strong><small>资源创建与绑定</small></div>
               <div className="api-infographic__api-columns">
-                <div className="api-infographic__api-column"><span className="api-infographic__api-index">1</span><strong>创建并上传 Buffer</strong><div><code>gl.createBuffer()</code><code>gl.bindBuffer()</code><code>gl.bufferData()</code></div></div>
-                <div className="api-infographic__api-column"><span className="api-infographic__api-index">2</span><strong>创建并绑定 VAO</strong><div><code>gl.createVertexArray()</code><code>gl.bindVertexArray()</code><code>gl.vertexAttribPointer()</code><code>gl.enableVertexAttribArray()</code></div></div>
-                <div className="api-infographic__api-column"><span className="api-infographic__api-index">3</span><strong>可选：纹理资源</strong><div><code>gl.createTexture()</code><code>gl.bindTexture()</code><code>gl.texImage2D()</code></div></div>
+                <ApiColumn index="1" title="创建并上传 Buffer"><div><code>gl.createBuffer()</code><code>gl.bindBuffer()</code><code>gl.bufferData()</code></div></ApiColumn>
+                <ApiColumn index="2" title="创建并绑定 VAO"><div><code>gl.createVertexArray()</code><code>gl.bindVertexArray()</code><code>gl.vertexAttribPointer()</code><code>gl.enableVertexAttribArray()</code></div></ApiColumn>
+                <ApiColumn index="3" title="可选：纹理资源"><div><code>gl.createTexture()</code><code>gl.bindTexture()</code><code>gl.texImage2D()</code></div></ApiColumn>
               </div>
+              <VariableTrace
+                label="数据与读取规则绑定"
+                flow={['TypedArray', 'Buffer / VAO', 'Attribute']}
+                description="bufferData() 上传实际值，vertexAttribPointer() 记录 GPU 如何读取这些值。"
+              />
             </div>
             <div className="api-infographic__stage-side"><CodePanel label="本例中的资源上传">{uploadCode}</CodePanel></div>
           </section>
@@ -335,6 +450,16 @@ export function CommonApisArticle({ toc }: { toc?: ReactNode }) {
             </div>
             <div className="api-infographic__stage-main api-infographic__stage-main--gpu">
               <div className="api-infographic__stage-heading"><strong>着色器代码与 GPU 流水线</strong><small>Vertex Shader → Fragment Shader</small></div>
+              <VariableTrace
+                label="顶点阶段"
+                flow={['a_position + u_offset', 'gl_Position']}
+                description="Attribute 提供每个顶点的数据，Uniform 提供本次绘制共享的偏移量。"
+              />
+              <VariableTrace
+                label="片段阶段"
+                flow={['a_color', 'v_color', 'outColor']}
+                description="顶点着色器输出 v_color，光栅化后插值给片段着色器，再写入颜色输出。"
+              />
               <div className="api-infographic__shader-grid"><CodePanel label="顶点着色器" language="glsl">{vertexShaderCode}</CodePanel><CodePanel label="片段着色器" language="glsl">{fragmentShaderCode}</CodePanel></div>
               <div className="api-infographic__svg-scroll"><PipelineDiagram /></div>
               <div className="api-infographic__api-strip"><strong>绘制相关状态</strong><code>gl.viewport()</code><code>gl.clearColor()</code><code>gl.clear()</code><code>gl.drawArrays()</code><code>gl.drawElements()</code></div>
@@ -352,6 +477,11 @@ export function CommonApisArticle({ toc }: { toc?: ReactNode }) {
             <div className="api-infographic__stage-main api-infographic__stage-main--output">
               <div className="api-infographic__stage-heading"><strong>从颜色缓冲区到页面</strong><small>Framebuffer → Canvas</small></div>
               <div className="api-infographic__svg-scroll"><CanvasOutputDiagram /></div>
+              <VariableTrace
+                label="绘制结果的最后一站"
+                flow={['outColor', 'Color Buffer', 'Canvas']}
+                description="片段着色器的 outColor 写入颜色缓冲区，浏览器再把它显示到 Canvas。"
+              />
             </div>
           </section>
 
