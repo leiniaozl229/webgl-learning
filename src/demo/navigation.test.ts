@@ -22,6 +22,10 @@ describe('parseLessonId', () => {
     expect(parseLessonId('?lesson=state-diagram')).toBe('state-diagram');
   });
 
+  it('selects the matrix math lesson from the query string', () => {
+    expect(parseLessonId('?lesson=matrix-math')).toBe('matrix-math');
+  });
+
   it.each([
     'texture-sampling',
     'image-processing-basics',

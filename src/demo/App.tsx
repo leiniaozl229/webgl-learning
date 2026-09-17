@@ -12,6 +12,7 @@ import {
   TextureSamplingArticle,
 } from './components/ImageProcessingArticles';
 import { LessonArticle } from './components/LessonArticle';
+import { MatrixMathArticle } from './components/MatrixMathArticle';
 import { HowItWorksArticle } from './components/HowItWorksArticle';
 import { ShadersAndGlslArticle } from './components/ShadersAndGlslArticle';
 import { StateDiagramArticle } from './components/StateDiagramArticle';
@@ -43,6 +44,7 @@ const lessonTitles: Record<LessonId, string> = {
   'how-it-works': 'WebGL2 如何工作',
   'shaders-and-glsl': '着色器与 GLSL',
   'state-diagram': 'WebGL2 状态图',
+  'matrix-math': '矩阵基础：从二维到三维',
   'texture-sampling': '图像上传与纹理采样',
   'image-processing-basics': '图像处理基础',
   'convolution-kernels': '卷积核',
@@ -197,6 +199,7 @@ export function App() {
         {lessonId === 'how-it-works' && <HowItWorksArticle toc={inlineTableOfContents} />}
         {lessonId === 'shaders-and-glsl' && <ShadersAndGlslArticle toc={inlineTableOfContents} />}
         {lessonId === 'state-diagram' && <StateDiagramArticle toc={inlineTableOfContents} />}
+        {lessonId === 'matrix-math' && <MatrixMathArticle toc={inlineTableOfContents} />}
         {lessonId === 'texture-sampling' && <TextureSamplingArticle toc={inlineTableOfContents} />}
         {lessonId === 'image-processing-basics' && <ImageProcessingBasicsArticle toc={inlineTableOfContents} />}
         {lessonId === 'convolution-kernels' && <ConvolutionKernelsArticle toc={inlineTableOfContents} />}

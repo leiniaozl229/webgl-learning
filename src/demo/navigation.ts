@@ -5,6 +5,7 @@ export type LessonId =
   | 'how-it-works'
   | 'shaders-and-glsl'
   | 'state-diagram'
+  | 'matrix-math'
   | 'texture-sampling'
   | 'image-processing-basics'
   | 'convolution-kernels'
@@ -54,6 +55,12 @@ export const navigationGroups: NavigationGroup[] = [
       { id: 'shaders-and-glsl', label: '着色器与 GLSL', href: lessonHref('shaders-and-glsl') },
       { id: 'state-diagram', label: 'WebGL2 状态图', href: lessonHref('state-diagram') },
       { id: 'common-apis', label: '常用 WebGL2 API', href: lessonHref('common-apis') },
+    ],
+  },
+  {
+    label: '数学',
+    items: [
+      { id: 'matrix-math', label: '矩阵基础：从二维到三维', href: lessonHref('matrix-math') },
     ],
   },
   {
@@ -134,6 +141,19 @@ export const tableOfContentsByLesson: Record<LessonId, TableOfContentsItem[]> = 
     { label: '状态模拟器', href: '#state-explorer' },
     { label: 'VAO 保存什么', href: '#vao-state' },
     { label: 'draw call 读取什么', href: '#draw-snapshot' },
+    { label: '继续学习', href: '#next-steps' },
+  ],
+  'matrix-math': [
+    { label: '标量、向量与矩阵', href: '#scalar-vector-matrix' },
+    { label: '行列与形状', href: '#rows-columns-shape' },
+    { label: '矩阵乘向量', href: '#matrix-vector-product' },
+    { label: '坐标轴与矩阵列', href: '#basis-columns' },
+    { label: '齐次坐标', href: '#homogeneous-coordinates' },
+    { label: 'mat3 到 mat4', href: '#mat3-to-mat4' },
+    { label: '组合顺序', href: '#composition-order' },
+    { label: '存储与上传', href: '#storage-and-upload' },
+    { label: '单位、逆与转置', href: '#identity-and-inverse' },
+    { label: '连接二维与三维', href: '#webgl-connections' },
     { label: '继续学习', href: '#next-steps' },
   ],
   'texture-sampling': [
@@ -284,6 +304,7 @@ export const sourceByLesson: Record<LessonId, string> = {
   'how-it-works': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-how-it-works.html',
   'shaders-and-glsl': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-shaders-and-glsl.html',
   'state-diagram': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-state-diagram.html',
+  'matrix-math': 'https://webgl2fundamentals.org/webgl/lessons/webgl-matrix-vs-math.html',
   'texture-sampling': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-image-processing.html',
   'image-processing-basics': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-image-processing.html',
   'convolution-kernels': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-image-processing.html',
@@ -310,6 +331,7 @@ export function parseLessonId(search: string): LessonId {
     lesson === 'how-it-works' ||
     lesson === 'shaders-and-glsl' ||
     lesson === 'state-diagram' ||
+    lesson === 'matrix-math' ||
     lesson === 'texture-sampling' ||
     lesson === 'image-processing-basics' ||
     lesson === 'convolution-kernels' ||
