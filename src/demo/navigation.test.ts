@@ -43,6 +43,16 @@ describe('parseLessonId', () => {
     expect(parseLessonId(`?lesson=${lesson}`)).toBe(lesson);
   });
 
+  it.each([
+    'orthographic-3d',
+    'perspective-3d',
+    'camera-3d',
+    'matrix-naming-3d',
+    'model-view-projection',
+  ] as const)('selects the 3D foundation lesson %s', (lesson) => {
+    expect(parseLessonId(`?lesson=${lesson}`)).toBe(lesson);
+  });
+
   it('falls back to fundamentals for unknown lessons', () => {
     expect(parseLessonId('?lesson=unknown')).toBe('fundamentals');
     expect(parseLessonId('')).toBe('fundamentals');

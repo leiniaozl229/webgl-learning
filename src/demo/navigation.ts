@@ -15,7 +15,12 @@ export type LessonId =
   | 'rotation-2d'
   | 'scale-2d'
   | 'matrices-2d'
-  | 'unified-2d-transforms';
+  | 'unified-2d-transforms'
+  | 'orthographic-3d'
+  | 'perspective-3d'
+  | 'camera-3d'
+  | 'matrix-naming-3d'
+  | 'model-view-projection';
 
 export interface NavigationItem {
   id?: LessonId;
@@ -69,7 +74,13 @@ export const navigationGroups: NavigationGroup[] = [
   },
   {
     label: '三维',
-    items: [{ label: '正射投影' }, { label: '透视投影' }, { label: '相机' }],
+    items: [
+      { id: 'orthographic-3d', label: '三维正射投影', href: lessonHref('orthographic-3d') },
+      { id: 'perspective-3d', label: '三维透视投影', href: lessonHref('perspective-3d') },
+      { id: 'camera-3d', label: '三维相机', href: lessonHref('camera-3d') },
+      { id: 'matrix-naming-3d', label: '三维矩阵命名', href: lessonHref('matrix-naming-3d') },
+      { id: 'model-view-projection', label: '模型、视图与投影', href: lessonHref('model-view-projection') },
+    ],
   },
 ];
 
@@ -223,6 +234,47 @@ export const tableOfContentsByLesson: Record<LessonId, TableOfContentsItem[]> = 
     { label: '完整数据流', href: '#complete-flow' },
     { label: '二维章节完成', href: '#next-steps' },
   ],
+  'orthographic-3d': [
+    { label: '从 mat3 到 mat4', href: '#mat4-upgrade' },
+    { label: '立体几何与颜色', href: '#volume-geometry' },
+    { label: '三个旋转轴', href: '#three-axes' },
+    { label: '正射投影体', href: '#orthographic-volume' },
+    { label: '面剔除与深度', href: '#depth-and-culling' },
+    { label: '正射实验', href: '#orthographic-lab' },
+    { label: '继续学习', href: '#next-steps' },
+  ],
+  'perspective-3d': [
+    { label: '近大远小', href: '#distance-scaling' },
+    { label: '透视除法', href: '#perspective-divide' },
+    { label: 'W 分量', href: '#w-component' },
+    { label: '视锥与裁剪面', href: '#frustum' },
+    { label: '透视矩阵', href: '#perspective-matrix' },
+    { label: '透视实验', href: '#perspective-lab' },
+    { label: '继续学习', href: '#next-steps' },
+  ],
+  'camera-3d': [
+    { label: '移动整个世界', href: '#move-the-world' },
+    { label: '相机矩阵与逆矩阵', href: '#camera-inverse' },
+    { label: '共享 ViewProjection', href: '#shared-view-projection' },
+    { label: '构造 lookAt', href: '#look-at' },
+    { label: '相机实验', href: '#camera-lab' },
+    { label: '继续学习', href: '#next-steps' },
+  ],
+  'matrix-naming-3d': [
+    { label: '用空间命名', href: '#space-naming' },
+    { label: '读取乘法方向', href: '#read-the-chain' },
+    { label: '常见命名对照', href: '#naming-table' },
+    { label: '接口约定', href: '#contract' },
+    { label: '继续学习', href: '#next-steps' },
+  ],
+  'model-view-projection': [
+    { label: '三类矩阵职责', href: '#three-responsibilities' },
+    { label: '完整空间链', href: '#mvp-chain' },
+    { label: '共享与逐物体更新', href: '#update-frequency' },
+    { label: 'MVP 实验', href: '#mvp-lab' },
+    { label: '数据流闭环', href: '#complete-3d-flow' },
+    { label: '三维基础完成', href: '#next-steps' },
+  ],
 };
 
 export const sourceByLesson: Record<LessonId, string> = {
@@ -243,6 +295,11 @@ export const sourceByLesson: Record<LessonId, string> = {
   'scale-2d': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-2d-scale.html',
   'matrices-2d': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-2d-matrices.html',
   'unified-2d-transforms': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-2d-matrices.html',
+  'orthographic-3d': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-3d-orthographic.html',
+  'perspective-3d': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-3d-perspective.html',
+  'camera-3d': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-3d-camera.html',
+  'matrix-naming-3d': 'https://webgl2fundamentals.org/webgl/lessons/webgl-3d-matrix-naming.html',
+  'model-view-projection': 'https://webgl2fundamentals.org/webgl/lessons/webgl-3d-matrix-naming.html',
 };
 
 export function parseLessonId(search: string): LessonId {
@@ -263,7 +320,12 @@ export function parseLessonId(search: string): LessonId {
     lesson === 'rotation-2d' ||
     lesson === 'scale-2d' ||
     lesson === 'matrices-2d' ||
-    lesson === 'unified-2d-transforms'
+    lesson === 'unified-2d-transforms' ||
+    lesson === 'orthographic-3d' ||
+    lesson === 'perspective-3d' ||
+    lesson === 'camera-3d' ||
+    lesson === 'matrix-naming-3d' ||
+    lesson === 'model-view-projection'
   ) return lesson;
   return 'fundamentals';
 }
