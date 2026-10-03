@@ -3,6 +3,8 @@ import { useMemo, useState, type CSSProperties, type ReactNode } from 'react';
 
 import { CodeBlock } from './CodeBlock';
 import { LessonLink } from './LessonLink';
+import { LessonPagination } from './LessonPagination';
+import { MathChapterRoute } from './MathChapterRoute';
 
 type BasisPreset = 'identity' | 'rotate' | 'scale' | 'shear';
 
@@ -34,7 +36,7 @@ const matrix = new Float32Array([
   tx, ty, 1,
 ]);
 
-// WebGL2 要求 transpose 保持 false。
+// 数组已按列存放，transpose 传 false（WebGL1 只允许 false，WebGL2 也允许 true）。
 gl.uniformMatrix3fv(matrixLocation, false, matrix);`;
 
 const shaderCode = `#version 300 es
@@ -229,6 +231,7 @@ export function MatrixMathArticle({ toc }: { toc?: ReactNode }) {
         <p className="lesson-lead">从“输入若干数字，输出若干数字”开始理解矩阵，再把行列、点积、坐标轴、齐次坐标和组合顺序连接到 WebGL2 的 <code>mat3</code> 与 <code>mat4</code>。</p>
       </header>
       {toc}
+      <MathChapterRoute current="matrix-math" />
       <LearningGoals />
       <section id="scalar-vector-matrix" className="lesson-section"><h2>先认识三种数学对象</h2><p>标量只有一个数；向量把多个相关分量排成一列；矩阵用一组系数描述“每个输出分量如何读取输入”。WebGL2 的顶点位置、颜色和变换都建立在这三种对象上。</p><MathObjects /></section>
       <section id="rows-columns-shape" className="lesson-section"><h2>行、列与形状先决定能否相乘</h2><p>一个 <code>m × n</code> 矩阵有 m 行、n 列。它接收 n 个输入分量，产生 m 个输出分量。先检查中间维度，能够在计算前发现许多错误。</p><MatrixShapeGuide /></section>
@@ -237,10 +240,10 @@ export function MatrixMathArticle({ toc }: { toc?: ReactNode }) {
       <section id="homogeneous-coordinates" className="lesson-section"><h2>多一个分量，让平移进入乘法</h2><p>普通 2×2 或 3×3 线性变换会把原点保持在原点，无法单独表达平移。给位置补上 W=1 后，矩阵的最后一列可以加入固定偏移；方向向量使用 W=0，因此不会受到平移影响。</p><HomogeneousBridge /></section>
       <section id="mat3-to-mat4" className="lesson-section"><h2>mat3 与 mat4 使用同一套阅读方式</h2><p>二维 <code>mat3</code> 用两列保存 X、Y 轴，再用一列保存平移。三维 <code>mat4</code> 增加 Z 轴，最后一列继续保存位置。Model、View 和 Projection 都沿用 4×4 结构。</p><CodeBlock label="vertex.glsl" language="glsl">{shaderCode}</CodeBlock></section>
       <section id="composition-order" className="lesson-section"><h2>矩阵组合把多个步骤压成一个接口</h2><p>本站采用列向量和矩阵左乘。表达式从右向左作用到点，因此交换两个矩阵通常会改变结果。平移后旋转与旋转后平移会得到不同轨迹。</p><CompositionOrder /><CodeBlock label="compose.ts">{composeCode}</CodeBlock></section>
-      <section id="storage-and-upload" className="lesson-section"><h2>区分数学排版、数组存储和 GLSL 索引</h2><p>页面把矩阵按数学习惯画成横向的行。JavaScript 数组按列连续存放，GLSL 的 <code>matrix[column][row]</code> 也先取列。上传时 <code>transpose</code> 必须传 <code>false</code>。</p><CodeBlock label="upload-mat3.ts">{uploadCode}</CodeBlock></section>
-      <section id="identity-and-inverse" className="lesson-section"><h2>三个后续会反复出现的矩阵操作</h2><p>单位矩阵提供初始状态，逆矩阵撤销变换，转置交换行列。先记住它们的职责，进入相机和光照章节后再推导具体算法。</p><IdentityInversePreview /></section>
+      <section id="storage-and-upload" className="lesson-section"><h2>区分数学排版、数组存储和 GLSL 索引</h2><p>页面把矩阵按数学习惯画成横向的行。JavaScript 数组按列连续存放，GLSL 的 <code>matrix[column][row]</code> 也先取列。因此上传时 <code>transpose</code> 传 <code>false</code>。WebGL1 只接受 <code>false</code>；WebGL2 允许传 <code>true</code>，适合行主序数组。</p><CodeBlock label="upload-mat3.ts">{uploadCode}</CodeBlock></section>
+      <section id="identity-and-inverse" className="lesson-section"><h2>三个后续会反复出现的矩阵操作</h2><p>单位矩阵提供初始状态，逆矩阵撤销变换，转置交换行列。先记住它们的职责，下一页会用行列式判断可逆性，并推导光照需要的法线矩阵。</p><IdentityInversePreview /></section>
       <section id="webgl-connections" className="lesson-section"><h2>回到二维与三维课程验证</h2><div className="matrix-lesson-links"><LessonLink lessonId="matrices-2d"><span>二维</span><div><strong>二维矩阵</strong><small>用 mat3 组合平移、旋转、缩放和像素投影</small></div><ArrowRight aria-hidden="true" /></LessonLink><LessonLink lessonId="model-view-projection"><span>三维</span><div><strong>模型、视图与投影</strong><small>用 mat4 串起 Local、World、View 与 Clip</small></div><ArrowRight aria-hidden="true" /></LessonLink></div></section>
-      <section id="next-steps" className="lesson-section next-steps"><div><h2>数学章节的下一步</h2><p>后续可以继续补充向量、三角函数、点积与叉积、逆矩阵以及法线变换。本页先提供阅读二维和三维变换所需的共同基础。</p></div></section>
+      <LessonPagination current="matrix-math" heading="接下来">矩阵已经能组合平移、旋转与缩放。下一页研究如何撤销变换：行列式、逆矩阵、转置，以及光照需要的法线矩阵。</LessonPagination>
       <footer className="lesson-footer"><p>内容约定：WebGL2、GLSL ES 3.00、列向量与 column-major 存储。</p><div className="lesson-footer__links"><a href="https://webgl2fundamentals.org/webgl/lessons/webgl-matrix-vs-math.html" target="_blank" rel="noreferrer">参考：WebGL2 Matrices vs Math Matrices <ExternalLink aria-hidden="true" /></a></div></footer>
     </article>
   );

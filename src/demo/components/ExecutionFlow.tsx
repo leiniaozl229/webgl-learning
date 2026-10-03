@@ -197,7 +197,7 @@ export function ExecutionFlow() {
               {pointTargets.map((target, index) => {
                 const position = activeStep >= 3 ? target : pointStarts[index];
                 return (
-                  <motion.circle key={`${target.cx}-${target.cy}`} r="7" fill="var(--color-surface-code)" stroke="var(--color-accent-strong)" strokeWidth="4" animate={{ cx: position.cx, cy: position.cy, scale: activeStep === 3 ? 1.15 : 1 }} transition={{ ...transition, delay: reducedMotion ? 0 : index * 0.07 }} />
+                  <motion.circle key={`${target.cx}-${target.cy}`} initial={{ cx: pointStarts[index].cx, cy: pointStarts[index].cy, scale: 1 }} r="7" fill="var(--color-surface-code)" stroke="var(--color-accent-strong)" strokeWidth="4" animate={{ cx: position.cx, cy: position.cy, scale: activeStep === 3 ? 1.15 : 1 }} transition={{ ...transition, delay: reducedMotion ? 0 : index * 0.07 }} />
                 );
               })}
             </svg>

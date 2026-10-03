@@ -1,8 +1,8 @@
-import { ArrowRight, CheckCircle2, Code2, MonitorCog, Server, ShieldCheck } from 'lucide-react';
+import { CheckCircle2, Code2, MonitorCog, Server, ShieldCheck } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 import { CodeBlock } from './CodeBlock';
-import { LessonLink } from './LessonLink';
+import { LessonPagination } from './LessonPagination';
 import { WebglCapabilityCheck } from './WebglCapabilityCheck';
 
 const contextCode = `const canvas = document.querySelector<HTMLCanvasElement>('#canvas');
@@ -90,10 +90,7 @@ export function GettingWebgl2Article({ toc }: { toc?: ReactNode }) {
         <CodeBlock label="启动和验证项目" language="bash">{projectCode}</CodeBlock>
       </section>
 
-      <section id="next-steps" className="lesson-section next-steps">
-        <div><h2>下一节</h2><p>环境准备完成后，从顶点着色器、片段着色器和第一个三角形建立完整渲染路径。</p></div>
-        <LessonLink className="next-steps__link" lessonId="fundamentals">WebGL2 基本原理 <ArrowRight aria-hidden="true" /></LessonLink>
-      </section>
+      <LessonPagination current="getting-webgl2" heading="下一节">环境准备完成后，从顶点着色器、片段着色器和第一个三角形建立完整渲染路径。</LessonPagination>
 
       <footer className="lesson-footer">
         <p>参考教程中的浏览器版本信息已按当前 Web 平台状态重新整理。</p>

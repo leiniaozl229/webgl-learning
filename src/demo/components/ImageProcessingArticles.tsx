@@ -1,5 +1,5 @@
 import { Tabs } from '@base-ui/react/tabs';
-import { ArrowLeft, ArrowRight, CheckCircle2, Cpu, Grid3X3, Images, Layers3, ScanSearch, SlidersHorizontal } from 'lucide-react';
+import { CheckCircle2, Cpu, Grid3X3, Images, Layers3, ScanSearch, SlidersHorizontal } from 'lucide-react';
 import type { ReactNode } from 'react';
 import textureSamplingTwoslashHtml from 'virtual:texture-sampling-twoslash';
 
@@ -7,7 +7,7 @@ import { CodeBlock } from './CodeBlock';
 import { FullscreenButton } from './FullscreenButton';
 import { HighlightedCode } from './HighlightedCode';
 import { ImageProcessingPlayground } from './ImageProcessingPlayground';
-import { LessonLink } from './LessonLink';
+import { LessonPagination } from './LessonPagination';
 import { TwoslashHighlightedCode } from './TwoslashHighlightedCode';
 
 const textureUploadCode = `const texture = gl.createTexture();
@@ -598,7 +598,7 @@ export function TextureSamplingArticle({ toc }: { toc?: ReactNode }) {
         <p>执行顺序可以沿着 <code>source Canvas → texImage2D → Texture → texture() → outColor → 默认 Framebuffer</code> 阅读。切换过滤选项时，只更新 Texture 的采样参数并重新绘制。</p>
       </section>
 
-      <section id="next-steps" className="lesson-section next-steps lesson-pagination"><LessonLink lessonId="state-diagram"><ArrowLeft aria-hidden="true" /> WebGL2 状态图</LessonLink><div><h2>接下来</h2><p>纹理已经能稳定显示。下一页让片段着色器对每个采样颜色执行亮度和灰度运算。</p></div><LessonLink className="next-steps__link" lessonId="image-processing-basics">图像处理基础 <ArrowRight aria-hidden="true" /></LessonLink></section>
+      <LessonPagination current="texture-sampling" heading="接下来">纹理已经能稳定显示。下一页让片段着色器对每个采样颜色执行亮度和灰度运算。</LessonPagination>
       <Footer />
     </article>
   );
@@ -619,7 +619,7 @@ export function ImageProcessingBasicsArticle({ toc }: { toc?: ReactNode }) {
 
       <section id="redraw-boundary" className="lesson-section"><h2>状态更新与重新绘制的边界</h2><p>Uniform 值属于当前 Program 的状态。调用 <code>uniform1f</code> 只修改状态；后续 <code>drawArrays</code> 才让 GPU 使用新值运行所有片段调用。</p><CodeBlock label="update-color.ts">{uniformUpdateCode}</CodeBlock></section>
 
-      <section id="next-steps" className="lesson-section next-steps lesson-pagination"><LessonLink lessonId="texture-sampling"><ArrowLeft aria-hidden="true" /> 图像上传与纹理采样</LessonLink><div><h2>接下来</h2><p>单个采样点只能处理当前 Texel。下一页读取周围 3×3 邻域，建立卷积核。</p></div><LessonLink className="next-steps__link" lessonId="convolution-kernels">卷积核 <ArrowRight aria-hidden="true" /></LessonLink></section>
+      <LessonPagination current="image-processing-basics" heading="接下来">单个采样点只能处理当前 Texel。下一页读取周围 3×3 邻域，建立卷积核。</LessonPagination>
       <Footer />
     </article>
   );
@@ -640,7 +640,7 @@ export function ConvolutionKernelsArticle({ toc }: { toc?: ReactNode }) {
 
       <section id="kernel-weight" className="lesson-section"><h2>权重决定整体亮度</h2><p>均值模糊的九项都为 1，除以 9 后平均亮度保持稳定。高斯模糊权重和为 16。锐化核权重和为 1，因此无需额外缩放。边缘检测核的权重和为 0，平坦区域相互抵消，只留下颜色发生变化的位置。</p></section>
 
-      <section id="next-steps" className="lesson-section next-steps lesson-pagination"><LessonLink lessonId="image-processing-basics"><ArrowLeft aria-hidden="true" /> 图像处理基础</LessonLink><div><h2>接下来</h2><p>卷积的计算框架已经固定。下一页引入 Divisor、Offset、Border、Channels 与 Normalize，完整拆解卷积矩阵参数。</p></div><LessonLink className="next-steps__link" lessonId="convolution-matrix-guide">卷积矩阵详解 <ArrowRight aria-hidden="true" /></LessonLink></section>
+      <LessonPagination current="convolution-kernels" heading="接下来">卷积的计算框架已经固定。下一页引入 Divisor、Offset、Border、Channels 与 Normalize，完整拆解卷积矩阵参数。</LessonPagination>
       <Footer />
     </article>
   );
@@ -661,7 +661,7 @@ export function ImageEffectsArticle({ toc }: { toc?: ReactNode }) {
 
       <section id="texture-edges" className="lesson-section"><h2>图像边缘也需要采样规则</h2><p>靠近四条边时，3×3 邻域会包含范围外的 UV。当前 Texture 使用 <code>CLAMP_TO_EDGE</code>，范围外采样会重复最靠近的边缘 Texel，避免从另一侧绕回或引入默认颜色。</p></section>
 
-      <section id="next-steps" className="lesson-section next-steps lesson-pagination"><LessonLink lessonId="convolution-matrix-guide"><ArrowLeft aria-hidden="true" /> 卷积矩阵详解</LessonLink><div><h2>接下来</h2><p>单次绘制已经能应用一种卷积效果。下一页加入 Framebuffer 与两张中间纹理，把多个效果串成管线。</p></div><LessonLink className="next-steps__link" lessonId="multi-pass-image-processing">多阶段图像处理 <ArrowRight aria-hidden="true" /></LessonLink></section>
+      <LessonPagination current="image-effects" heading="接下来">单次绘制已经能应用一种卷积效果。下一页加入 Framebuffer 与两张中间纹理，把多个效果串成管线。</LessonPagination>
       <Footer />
     </article>
   );
@@ -684,7 +684,7 @@ export function MultiPassImageProcessingArticle({ toc }: { toc?: ReactNode }) {
 
       <section id="target-switch" className="lesson-section"><h2>切换目标时同步三组状态</h2><ul className="resource-checklist"><li><Grid3X3 aria-hidden="true" /><div><strong>Framebuffer</strong><span>决定片段输出写入中间 Texture 或 Canvas。</span></div></li><li><SlidersHorizontal aria-hidden="true" /><div><strong>viewport</strong><span>离屏阶段使用图像尺寸，最终阶段使用绘图缓冲区尺寸。</span></div></li><li><Layers3 aria-hidden="true" /><div><strong>输入 Texture</strong><span>绑定上一 Pass 的结果，最后一个 Pass 绑定到默认 Framebuffer。</span></div></li></ul><p>组件卸载时会删除两张中间 Texture、两个 Framebuffer、原图 Texture、两个 Buffer、VAO 和 Program，浏览器便可回收对应 GPU 资源。</p></section>
 
-      <section id="next-steps" className="lesson-section next-steps lesson-pagination"><LessonLink lessonId="image-effects"><ArrowLeft aria-hidden="true" /> 模糊、锐化与边缘检测</LessonLink><div><h2>本章完成</h2><p>从图像上传、纹理采样走到多阶段离屏渲染，输入、资源绑定、提交、输出观察与清理已经形成完整闭环。</p></div><span /></section>
+      <LessonPagination current="multi-pass-image-processing" heading="本章完成">从图像上传、纹理采样走到多阶段离屏渲染，输入、资源绑定、提交、输出观察与清理已经形成完整闭环。下一章回到几何本身，用 Uniform 与矩阵移动、旋转和缩放顶点。</LessonPagination>
       <Footer continued />
     </article>
   );

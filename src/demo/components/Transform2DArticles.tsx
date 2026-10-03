@@ -1,9 +1,9 @@
-import { ArrowLeft, ArrowRight, CheckCircle2, CircleDot, Combine, Expand, Move, RotateCw, Rows3 } from 'lucide-react';
+import { CheckCircle2, CircleDot, Combine, Expand, Move, RotateCw, Rows3 } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 import { MATRIX_TRANSFORM_VERTEX_SHADER } from '../../core/transforms2d';
 import { CodeBlock } from './CodeBlock';
-import { LessonLink } from './LessonLink';
+import { LessonPagination } from './LessonPagination';
 import { Transform2DPlayground } from './Transform2DPlayground';
 import {
   CanvasSizingNote,
@@ -181,7 +181,7 @@ export function Translation2DArticle({ toc }: { toc?: ReactNode }) {
 
       <section id="translation-redraw" className="lesson-section"><h2>滑块变化只更新状态并重绘</h2><p>TypedArray 中的顶点仍留在 GPU Buffer。页面选择 Program 和 VAO，上传新的两个平移数值，然后再次处理 18 个顶点。</p><CodeBlock label="draw-translation.ts">{translationDrawCode}</CodeBlock></section>
 
-      <section id="next-steps" className="lesson-section next-steps lesson-pagination"><LessonLink lessonId="multi-pass-image-processing"><ArrowLeft aria-hidden="true" /> 多阶段图像处理</LessonLink><div><h2>接下来</h2><p>位置偏移已经独立于几何数据。下一页使用单位圆上的正弦和余弦，让同一组局部顶点围绕原点旋转。</p></div><LessonLink className="next-steps__link" lessonId="rotation-2d">二维旋转 <ArrowRight aria-hidden="true" /></LessonLink></section>
+      <LessonPagination current="translation-2d" heading="接下来">位置偏移已经独立于几何数据。下一页使用单位圆上的正弦和余弦，让同一组局部顶点围绕原点旋转。</LessonPagination>
       <Footer href="https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-2d-translation.html" />
     </article>
   );
@@ -205,7 +205,7 @@ export function Rotation2DArticle({ toc }: { toc?: ReactNode }) {
 
       <section id="rotation-lab" className="lesson-section lesson-section--wide"><h2>旋转实验</h2><p>单位圆会同步显示当前 <code>sin</code> 和 <code>cos</code>。平移改变旋转后的整体位置，局部原点仍是字母 F 的旋转中心。</p><Transform2DPlayground variant="rotation" /></section>
 
-      <section id="next-steps" className="lesson-section next-steps lesson-pagination"><LessonLink lessonId="translation-2d"><ArrowLeft aria-hidden="true" /> 二维平移</LessonLink><div><h2>接下来</h2><p>旋转会混合两个坐标分量。下一页分别乘 X、Y 比例，控制宽度、高度和翻转方向。</p></div><LessonLink className="next-steps__link" lessonId="scale-2d">二维缩放 <ArrowRight aria-hidden="true" /></LessonLink></section>
+      <LessonPagination current="rotation-2d" heading="接下来">旋转会混合两个坐标分量。下一页分别乘 X、Y 比例，控制宽度、高度和翻转方向。</LessonPagination>
       <Footer href="https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-2d-rotation.html" />
     </article>
   );
@@ -229,7 +229,7 @@ export function Scale2DArticle({ toc }: { toc?: ReactNode }) {
 
       <section id="scale-origin" className="lesson-section"><h2>缩放中心来自局部原点</h2><p>当前 F 的 <code>(0, 0)</code> 位于左上角，因此宽高变化会从左上角向外展开。想围绕中心缩放，可以先把中心平移到原点，再执行缩放，最后把它移回目标位置。最后一页会把这三步写成可复用的矩阵组合。</p><div className="pivot-preview" aria-label="围绕中心缩放的三步流程"><span>中心移到原点<code>T(−pivot)</code></span><i>→</i><span>改变距离<code>S(sx, sy)</code></span><i>→</i><span>放回画布<code>T(position)</code></span></div></section>
 
-      <section id="next-steps" className="lesson-section next-steps lesson-pagination"><LessonLink lessonId="rotation-2d"><ArrowLeft aria-hidden="true" /> 二维旋转</LessonLink><div><h2>接下来</h2><p>三类变换目前对应三组公式和 Uniform。下一页把二维点扩展成齐次坐标，用 3×3 矩阵表达它们。</p></div><LessonLink className="next-steps__link" lessonId="matrices-2d">二维矩阵 <ArrowRight aria-hidden="true" /></LessonLink></section>
+      <LessonPagination current="scale-2d" heading="接下来">三类变换目前对应三组公式和 Uniform。下一页把二维点扩展成齐次坐标，用 3×3 矩阵表达它们。</LessonPagination>
       <Footer href="https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-2d-scale.html" />
     </article>
   );
@@ -257,7 +257,7 @@ export function Matrices2DArticle({ toc }: { toc?: ReactNode }) {
 
       <section id="matrix-lab" className="lesson-section lesson-section--wide"><h2>观察实际上传的 mat3</h2><p>拖动任意参数，实验下方九个数值会同步更新。界面按数学行展示；WebGL2 上传的 TypedArray 使用列主序排列，并将 <code>transpose</code> 参数保持为 <code>false</code>。</p><Transform2DPlayground variant="matrix" /></section>
 
-      <section id="next-steps" className="lesson-section next-steps lesson-pagination"><LessonLink lessonId="scale-2d"><ArrowLeft aria-hidden="true" /> 二维缩放</LessonLink><div><h2>接下来</h2><p>一个矩阵已经覆盖全部变换。最后一页专门比较矩阵乘法顺序，并建立可复用的组合写法。</p></div><LessonLink className="next-steps__link" lessonId="unified-2d-transforms">统一表达二维变换 <ArrowRight aria-hidden="true" /></LessonLink></section>
+      <LessonPagination current="matrices-2d" heading="接下来">一个矩阵已经覆盖全部变换。最后一页专门比较矩阵乘法顺序，并建立可复用的组合写法。</LessonPagination>
       <Footer href="https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-2d-matrices.html" />
     </article>
   );
@@ -287,7 +287,7 @@ export function Unified2DTransformsArticle({ toc }: { toc?: ReactNode }) {
 
       <section id="complete-flow" className="lesson-section"><h2>二维变换学习闭环</h2><ul className="resource-checklist"><li><Combine aria-hidden="true" /><div><strong>输入与创建</strong><span>局部 F 顶点进入静态 Buffer，VAO 保存属性读取规则。</span></div></li><li><Rows3 aria-hidden="true" /><div><strong>绑定与提交</strong><span>页面选择 Program、VAO，上传组合 <code>mat3</code>，随后调用 <code>drawArrays</code>。</span></div></li><li><Move aria-hidden="true" /><div><strong>输出与清理</strong><span>18 次顶点调用生成裁剪空间位置，片段写入 Canvas；卸载时删除 Buffer、VAO 与 Program。</span></div></li></ul></section>
 
-      <section id="next-steps" className="lesson-section next-steps lesson-pagination"><LessonLink lessonId="matrices-2d"><ArrowLeft aria-hidden="true" /> 二维矩阵</LessonLink><div><h2>二维章节完成</h2><p>图像处理、平移、旋转、缩放与矩阵组合已经连成完整二维路径。下一章可以从三维正射投影开始，把 <code>mat3</code> 扩展为 <code>mat4</code>。</p></div><span /></section>
+      <LessonPagination current="unified-2d-transforms" heading="二维章节完成">图像处理、平移、旋转、缩放与矩阵组合已经连成完整二维路径。下一章可以从三维正射投影开始，把 <code>mat3</code> 扩展为 <code>mat4</code>。</LessonPagination>
       <Footer href="https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-2d-matrices.html" />
     </article>
   );

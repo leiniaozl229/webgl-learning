@@ -1,9 +1,10 @@
-import { ArrowLeft, ArrowRight, Braces, Cpu, Database, GitBranch, Layers3 } from 'lucide-react';
+import { ArrowRight, Braces, Cpu, Database, GitBranch, Layers3 } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 import { CodeBlock } from './CodeBlock';
 import { InterpolationSources } from './InterpolationSources';
 import { LessonLink } from './LessonLink';
+import { LessonPagination } from './LessonPagination';
 import { VaryingPlayground } from './VaryingPlayground';
 
 const drawCountCode = `gl.bindVertexArray(triangleVao);
@@ -114,11 +115,7 @@ export function HowItWorksArticle({ toc }: { toc?: ReactNode }) {
         </ul>
       </section>
 
-      <section id="next-steps" className="lesson-section next-steps lesson-pagination">
-        <LessonLink lessonId="fundamentals"><ArrowLeft aria-hidden="true" /> WebGL2 基本原理</LessonLink>
-        <div><h2>接下来</h2><p>下一篇会系统拆解 GLSL 类型、函数、Attribute、Uniform 和 Varying。</p></div>
-        <LessonLink className="next-steps__link" lessonId="shaders-and-glsl">着色器与 GLSL <ArrowRight aria-hidden="true" /></LessonLink>
-      </section>
+      <LessonPagination current="how-it-works" heading="接下来">下一篇会系统拆解 GLSL 类型、函数、Attribute、Uniform 和 Varying。</LessonPagination>
 
       <footer className="lesson-footer">
         <p>本文参考 WebGL2 Fundamentals 的知识路线重新组织，交互实验使用 TypeScript 和原生 WebGL2 API 实现。</p>

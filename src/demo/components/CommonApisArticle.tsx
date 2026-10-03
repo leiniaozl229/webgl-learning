@@ -1,8 +1,9 @@
-import { ArrowLeft, ArrowRight, Braces, Code2, Cpu, Database, Layers3, Monitor, Settings2, Upload } from 'lucide-react';
+import { ArrowRight, Braces, Code2, Cpu, Database, Layers3, Monitor, Settings2, Upload } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 import { HighlightedCode } from './HighlightedCode';
 import { LessonLink } from './LessonLink';
+import { LessonPagination } from './LessonPagination';
 
 const commonApiGroups = [
   {
@@ -498,11 +499,7 @@ export function CommonApisArticle({ toc }: { toc?: ReactNode }) {
         </div>
       </section>
 
-      <section id="next-steps" className="lesson-section next-steps lesson-pagination">
-        <LessonLink lessonId="getting-webgl2"><ArrowLeft aria-hidden="true" /> 怎样使用 WebGL2</LessonLink>
-        <div><h2>接下来</h2><p>继续进入顶点数据、着色器和第一个三角形，观察这些 API 在完整示例中的协作方式。</p></div>
-        <LessonLink className="next-steps__link" lessonId="fundamentals">WebGL2 基本原理 <ArrowRight aria-hidden="true" /></LessonLink>
-      </section>
+      <LessonPagination current="common-apis" heading="基础模块完成">API 与数据流已经可以对照查阅。下一模块补齐数学工具：向量、三角函数、点积叉积与矩阵，后续二维、三维和光照都会反复使用它们。</LessonPagination>
 
       <footer className="lesson-footer">
         <p>本文依据 WebGL2 Fundamentals 的知识路线重新整理，示例使用 TypeScript 和原生 WebGL2 API 编写。</p>

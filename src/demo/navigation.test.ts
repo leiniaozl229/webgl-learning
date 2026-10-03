@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseLessonId } from './navigation';
+import {
+  adjacentLessons,
+  lessonIds,
+  lessonSequence,
+  lessonTitles,
+  navigationGroups,
+  parseLessonId,
+  sourceByLesson,
+  tableOfContentsByLesson,
+} from './navigation';
 
 describe('parseLessonId', () => {
   it('selects the getting started lesson from the query string', () => {
@@ -22,8 +31,14 @@ describe('parseLessonId', () => {
     expect(parseLessonId('?lesson=state-diagram')).toBe('state-diagram');
   });
 
-  it('selects the matrix math lesson from the query string', () => {
-    expect(parseLessonId('?lesson=matrix-math')).toBe('matrix-math');
+  it.each([
+    'vectors',
+    'trigonometry',
+    'dot-and-cross',
+    'matrix-math',
+    'inverse-and-normals',
+  ] as const)('selects the math lesson %s', (lesson) => {
+    expect(parseLessonId(`?lesson=${lesson}`)).toBe(lesson);
   });
 
   it.each([
@@ -60,5 +75,37 @@ describe('parseLessonId', () => {
   it('falls back to fundamentals for unknown lessons', () => {
     expect(parseLessonId('?lesson=unknown')).toBe('fundamentals');
     expect(parseLessonId('')).toBe('fundamentals');
+  });
+});
+
+describe('lesson catalog', () => {
+  it('lists every lesson exactly once in the sidebar', () => {
+    const navigationIds = navigationGroups.flatMap((group) => group.items.map((item) => item.id));
+    expect(new Set(navigationIds).size).toBe(navigationIds.length);
+    expect([...navigationIds].sort()).toEqual([...lessonIds].sort());
+  });
+
+  it('provides a title, table of contents and source for every lesson', () => {
+    for (const id of lessonIds) {
+      expect(lessonTitles[id]).toBeTruthy();
+      expect(sourceByLesson[id]).toMatch(/^https:\/\//);
+      expect(tableOfContentsByLesson[id].at(-1)?.href).toBe('#next-steps');
+    }
+  });
+
+  it('keeps table of contents anchors unique within a lesson', () => {
+    for (const id of lessonIds) {
+      const anchors = tableOfContentsByLesson[id].map((item) => item.href);
+      expect(new Set(anchors).size).toBe(anchors.length);
+    }
+  });
+
+  it('derives previous and next lessons from sidebar order', () => {
+    expect(adjacentLessons(lessonSequence[0]).previous).toBeUndefined();
+    expect(adjacentLessons('state-diagram')).toEqual({ previous: 'shaders-and-glsl', next: 'common-apis' });
+    expect(adjacentLessons('vectors')).toEqual({ previous: 'common-apis', next: 'trigonometry' });
+    expect(adjacentLessons('inverse-and-normals')).toEqual({ previous: 'matrix-math', next: 'texture-sampling' });
+    expect(adjacentLessons('unified-2d-transforms').next).toBe('orthographic-3d');
+    expect(adjacentLessons(lessonSequence[lessonSequence.length - 1]).next).toBeUndefined();
   });
 });

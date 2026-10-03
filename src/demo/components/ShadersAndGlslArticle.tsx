@@ -1,8 +1,9 @@
-import { ArrowLeft, ArrowRight, Braces, Box, Cable, Cpu, Grid3X3, Image, SlidersHorizontal } from 'lucide-react';
+import { ArrowRight, Braces, Box, Cable, Cpu, Grid3X3, Image, SlidersHorizontal } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 import { CodeBlock } from './CodeBlock';
 import { LessonLink } from './LessonLink';
+import { LessonPagination } from './LessonPagination';
 import { UniformPlayground } from './UniformPlayground';
 
 const stageCode = `// vertex.glsl：每个顶点执行一次
@@ -124,11 +125,7 @@ export function ShadersAndGlslArticle({ toc }: { toc?: ReactNode }) {
         </ul>
       </section>
 
-      <section id="next-steps" className="lesson-section next-steps lesson-pagination">
-        <LessonLink lessonId="how-it-works"><ArrowLeft aria-hidden="true" /> WebGL2 如何工作</LessonLink>
-        <div><h2>接下来</h2><p>下一篇会用状态图整理 Program、VAO、Buffer、Texture 和 Framebuffer 的绑定关系。</p></div>
-        <LessonLink className="next-steps__link" lessonId="state-diagram">WebGL2 状态图 <ArrowRight aria-hidden="true" /></LessonLink>
-      </section>
+      <LessonPagination current="shaders-and-glsl" heading="接下来">下一篇会用状态图整理 Program、VAO、Buffer、Texture 和 Framebuffer 的绑定关系。</LessonPagination>
 
       <footer className="lesson-footer">
         <p>本文参考 WebGL2 Fundamentals 的着色器章节重新组织，交互实验使用 TypeScript 和原生 WebGL2 API 实现。</p>

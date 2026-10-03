@@ -1,9 +1,9 @@
-import { ArrowLeft, ArrowRight, Braces, Cpu, Database, Layers3, MonitorUp, ScanLine } from 'lucide-react';
+import { Braces, Cpu, Database, Layers3, MonitorUp, ScanLine } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 import { CodeBlock } from './CodeBlock';
 import { ExecutionFlow } from './ExecutionFlow';
-import { LessonLink } from './LessonLink';
+import { LessonPagination } from './LessonPagination';
 import { PixelRectanglePlayground } from './PixelRectanglePlayground';
 import { ShaderPlayground } from './ShaderPlayground';
 
@@ -190,11 +190,7 @@ export function LessonArticle({ toc }: { toc?: ReactNode }) {
         <p>点击实验中的“随机 20 个”，JavaScript 会重复更新同一个 Buffer 和 <code>u_color</code>，每个矩形发起一次 draw call。这个方式适合展示状态变化；后续课程会介绍矩阵、批处理和实例化绘制等更常用的组织方案。</p>
       </section>
 
-      <section id="next-steps" className="lesson-section next-steps lesson-pagination">
-        <LessonLink lessonId="getting-webgl2"><ArrowLeft aria-hidden="true" /> 怎样使用 WebGL2</LessonLink>
-        <div><h2>接下来</h2><p>现在已经走完从 GLSL 源码、GPU 数据到像素矩形的完整绘制。下一篇会深入每次顶点调用、Attribute 拉取与 Varying 插值。</p></div>
-        <LessonLink className="next-steps__link" lessonId="how-it-works">WebGL2 如何工作 <ArrowRight aria-hidden="true" /></LessonLink>
-      </section>
+      <LessonPagination current="fundamentals" heading="接下来">现在已经走完从 GLSL 源码、GPU 数据到像素矩形的完整绘制。下一篇会深入每次顶点调用、Attribute 拉取与 Varying 插值。</LessonPagination>
 
       <footer className="lesson-footer">
         <p>本文依据 WebGL2 Fundamentals 的知识路线重新整理，示例使用 TypeScript 和原生 WebGL2 API 编写。</p>

@@ -1,9 +1,9 @@
-import { ArrowLeft, ArrowRight, CheckCircle2, Divide, Grid3X3, Orbit, Palette, Sigma } from 'lucide-react';
+import { CheckCircle2, Divide, Grid3X3, Orbit, Palette, Sigma } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 import { CodeBlock } from './CodeBlock';
 import { ConvolutionMatrixPlayground } from './ConvolutionMatrixPlayground';
-import { LessonLink } from './LessonLink';
+import { LessonPagination } from './LessonPagination';
 
 const resultFormula = `output = (
   pixel0 * kernel0 + pixel1 * kernel1 + ... + pixel8 * kernel8
@@ -130,11 +130,7 @@ export function ConvolutionMatrixArticle({ toc }: { toc?: ReactNode }) {
         <p>组件卸载时会删除原始纹理（Texture）、两张离屏纹理（Texture）、帧缓冲（Framebuffer）、缓冲区（Buffer）、顶点数组对象（VAO）和着色程序（Program），GPU 资源生命周期到此结束。</p>
       </section>
 
-      <section id="next-steps" className="lesson-section next-steps lesson-pagination">
-        <LessonLink lessonId="convolution-kernels"><ArrowLeft aria-hidden="true" /> 卷积核</LessonLink>
-        <div><h2>继续学习</h2><p>现在已经掌握卷积矩阵的完整参数模型。下一页回到常用效果，比较几组经典卷积核（Kernel）的视觉特征。</p></div>
-        <LessonLink className="next-steps__link" lessonId="image-effects">模糊、锐化与边缘检测 <ArrowRight aria-hidden="true" /></LessonLink>
-      </section>
+      <LessonPagination current="convolution-matrix-guide" heading="继续学习">现在已经掌握卷积矩阵的完整参数模型。下一页回到常用效果，比较几组经典卷积核（Kernel）的视觉特征。</LessonPagination>
 
       <footer className="lesson-footer">
         <p>本文依据 GIMP 2.6 卷积矩阵（Convolution Matrix）文档整理，并将桌面图像编辑器选项映射到 WebGL2。</p>

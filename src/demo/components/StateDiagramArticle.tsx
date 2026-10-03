@@ -1,8 +1,9 @@
-import { ArrowLeft, Boxes, Braces, Database, Frame, Image, Layers3 } from 'lucide-react';
+import { Boxes, Braces, Database, Frame, Image, Layers3 } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 import { CodeBlock } from './CodeBlock';
 import { LessonLink } from './LessonLink';
+import { LessonPagination } from './LessonPagination';
 import { WebglStateExplorer } from './WebglStateExplorer';
 
 const vaoCode = `gl.bindVertexArray(vao);
@@ -89,10 +90,7 @@ export function StateDiagramArticle({ toc }: { toc?: ReactNode }) {
         </ul>
       </section>
 
-      <section id="next-steps" className="lesson-section next-steps lesson-pagination">
-        <LessonLink lessonId="shaders-and-glsl"><ArrowLeft aria-hidden="true" /> 着色器与 GLSL</LessonLink>
-        <div><h2>基础概念完成</h2><p>现在已经能从环境检测一路追踪到 draw call。下一模块将比较 WebGL2 与 WebGL1 的能力和迁移方式。</p></div>
-      </section>
+      <LessonPagination current="state-diagram" heading="接下来">现在已经能从环境检测一路追踪到 draw call。下一页把本模块出现的 API 汇总成速查表，并按数据流重新串起来。</LessonPagination>
 
       <footer className="lesson-footer">
         <p>本文参考 WebGL2 Fundamentals 状态图，并围绕 WebGL2 的 VAO 与绑定关系重新组织。</p>

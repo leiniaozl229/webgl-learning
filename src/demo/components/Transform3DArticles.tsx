@@ -1,9 +1,10 @@
-import { ArrowLeft, ArrowRight, Box, Camera, CheckCircle2, Eye, Layers3, Move, Rows3 } from 'lucide-react';
+import { ArrowRight, Box, Camera, CheckCircle2, Eye, Layers3, Move, Rows3 } from 'lucide-react';
 import type { CSSProperties, ReactNode } from 'react';
 
 import type { LessonId } from '../navigation';
 import { CodeBlock } from './CodeBlock';
 import { LessonLink } from './LessonLink';
+import { LessonPagination } from './LessonPagination';
 import { Transform3DPlayground } from './Transform3DPlayground';
 
 const mat4ShaderCode = `#version 300 es
@@ -248,7 +249,7 @@ export function Orthographic3DArticle({ toc }: { toc?: ReactNode }) {
       <section id="orthographic-volume" className="lesson-section"><h2>正射投影把长方体空间压进裁剪空间</h2><p><code>left</code>、<code>right</code>、<code>bottom</code>、<code>top</code>、<code>near</code> 和 <code>far</code> 定义一个长方体可见范围。距离变化不会改变物体显示尺寸，工程制图和二维编辑器常用这种投影。</p><CodeBlock label="mat4.ts · orthographic">{orthographicCode}</CodeBlock></section>
       <section id="depth-and-culling" className="lesson-section"><h2>朝向与距离解决两类遮挡</h2><p>面剔除根据三角形绕序跳过背面。深度测试比较同一像素位置上的 Z 值，让更近的片段覆盖更远的片段；每帧绘制前要清除深度缓冲。</p><RasterStateFlow /><CodeBlock label="draw-state.ts">{depthStateCode}</CodeBlock></section>
       <section id="orthographic-lab" className="lesson-section lesson-section--wide"><h2>正射三维实验</h2><p>旋转三个轴，并分别关闭 <code>CULL_FACE</code> 与 <code>DEPTH_TEST</code>。观察缺少每项状态时，哪些表面会穿到前方。</p><Transform3DPlayground variant="orthographic" /></section>
-      <section id="next-steps" className="lesson-section next-steps lesson-pagination"><LessonLink lessonId="unified-2d-transforms"><ArrowLeft aria-hidden="true" /> 二维矩阵组合</LessonLink><div><h2>接下来</h2><p>正射投影已经建立三维遮挡。下一页把深度写入 W，让远处物体自然缩小。</p></div><LessonLink lessonId="perspective-3d">三维透视投影 <ArrowRight aria-hidden="true" /></LessonLink></section>
+      <LessonPagination current="orthographic-3d" heading="接下来">正射投影已经建立三维遮挡。下一页把深度写入 W，让远处物体自然缩小。</LessonPagination>
       <Footer href="https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-3d-orthographic.html" />
     </article>
   );
@@ -266,7 +267,7 @@ export function Perspective3DArticle({ toc }: { toc?: ReactNode }) {
       <section id="frustum" className="lesson-section"><h2>视锥限定相机能看到的空间</h2><p>视野角决定张开程度，宽高比避免画面拉伸，近远裁剪面限定有效深度。视锥以外的几何会在裁剪阶段被移除。</p><FrustumVisual /></section>
       <section id="perspective-matrix" className="lesson-section"><h2>一个矩阵完成缩放、Z 映射与 W 构造</h2><p>透视矩阵将视锥映射到裁剪空间，同时把 near、far 对应到可裁剪的深度范围。顶点着色器仍只需要一次矩阵乘法。</p><CodeBlock label="mat4.ts · perspective">{perspectiveCode}</CodeBlock></section>
       <section id="perspective-lab" className="lesson-section lesson-section--wide"><h2>透视与裁剪实验</h2><p>缩小视野角会产生长焦感；增大视野角会看到更宽区域。拖动 near 和 far，观察 F 的表面何时穿过裁剪面。</p><Transform3DPlayground variant="perspective" /></section>
-      <section id="next-steps" className="lesson-section next-steps lesson-pagination"><LessonLink lessonId="orthographic-3d"><ArrowLeft aria-hidden="true" /> 三维正射投影</LessonLink><div><h2>接下来</h2><p>投影假定相机位于原点并朝向负 Z。下一页把相机移动到世界位置，再用逆矩阵建立视图空间。</p></div><LessonLink lessonId="camera-3d">三维相机 <ArrowRight aria-hidden="true" /></LessonLink></section>
+      <LessonPagination current="perspective-3d" heading="接下来">投影假定相机位于原点并朝向负 Z。下一页把相机移动到世界位置，再用逆矩阵建立视图空间。</LessonPagination>
       <Footer href="https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-3d-perspective.html" />
     </article>
   );
@@ -283,7 +284,7 @@ export function Camera3DArticle({ toc }: { toc?: ReactNode }) {
       <section id="shared-view-projection" className="lesson-section"><h2>同一帧中的物体共享相机与投影</h2><p>先计算一次 <code>projection × view</code>。绘制每个物体时，只需要继续乘上该物体自己的 World Matrix。</p><CodeBlock label="draw-scene.ts">{viewMatrixCode}</CodeBlock></section>
       <section id="look-at" className="lesson-section"><h2>用 position、target 和 up 构造 lookAt</h2><p>相机位置减去目标得到 Z 轴；up 与 Z 叉乘得到 X 轴；Z 与 X 再叉乘得到 Y 轴。三个单位轴和相机位置共同组成 Camera Matrix。</p><LookAtBasis /><CodeBlock label="look-at.ts">{lookAtCode}</CodeBlock></section>
       <section id="camera-lab" className="lesson-section lesson-section--wide"><h2>环绕相机实验</h2><p>相机沿圆周移动，<code>lookAt</code> 让它持续对准场景中心。七个 F 共享同一个 Projection 和 View，各自拥有独立 Model Matrix。</p><Transform3DPlayground variant="camera" /></section>
-      <section id="next-steps" className="lesson-section next-steps lesson-pagination"><LessonLink lessonId="perspective-3d"><ArrowLeft aria-hidden="true" /> 三维透视投影</LessonLink><div><h2>接下来</h2><p>相机页已经出现多种矩阵。下一页用来源空间和目标空间为它们命名，让乘法方向可以直接阅读。</p></div><LessonLink lessonId="matrix-naming-3d">三维矩阵命名 <ArrowRight aria-hidden="true" /></LessonLink></section>
+      <LessonPagination current="camera-3d" heading="接下来">相机页已经出现多种矩阵。下一页用来源空间和目标空间为它们命名，让乘法方向可以直接阅读。</LessonPagination>
       <Footer href="https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-3d-camera.html" />
     </article>
   );
@@ -299,7 +300,7 @@ export function MatrixNaming3DArticle({ toc }: { toc?: ReactNode }) {
       <section id="read-the-chain" className="lesson-section"><h2>相邻空间像接口一样首尾相接</h2><p>从右向左读取时，每个矩阵的输入空间都要匹配右侧结果。若出现 <code>viewFromWorld × clipFromView</code>，名称会立即暴露方向错误。</p><SpaceChain /></section>
       <section id="naming-table" className="lesson-section"><h2>完整名称与常见简称对照</h2><p>Model、View、Projection 适合教学和行业交流；方向式名称适合复杂引擎代码。项目可以同时保留注释中的概念简称和变量中的空间方向。</p><NamingTable /></section>
       <section id="contract" className="lesson-section"><h2>统一项目接口约定</h2><p>本站使用列向量、矩阵左乘，组合矩阵写在顶点左侧。JavaScript 数组按 column-major 上传，<code>uniformMatrix4fv</code> 的 transpose 参数保持 <code>false</code>。</p><div className="matrix-contract"><span><strong>Vector</strong><code>column vector</code></span><span><strong>Expression</strong><code>M × position</code></span><span><strong>Storage</strong><code>column-major</code></span><span><strong>Upload</strong><code>transpose = false</code></span></div></section>
-      <section id="next-steps" className="lesson-section next-steps lesson-pagination"><LessonLink lessonId="camera-3d"><ArrowLeft aria-hidden="true" /> 三维相机</LessonLink><div><h2>接下来</h2><p>命名规则已经固定。最后一页把 Model、View、Projection 的职责、更新频率和 GPU 提交流程收束成完整模式。</p></div><LessonLink lessonId="model-view-projection">模型、视图与投影 <ArrowRight aria-hidden="true" /></LessonLink></section>
+      <LessonPagination current="matrix-naming-3d" heading="接下来">命名规则已经固定。最后一页把 Model、View、Projection 的职责、更新频率和 GPU 提交流程收束成完整模式。</LessonPagination>
       <Footer href="https://webgl2fundamentals.org/webgl/lessons/webgl-3d-matrix-naming.html" />
     </article>
   );
@@ -316,7 +317,7 @@ export function ModelViewProjectionArticle({ toc }: { toc?: ReactNode }) {
       <section id="update-frequency" className="lesson-section"><h2>按变化频率安排矩阵计算</h2><p>Projection 通常随镜头或画布变化，View 随相机变化，Model 随物体变化。先缓存共享部分，可以减少同一帧内重复计算。</p><UpdateFrequency /></section>
       <section id="mvp-lab" className="lesson-section lesson-section--wide"><h2>多物体 MVP 实验</h2><p>三个 F 拥有不同 Model Matrix，共享相机生成的 View 与 Perspective Projection。环绕相机时只更新共享的 ViewProjection。</p><Transform3DPlayground variant="mvp" /></section>
       <section id="complete-3d-flow" className="lesson-section"><h2>三维基础数据流闭环</h2><ul className="resource-checklist"><li><Box aria-hidden="true" /><div><strong>Local → World</strong><span>Position Buffer 由 VAO 读取，Model Matrix 放置每个物体。</span></div></li><li><Camera aria-hidden="true" /><div><strong>World → View → Clip</strong><span>相机逆矩阵和投影矩阵形成共享空间，组合结果上传到 <code>u_matrix</code>。</span></div></li><li><Layers3 aria-hidden="true" /><div><strong>NDC → Fragment</strong><span>GPU 完成透视除法、裁剪、光栅化、面剔除与深度测试。</span></div></li></ul></section>
-      <section id="next-steps" className="lesson-section next-steps lesson-pagination"><LessonLink lessonId="matrix-naming-3d"><ArrowLeft aria-hidden="true" /> 三维矩阵命名</LessonLink><div><h2>三维基础完成</h2><p>空间、相机、投影和深度已经连成完整链路。下一章将在这些坐标基础上计算表面方向与光照。</p></div><span /></section>
+      <LessonPagination current="model-view-projection" heading="三维基础完成">空间、相机、投影和深度已经连成完整链路。下一章将在这些坐标基础上计算表面方向与光照。</LessonPagination>
       <Footer href="https://webgl2fundamentals.org/webgl/lessons/webgl-3d-matrix-naming.html" />
     </article>
   );

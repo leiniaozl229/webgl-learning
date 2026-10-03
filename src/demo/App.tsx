@@ -13,6 +13,12 @@ import {
 } from './components/ImageProcessingArticles';
 import { LessonArticle } from './components/LessonArticle';
 import { MatrixMathArticle } from './components/MatrixMathArticle';
+import {
+  DotAndCrossArticle,
+  InverseAndNormalsArticle,
+  TrigonometryArticle,
+  VectorsArticle,
+} from './components/MathArticles';
 import { HowItWorksArticle } from './components/HowItWorksArticle';
 import { ShadersAndGlslArticle } from './components/ShadersAndGlslArticle';
 import { StateDiagramArticle } from './components/StateDiagramArticle';
@@ -33,35 +39,9 @@ import {
   Orthographic3DArticle,
   Perspective3DArticle,
 } from './components/Transform3DArticles';
-import { type LessonId, readLessonId, sourceByLesson, tableOfContentsByLesson } from './navigation';
+import { lessonTitles, readLessonId, sourceByLesson, tableOfContentsByLesson } from './navigation';
 
 type Theme = 'light' | 'dark';
-
-const lessonTitles: Record<LessonId, string> = {
-  'getting-webgl2': '怎样使用 WebGL2',
-  'common-apis': '常用 WebGL2 API',
-  fundamentals: 'WebGL2 的基本原理',
-  'how-it-works': 'WebGL2 如何工作',
-  'shaders-and-glsl': '着色器与 GLSL',
-  'state-diagram': 'WebGL2 状态图',
-  'matrix-math': '矩阵基础：从二维到三维',
-  'texture-sampling': '图像上传与纹理采样',
-  'image-processing-basics': '图像处理基础',
-  'convolution-kernels': '卷积核',
-  'convolution-matrix-guide': '卷积矩阵详解',
-  'image-effects': '模糊、锐化与边缘检测',
-  'multi-pass-image-processing': '多阶段图像处理',
-  'translation-2d': '二维平移',
-  'rotation-2d': '二维旋转',
-  'scale-2d': '二维缩放',
-  'matrices-2d': '二维矩阵',
-  'unified-2d-transforms': '使用矩阵统一表达二维变换',
-  'orthographic-3d': '三维正射投影',
-  'perspective-3d': '三维透视投影',
-  'camera-3d': '三维相机',
-  'matrix-naming-3d': 'WebGL2 三维矩阵命名',
-  'model-view-projection': '模型、视图与投影矩阵',
-};
 
 function readInitialTheme(): Theme {
   const stored = window.localStorage.getItem('webgl-learning-theme');
@@ -92,6 +72,14 @@ export function App() {
       window.removeEventListener('popstate', updateLesson);
       window.removeEventListener(LESSON_NAVIGATION_EVENT, updateLesson);
     };
+  }, []);
+
+  useEffect(() => {
+    // 浏览器在 React 渲染前就处理了 URL 锚点，此时目标元素还不存在；挂载后补一次滚动，让分享的章节链接直接定位。
+    const hash = decodeURIComponent(window.location.hash.slice(1));
+    if (!hash || hash === 'lesson-title') return;
+    const frame = window.requestAnimationFrame(() => document.getElementById(hash)?.scrollIntoView());
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   useEffect(() => {
@@ -199,7 +187,11 @@ export function App() {
         {lessonId === 'how-it-works' && <HowItWorksArticle toc={inlineTableOfContents} />}
         {lessonId === 'shaders-and-glsl' && <ShadersAndGlslArticle toc={inlineTableOfContents} />}
         {lessonId === 'state-diagram' && <StateDiagramArticle toc={inlineTableOfContents} />}
+        {lessonId === 'vectors' && <VectorsArticle toc={inlineTableOfContents} />}
+        {lessonId === 'trigonometry' && <TrigonometryArticle toc={inlineTableOfContents} />}
+        {lessonId === 'dot-and-cross' && <DotAndCrossArticle toc={inlineTableOfContents} />}
         {lessonId === 'matrix-math' && <MatrixMathArticle toc={inlineTableOfContents} />}
+        {lessonId === 'inverse-and-normals' && <InverseAndNormalsArticle toc={inlineTableOfContents} />}
         {lessonId === 'texture-sampling' && <TextureSamplingArticle toc={inlineTableOfContents} />}
         {lessonId === 'image-processing-basics' && <ImageProcessingBasicsArticle toc={inlineTableOfContents} />}
         {lessonId === 'convolution-kernels' && <ConvolutionKernelsArticle toc={inlineTableOfContents} />}

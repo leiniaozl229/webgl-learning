@@ -1,27 +1,65 @@
-export type LessonId =
-  | 'getting-webgl2'
-  | 'common-apis'
-  | 'fundamentals'
-  | 'how-it-works'
-  | 'shaders-and-glsl'
-  | 'state-diagram'
-  | 'matrix-math'
-  | 'texture-sampling'
-  | 'image-processing-basics'
-  | 'convolution-kernels'
-  | 'convolution-matrix-guide'
-  | 'image-effects'
-  | 'multi-pass-image-processing'
-  | 'translation-2d'
-  | 'rotation-2d'
-  | 'scale-2d'
-  | 'matrices-2d'
-  | 'unified-2d-transforms'
-  | 'orthographic-3d'
-  | 'perspective-3d'
-  | 'camera-3d'
-  | 'matrix-naming-3d'
-  | 'model-view-projection';
+// 课程 ID 的唯一来源：类型、URL 解析和测试都从这里派生，新增课程时只需在此登记。
+export const lessonIds = [
+  'getting-webgl2',
+  'common-apis',
+  'fundamentals',
+  'how-it-works',
+  'shaders-and-glsl',
+  'state-diagram',
+  'vectors',
+  'trigonometry',
+  'dot-and-cross',
+  'matrix-math',
+  'inverse-and-normals',
+  'texture-sampling',
+  'image-processing-basics',
+  'convolution-kernels',
+  'convolution-matrix-guide',
+  'image-effects',
+  'multi-pass-image-processing',
+  'translation-2d',
+  'rotation-2d',
+  'scale-2d',
+  'matrices-2d',
+  'unified-2d-transforms',
+  'orthographic-3d',
+  'perspective-3d',
+  'camera-3d',
+  'matrix-naming-3d',
+  'model-view-projection',
+] as const;
+
+export type LessonId = typeof lessonIds[number];
+
+export const lessonTitles: Record<LessonId, string> = {
+  'getting-webgl2': '怎样使用 WebGL2',
+  'common-apis': '常用 WebGL2 API',
+  fundamentals: 'WebGL2 的基本原理',
+  'how-it-works': 'WebGL2 如何工作',
+  'shaders-and-glsl': '着色器与 GLSL',
+  'state-diagram': 'WebGL2 状态图',
+  vectors: '向量、长度与单位化',
+  trigonometry: '角度、弧度与三角函数',
+  'dot-and-cross': '点积、叉积与坐标基',
+  'matrix-math': '矩阵基础：从二维到三维',
+  'inverse-and-normals': '逆矩阵、转置与法线矩阵',
+  'texture-sampling': '图像上传与纹理采样',
+  'image-processing-basics': '图像处理基础',
+  'convolution-kernels': '卷积核',
+  'convolution-matrix-guide': '卷积矩阵详解',
+  'image-effects': '模糊、锐化与边缘检测',
+  'multi-pass-image-processing': '多阶段图像处理',
+  'translation-2d': '二维平移',
+  'rotation-2d': '二维旋转',
+  'scale-2d': '二维缩放',
+  'matrices-2d': '二维矩阵',
+  'unified-2d-transforms': '使用矩阵统一表达二维变换',
+  'orthographic-3d': '三维正射投影',
+  'perspective-3d': '三维透视投影',
+  'camera-3d': '三维相机',
+  'matrix-naming-3d': 'WebGL2 三维矩阵命名',
+  'model-view-projection': '模型、视图与投影矩阵',
+};
 
 export interface NavigationItem {
   id?: LessonId;
@@ -60,11 +98,15 @@ export const navigationGroups: NavigationGroup[] = [
   {
     label: '数学',
     items: [
+      { id: 'vectors', label: '向量与单位化', href: lessonHref('vectors') },
+      { id: 'trigonometry', label: '弧度与三角函数', href: lessonHref('trigonometry') },
+      { id: 'dot-and-cross', label: '点积与叉积', href: lessonHref('dot-and-cross') },
       { id: 'matrix-math', label: '矩阵基础：从二维到三维', href: lessonHref('matrix-math') },
+      { id: 'inverse-and-normals', label: '逆矩阵与法线矩阵', href: lessonHref('inverse-and-normals') },
     ],
   },
   {
-    label: '二维',
+    label: '图像处理',
     items: [
       { id: 'texture-sampling', label: '图像上传与纹理采样', href: lessonHref('texture-sampling') },
       { id: 'image-processing-basics', label: '图像处理基础', href: lessonHref('image-processing-basics') },
@@ -72,6 +114,11 @@ export const navigationGroups: NavigationGroup[] = [
       { id: 'convolution-matrix-guide', label: '卷积矩阵详解', href: lessonHref('convolution-matrix-guide') },
       { id: 'image-effects', label: '模糊、锐化与边缘检测', href: lessonHref('image-effects') },
       { id: 'multi-pass-image-processing', label: '多阶段图像处理', href: lessonHref('multi-pass-image-processing') },
+    ],
+  },
+  {
+    label: '二维变换',
+    items: [
       { id: 'translation-2d', label: '二维平移', href: lessonHref('translation-2d') },
       { id: 'rotation-2d', label: '二维旋转', href: lessonHref('rotation-2d') },
       { id: 'scale-2d', label: '二维缩放', href: lessonHref('scale-2d') },
@@ -90,6 +137,24 @@ export const navigationGroups: NavigationGroup[] = [
     ],
   },
 ];
+
+// 上一篇 / 下一篇按侧边栏顺序派生，保证分页与目录始终一致。
+export const lessonSequence: LessonId[] = navigationGroups.flatMap((group) => group.items.flatMap((item) => item.id ? [item.id] : []));
+
+const navigationLabels = new Map(navigationGroups.flatMap((group) => group.items.flatMap((item) => item.id ? [[item.id, item.label] as const] : [])));
+
+/** 侧边栏使用的短标题，适合分页按钮等空间有限的位置。 */
+export function lessonNavLabel(lessonId: LessonId): string {
+  return navigationLabels.get(lessonId) ?? lessonTitles[lessonId];
+}
+
+export function adjacentLessons(lessonId: LessonId): { previous?: LessonId; next?: LessonId } {
+  const index = lessonSequence.indexOf(lessonId);
+  return {
+    previous: index > 0 ? lessonSequence[index - 1] : undefined,
+    next: index >= 0 && index < lessonSequence.length - 1 ? lessonSequence[index + 1] : undefined,
+  };
+}
 
 export const tableOfContentsByLesson: Record<LessonId, TableOfContentsItem[]> = {
   'getting-webgl2': [
@@ -143,6 +208,38 @@ export const tableOfContentsByLesson: Record<LessonId, TableOfContentsItem[]> = 
     { label: 'draw call 读取什么', href: '#draw-snapshot' },
     { label: '继续学习', href: '#next-steps' },
   ],
+  vectors: [
+    { label: '点与向量', href: '#points-and-vectors' },
+    { label: '加法与减法', href: '#add-and-subtract' },
+    { label: '标量乘法', href: '#scalar-multiply' },
+    { label: '长度与距离', href: '#length' },
+    { label: '单位化', href: '#normalize' },
+    { label: '向量实验', href: '#vector-lab' },
+    { label: 'GLSL 中的向量', href: '#glsl-vectors' },
+    { label: '容易混淆的地方', href: '#pitfalls' },
+    { label: '继续学习', href: '#next-steps' },
+  ],
+  trigonometry: [
+    { label: '弧度的定义', href: '#radian-definition' },
+    { label: '单位圆', href: '#unit-circle' },
+    { label: '三角函数实验', href: '#trig-lab' },
+    { label: '极坐标生成几何', href: '#polar-geometry' },
+    { label: 'atan2 求方向角', href: '#atan2' },
+    { label: '视野角与 tan', href: '#field-of-view' },
+    { label: '用 sin 做动画', href: '#oscillation' },
+    { label: '容易混淆的地方', href: '#pitfalls' },
+    { label: '继续学习', href: '#next-steps' },
+  ],
+  'dot-and-cross': [
+    { label: '点积的两种读法', href: '#dot-definition' },
+    { label: '点积实验', href: '#dot-lab' },
+    { label: '点积与光照', href: '#dot-lighting' },
+    { label: '叉积与垂直方向', href: '#cross-definition' },
+    { label: '绕序与面剔除', href: '#winding-lab' },
+    { label: '构造坐标基', href: '#basis' },
+    { label: '容易混淆的地方', href: '#pitfalls' },
+    { label: '继续学习', href: '#next-steps' },
+  ],
   'matrix-math': [
     { label: '标量、向量与矩阵', href: '#scalar-vector-matrix' },
     { label: '行列与形状', href: '#rows-columns-shape' },
@@ -154,6 +251,18 @@ export const tableOfContentsByLesson: Record<LessonId, TableOfContentsItem[]> = 
     { label: '存储与上传', href: '#storage-and-upload' },
     { label: '单位、逆与转置', href: '#identity-and-inverse' },
     { label: '连接二维与三维', href: '#webgl-connections' },
+    { label: '继续学习', href: '#next-steps' },
+  ],
+  'inverse-and-normals': [
+    { label: '逆矩阵撤销变换', href: '#inverse-undo' },
+    { label: '行列式与可逆性', href: '#determinant' },
+    { label: '行列式实验', href: '#determinant-lab' },
+    { label: '组合矩阵的逆', href: '#inverse-order' },
+    { label: '转置与正交矩阵', href: '#transpose' },
+    { label: '法线为什么会歪', href: '#normal-problem' },
+    { label: '法线矩阵实验', href: '#normal-lab' },
+    { label: '在 WebGL2 中使用', href: '#normal-matrix-webgl' },
+    { label: '容易混淆的地方', href: '#pitfalls' },
     { label: '继续学习', href: '#next-steps' },
   ],
   'texture-sampling': [
@@ -304,7 +413,11 @@ export const sourceByLesson: Record<LessonId, string> = {
   'how-it-works': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-how-it-works.html',
   'shaders-and-glsl': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-shaders-and-glsl.html',
   'state-diagram': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-state-diagram.html',
+  vectors: 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-3d-camera.html',
+  trigonometry: 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-2d-rotation.html',
+  'dot-and-cross': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-3d-lighting-directional.html',
   'matrix-math': 'https://webgl2fundamentals.org/webgl/lessons/webgl-matrix-vs-math.html',
+  'inverse-and-normals': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-3d-lighting-directional.html',
   'texture-sampling': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-image-processing.html',
   'image-processing-basics': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-image-processing.html',
   'convolution-kernels': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-image-processing.html',
@@ -325,31 +438,7 @@ export const sourceByLesson: Record<LessonId, string> = {
 
 export function parseLessonId(search: string): LessonId {
   const lesson = new URLSearchParams(search).get('lesson');
-  if (
-    lesson === 'getting-webgl2' ||
-    lesson === 'common-apis' ||
-    lesson === 'how-it-works' ||
-    lesson === 'shaders-and-glsl' ||
-    lesson === 'state-diagram' ||
-    lesson === 'matrix-math' ||
-    lesson === 'texture-sampling' ||
-    lesson === 'image-processing-basics' ||
-    lesson === 'convolution-kernels' ||
-    lesson === 'convolution-matrix-guide' ||
-    lesson === 'image-effects' ||
-    lesson === 'multi-pass-image-processing' ||
-    lesson === 'translation-2d' ||
-    lesson === 'rotation-2d' ||
-    lesson === 'scale-2d' ||
-    lesson === 'matrices-2d' ||
-    lesson === 'unified-2d-transforms' ||
-    lesson === 'orthographic-3d' ||
-    lesson === 'perspective-3d' ||
-    lesson === 'camera-3d' ||
-    lesson === 'matrix-naming-3d' ||
-    lesson === 'model-view-projection'
-  ) return lesson;
-  return 'fundamentals';
+  return (lessonIds as readonly string[]).includes(lesson ?? '') ? lesson as LessonId : 'fundamentals';
 }
 
 export function readLessonId(): LessonId {
