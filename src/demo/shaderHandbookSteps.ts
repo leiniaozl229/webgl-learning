@@ -1,0 +1,51 @@
+export const shaderHandbookSteps = [
+  {
+    short: '坐标', title: '建立统一尺度的坐标',
+    description: '从当前片段的像素位置出发，减去画面中心，再统一除以高度。后面的距离、噪声和形状都读取同一份坐标 p。',
+    input: '片段位置、分区原点、目标像素尺寸', operation: '居中并按高度归一化', output: '横纵同尺度的坐标 p',
+    observe: '改变半径，确认圆环保持正圆。关闭对照后改变窗口宽度，观察网格的尺度。',
+    code: 'vec2 p = (gl_FragCoord.xy - u_origin\n  - 0.5 * u_resolution) / u_resolution.y;',
+  },
+  {
+    short: 'SDF', title: '用距离描述一个形状',
+    description: 'SDF 把位置变成到边界的有符号距离：圆内为负，边界为零，圆外为正。同一个距离值可以生成填充、描边和距离可视化。',
+    input: '坐标 p、半径、描边半宽', operation: '求距离，再把距离变成覆盖率', output: '圆形或圆环的边缘',
+    observe: '切换填充、描边与距离。距离视图中蓝色为负、橙色为正，亮线标出边界。关闭抗锯齿并缩小描边，观察边缘。',
+    code: 'float d = length(p) - u_radius;\nfloat w = max(0.5 * fwidth(d), 0.000001);\nfloat fill = 1.0 - smoothstep(-w, w, d);\nfloat stroke = 1.0 - smoothstep(-w, w, abs(d) - u_lineWidth);',
+  },
+  {
+    short: 'Noise', title: '把随机格点插值成连续场',
+    description: 'hash 给每个整数格点一个可复现的随机数。Value noise 读取四个角，再按单元内位置做平滑插值，让相邻区域连续过渡。',
+    input: '放大后的坐标、四个格点随机值', operation: '平滑权重与两次线性插值', output: '范围在 0～1 的灰度场',
+    observe: '关闭平滑插值，看到每格一个随机值；再打开，观察块状边界怎样连接。频率越高，同一视口里出现的单元越多。',
+    code: 'vec2 i = floor(p), f = fract(p);\nvec2 u = f * f * (3.0 - 2.0 * f);\nreturn mix(\n  mix(hash21(i), hash21(i + vec2(1.0, 0.0)), u.x),\n  mix(hash21(i + vec2(0.0, 1.0)), hash21(i + vec2(1.0)), u.x),\n  u.y\n);',
+  },
+  {
+    short: 'fBM', title: '叠加不同尺度的噪声',
+    description: '每层 octave 提高频率、减小振幅，再把结果累加。低频决定大块轮廓，高频补上细节。分母跟随实际振幅之和，让亮度比较更稳定。',
+    input: 'Value noise、层数、振幅倍率', operation: '倍频、旋转、加权、归一化', output: '包含多个尺度的标量场',
+    observe: '先把层数调到 1，再逐层增加。提高振幅倍率，会让高频细节更显眼。这一步的当前场没有时间项，完成效果的对照仍可流动。',
+    code: 'float sum = 0.0, amplitude = 0.5, weight = 0.0;\nfor (int i = 0; i < 6; ++i) {\n  if (i >= u_octaves) break;\n  sum += amplitude * valueNoise(p);\n  weight += amplitude;\n  p = turn * p * 2.0 + vec2(7.1, 3.7);\n  amplitude *= u_gain;\n}\nreturn sum / weight;',
+  },
+  {
+    short: '扭曲', title: '让噪声决定查询坐标',
+    description: '先计算两份错开的 fBM，分别提供横向和纵向位移。减去 0.5 后，位移围绕零变化；新的坐标进入第三次 fBM，形成弯曲的团块与褶皱。',
+    input: '两份 fBM、扭曲强度、时间漂移', operation: '先偏移坐标，再求最终场', output: '被扭曲的连续标量场',
+    observe: '把扭曲强度归零，对照上一层 fBM；再慢慢增大。查看位移来源时，R/G 通道显示原始的两份噪声，尚未乘上扭曲强度。',
+    code: 'vec2 drift = vec2(u_time * 0.12, -u_time * 0.08);\nvec2 warp = vec2(\n  fbm(p * 2.0 + drift),\n  fbm(p * 2.0 + drift + 13.7)\n);\nfloat field = fbm(p * u_frequency + u_warp * (warp - 0.5));',
+  },
+  {
+    short: '配色', title: '把一个数值映射为颜色',
+    description: '形状和配色共享 field，但可以分别调整。余弦调色板把一个标量变成三个通道；通道相位错开，使颜色随场值连续变化。',
+    input: '标量 field、配色相位', operation: '余弦调色板', output: '连续的 RGB 色彩场',
+    observe: '只改变配色相位，确认噪声的空间轮廓保持一致。这里采用艺术配色；完整的线性光照和 sRGB 编码需要另外管理。',
+    code: 'vec3 palette(float t) {\n  return vec3(0.5) + vec3(0.45) * cos(\n    6.28318530718 * (vec3(t) + vec3(0.0, 0.18, 0.35))\n  );\n}\nvec3 color = palette(field + u_hue + u_time * 0.03);',
+  },
+  {
+    short: '合成', title: '让场同时控制轮廓、颜色与发光',
+    description: '场值让圆环半径轻微起伏，SDF 生成细线，倒数衰减提供柔亮的尾部。三者相加后，用 Tone mapping 把高光压入显示范围。',
+    input: '噪声场、圆环距离、调色板', operation: '形状覆盖率 + 解析发光 + 高光压缩', output: '文档中的噪声光环',
+    observe: '右侧保留相同轮廓和配色，关闭解析发光。把发光强度归零，两边应一致。这里的光晕由公式直接求出，Bloom 的空间模糊管线见下文。',
+    code: 'float d = abs(length(p)\n  - (u_radius + 0.08 * (field - 0.5))) - u_lineWidth;\nfloat ring = coverage(d);\nfloat glow = u_glow * 0.0015 / (d * d + 0.002);\nvec3 color = background\n  + palette(field + u_hue + u_time * 0.03)\n  * (0.12 * field + ring + glow);\ncolor = color / (1.0 + color);',
+  },
+] as const;

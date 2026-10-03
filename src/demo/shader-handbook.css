@@ -1,0 +1,64 @@
+.handbook-lab .ribbon-lab__navigation ol { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.handbook-lab .ribbon-lab__controls .ribbon-check { align-items: flex-start; line-height: 1.7; }
+.handbook-lab .ribbon-check input { margin-top: 0.25rem; }
+.handbook-table { max-width: 100%; overflow-x: auto; margin-block: 1.5rem; scrollbar-color: var(--color-border-strong) var(--color-surface); }
+.handbook-table table { width: 100%; min-width: 37rem; border-collapse: collapse; text-align: left; font-size: 0.875rem; line-height: 1.8; }
+.handbook-table th, .handbook-table td { padding: 0.875rem 1rem 0.875rem 0; border-bottom: 1px solid var(--color-border); vertical-align: top; }
+.handbook-table th { color: var(--color-text); font-weight: 650; }
+.handbook-table th:first-child { width: 24%; }
+.handbook-table td { color: var(--color-text-soft); }
+.handbook-table a { text-underline-offset: 0.25em; }
+.handbook-flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.5rem; margin: 1.5rem 0; padding: 1.25rem 0; border-block: 1px solid var(--color-border); list-style: none; }
+.handbook-flow li { display: flex; min-width: 0; flex-direction: column; gap: 0.5rem; }
+.handbook-flow strong { color: var(--color-text); font-size: 0.875rem; }
+.handbook-flow span { color: var(--color-text-soft); font-size: 0.8125rem; line-height: 1.7; }
+.handbook-flow code { font-size: 0.6875rem; overflow-wrap: anywhere; }
+.handbook-flow--three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.handbook-pass-list { padding-left: 1.5rem; margin-block: 1.5rem; }
+.handbook-pass-list li { padding: 0.5rem 0 0.75rem 0.25rem; }
+.handbook-pass-list strong, .handbook-pass-list span { display: block; }
+.handbook-pass-list strong { color: var(--color-text); }
+.handbook-pass-list span { margin-top: 0.25rem; font-size: 0.875rem; }
+.handbook-feedback { margin-block: 1.5rem; padding: 1.25rem; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface-soft); }
+.handbook-feedback__header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; color: var(--color-text); }
+.handbook-feedback__header span { font-size: 0.8125rem; font-variant-numeric: tabular-nums; }
+.handbook-feedback p { font-size: 0.9375rem; }
+.handbook-feedback__actions { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+.handbook-feedback button { display: inline-flex; min-height: 2.75rem; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.5rem 0.875rem; border: 1px solid var(--color-border-strong); border-radius: var(--radius-sm); background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 0.8125rem; font-weight: 650; cursor: pointer; }
+.handbook-feedback button:hover { border-color: var(--color-accent); background: var(--color-accent-soft); }
+.handbook-feedback button svg { width: 1rem; height: 1rem; }
+.handbook-checks { margin-block: 1.5rem; }
+.handbook-checks > div { display: grid; grid-template-columns: 9rem minmax(0, 1fr); gap: 1rem; padding-block: 1rem; border-bottom: 1px solid var(--color-border); }
+.handbook-checks dt { color: var(--color-text); font-weight: 650; }
+.handbook-checks dd { margin: 0; font-size: 0.9375rem; }
+.shader-handbook-article .handbook-reference-note { margin-top: 1.5rem; font-size: 0.8125rem; }
+.effect-gallery__toolbar > .ribbon-select { display: flex; align-items: center; gap: 0.75rem; }
+.effect-gallery__toolbar select { width: auto; max-width: 100%; }
+.effect-gallery__toolbar > div { font-variant-numeric: tabular-nums; }
+.effect-gallery__toolbar button { min-width: 2.75rem; padding-inline: 0.5rem; }
+.effect-gallery-lab .ribbon-lab__explanation h3 { margin: 0 0 0.5rem; font-size: 1.25rem; line-height: 1.5; color: var(--color-text); }
+.effect-gallery__pipeline { display: flex; flex-wrap: wrap; gap: 0.75rem 1.5rem; padding: 1rem 0; margin: 1rem 0; border-block: 1px solid var(--color-border); list-style: none; }
+.effect-gallery__pipeline li { display: flex; align-items: baseline; gap: 0.5rem; color: var(--color-text); font-size: 0.8125rem; line-height: 1.8; }
+.effect-gallery__pipeline li > span { color: var(--color-text-soft); font-variant-numeric: tabular-nums; }
+.effect-gallery-lab .effect-gallery__history { margin-bottom: 1rem; color: var(--color-accent-strong); font-size: 0.8125rem; font-variant-numeric: tabular-nums; }
+.effect-gallery__principle { display: inline-flex; min-height: 2.75rem; align-items: center; gap: 0.5rem; font-size: 0.8125rem; text-underline-offset: 0.25em; }
+.effect-gallery__principle svg { width: 1rem; height: 1rem; }
+.effect-gallery__clock { font-variant-numeric: tabular-nums; }
+.handbook-effect-link { display: inline-flex; align-items: center; gap: 0.4rem; min-height: 2.75rem; padding: 0; border: 0; background: transparent; color: var(--color-accent-strong); text-align: left; font: inherit; font-weight: 650; cursor: pointer; }
+.handbook-effect-link:hover { text-decoration: underline; text-underline-offset: 0.25em; }
+.handbook-effect-link svg { width: 0.875rem; height: 0.875rem; flex-shrink: 0; }
+.handbook-table .handbook-effect-principle { display: block; width: fit-content; min-height: 2.75rem; padding-block: 0.5rem; font-size: 0.75rem; font-weight: 400; }
+
+@media (max-width: 45rem) {
+  .effect-gallery-lab .ribbon-lab__toolbar { gap: 0.5rem; padding: 0.5rem 0.75rem; }
+  .effect-gallery__toolbar > .ribbon-select { width: 100%; flex-wrap: wrap; }
+  .effect-gallery__toolbar select { flex: 1; }
+  .effect-gallery__toolbar > div { display: none; }
+  .effect-gallery-lab .ribbon-lab__toolbar > div { width: auto; }
+  .effect-gallery__long-label { display: none; }
+  .handbook-lab .ribbon-lab__navigation ol { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .handbook-flow { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
+  .handbook-flow--three { grid-template-columns: minmax(0, 1fr); }
+  .handbook-feedback { padding: 1rem; }
+  .handbook-checks > div { grid-template-columns: minmax(0, 1fr); gap: 0.5rem; }
+}

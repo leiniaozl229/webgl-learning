@@ -1,0 +1,61 @@
+---
+version: 1
+slug: "src-demo-components-shaderhandbookarticle-tsx"
+primary_target: "src/demo/components/ShaderHandbookArticle.tsx"
+related_targets: ["src/demo/components/EffectGalleryLab.tsx","src/demo/components/ShaderHandbookLab.tsx","src/demo/effectRecipes.ts","src/demo/shader-handbook.css","src/demo/openshaders.css","src/core/effectGalleryRenderer.ts","src/core/effectGallery.ts"]
+---
+
+# Shader 效果手册
+
+Mode: Read. Extend the established lesson world, code-led. The user requests the supplied handbook as a page and already chose progressive experiments with live output and parameter controls.
+
+## Direction contract
+
+THESIS: Make all sixteen handbook recipes visible and adjustable, then assemble the noisy light ring one operation at a time.
+OWN-WORLD: Inherit DESIGN.md typography, laboratory blue, neutral reading surfaces, both themes, and the existing lab composition.
+STORY: Choose any of the sixteen effects, inspect the live output and relevant controls, and follow its real render passes or state. Continue with the seven-step noise ring and the linked principle chapters.
+FIRST VIEWPORT: Lesson title and short introduction, an effect selector and a large live canvas with adjacent parameters. The sixteen-entry table opens the selected demonstration; seven-step learning and source panels remain available below.
+FORM: Existing course extension; seed key not applicable. Signature interaction compares the current operation with the same-parameter complete ring, and removes glow at the final stage. Motion starts only by explicit playback.
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+
+No external imagery, approved comp, new visual identity, or unresolved choices. Preserve the source document and existing work.
+
+## Current extension contract
+
+The user identified the missing demonstrations in the sixteen-effect table and requested commit and push. Add one shared WebGL2 experiment with sixteen selectable recipes, effect-specific controls, baseline comparison, explicit playback, source tabs, and direct entry from each table row. ASCII/mosaic, trails/diffusion, and water/flag expose variants. Bloom must run highlight extraction and two blur passes; feedback must use two real alternating textures; geometry must use indexed subdivided vertex data with updated normals. Keep theme, responsive behavior, reduced-motion support, complete GPU cleanup and visible rendering diagnostics. The latest verification and finish review cover this extension; the earlier seven-step evidence is retained below with its historical scope.
+
+## Implemented surface
+
+- Route: `?lesson=shader-effects-handbook`, under Shader 实战 immediately after OpenShaders. The page adapts `docs/shader-effects-handbook.md` into a lesson with the sixteen-effect Gallery first, the seven-step noise-ring experiment next, then the technique table, explanatory data flows, recipes, sources, and lesson pagination.
+- One shared Gallery renderer covers `waves`, `ribbons`, `clouds`, `sdf`, `color`, `glass`, `chroma`, `stars`, `grain`, `dither`, `halftone`, `cells`, `bloom`, `feedback`, `raymarch`, and `geometry`. The selector and desktop previous/next buttons choose a recipe; each of the sixteen table buttons selects its demonstration, scrolls to the Gallery, and focuses its heading. The `effect` query parameter preserves a copyable selection; invalid values use `waves`.
+- Each recipe supplies its own controls, observation prompt, baseline, and actual pipeline description. Selection loads that recipe's defaults and paused time. Base comparison uses the same context and time with a second viewport; its drawing cost is reported separately. Variants include radial waves/breathing, rounded box/cutout, ASCII/mosaic, trails/diffusion, sphere/torus, and water/flag. Geometry exposes grid lines; feedback exposes single-frame advance and readable A/B history state.
+- Bloom performs five draws: scene → highlight extraction → horizontal blur → vertical blur → composition. The three intermediate draws use textures at half the pane width and height. Controls expose threshold, blur sampling interval, and gain; gain zero removes the composed glow. The status reports the current pane's five draws and actual attachment format.
+- Feedback stores GPU state in two real history textures. Each update samples the previous texture, applies `exp(-decay * dt)`, optionally mixes four neighbours with bounded nonnegative weights, injects the source, writes the other texture, and swaps references. Updates use `dt ≤ 1/30` second. Pause fixes the accumulated state; single-frame advance updates once. Parameter, variant, pane-size, effect, and time-reset changes clear history. The status shows accumulated updates and the latest read/write texture names.
+- Water and flag use a CPU-generated indexed grid with `position.xyz` and `uv.xy`, a 20-byte stride and 12-byte UV offset, uploaded vertex/index Buffers, and a VAO. The vertex shader displaces the geometry and updates normals from analytic derivatives; the fragment shader lights the deformed surface. The flag's left edge remains fixed. The status exposes vertex and triangle counts.
+- Background test imagery and the ASCII glyph atlas are generated by code. Glass uses a thin-layer UV refraction approximation with height-derived normals and a Fresnel blend; the chroma recipe uses RGB sampling offsets and artistic iridescent palette mixing. These teaching approximations are disclosed in the lesson.
+- Gallery source tabs use Base UI and display actual raw runtime sources: effect-specific `fragment.glsl`, `vertex.glsl`, `vertex-data.ts`, `renderer.ts`, `scene.glsl`, and `post.glsl`. The source area has bounded height and scrolling. Shader compilation, Program linking, and Framebuffer failures retain diagnostics; resource recreation is available. Disposal releases Programs, textures, Framebuffers, VAOs, Buffers, and renderbuffers.
+- Both experiments start paused, offer explicit playback/reset and static parameter updates, and pause continuous rendering when the document is hidden or the Canvas leaves the viewport. Reduced-motion preference changes stop playback. ResizeObserver and DPR listeners synchronize Canvas, render-target dimensions, and viewport; drawing pixels and animation frequency are capped. Context restoration recreates resources and resets feedback history.
+- The retained seven-step progression is coordinates → SDF → Value noise → fBM → domain warping → palette → ring/glow composition. Each step shows input, added operation, output, observation prompt, and relevant controls; its parameters persist across steps. One WebGL2 Context, Program, and VAO draw its two same-time viewports. Steps 1–6 compare with the complete ring; step 7 compares with analytic glow disabled. Its raw sources and current-pane Value noise cost remain available.
+- The chapter's separate Ping-Pong binding widget advances or resets a readable A/B diagram. The Gallery feedback recipe supplies the actual GPU accumulation experiment; the diagram continues to explain input texture units and output Framebuffer attachments.
+- Existing lesson title/section/body hierarchy, neutral reading surfaces, laboratory blue, both themes, navigation, focus treatments, and lab composition remain authoritative. The final header and introductory copy leave the live Gallery Canvas visible in the first viewport. Desktop parameters sit beside the Canvas; narrow layouts place them below, compact the Gallery toolbar, wrap step navigation, stack flow diagrams, and contain wide-table/source scrolling.
+
+## Finish evidence
+
+Latest disposition: **ship**, covering the sixteen-effect extension with the review sequence below. A fresh independent finish reviewer read the lesson and Gallery implementation and assessed the initial captures and the user's screenshot. That full pass returned **fix** for one FIRST VIEWPORT finding. After the header/introduction and mobile toolbar correction, the same reviewer assessed that finding and its three replacement captures, returned **ship**, and marked it resolved with no open findings. The follow-up verdict is scoped to this correction; the other passing checks retain their coverage from the initial full review.
+
+- Final first-viewport evidence: `.impeccable/review/gallery-desktop-fix.jpg` (1280 × 720), `.impeccable/review/gallery-mobile-fix.jpg`, and `.impeccable/review/gallery-mobile-feedback-fix.jpg` (390 × 844). At mobile `scrollY = 0`, the Bloom Canvas has 269.96 CSS px visible; feedback has 217.96 CSS px visible. These are measurements for this surface's final viewport evidence. The final user-facing Gallery capture is `.impeccable/review/gallery-final.jpg`.
+- Initial layout/theme captures: `.impeccable/review/gallery-desktop-top.jpg`, `gallery-desktop.jpg`, `gallery-desktop-full.jpg`, `gallery-desktop-light.jpg`, `gallery-mobile-top.jpg`, `gallery-mobile.jpg`, and `gallery-mobile-full.jpg`, all under `.impeccable/review/`.
+- Initial effect captures, under `.impeccable/review/`: `gallery-waves.jpg`, `gallery-ribbons.jpg`, `gallery-clouds.jpg`, `gallery-sdf.jpg`, `gallery-color.jpg`, `gallery-glass.jpg`, `gallery-chroma.jpg`, `gallery-stars.jpg`, `gallery-grain.jpg`, `gallery-dither.jpg`, `gallery-halftone.jpg`, `gallery-cells.jpg`, `gallery-bloom.jpg`, `gallery-feedback.jpg`, `gallery-raymarch.jpg`, and `gallery-geometry.jpg`.
+- Initial supplemental captures, under `.impeccable/review/`: `gallery-flag-grid.jpg`, `gallery-mosaic.jpg`, `gallery-bloom-compare.jpg`, `gallery-bloom-zero.jpg`, and `gallery-feedback-running.jpg`. The listed initial and correction images were verified as valid local QA evidence.
+- Completed implementation checks: **135 tests across 18 files**; `npm run check:types`, `npm run build`, and `git diff --check` passed.
+- Completed browser checks: all sixteen selections compiled, linked, and drew with no console warnings or errors; Bloom at gain zero matched its baseline; geometry at four subdivisions reported 25 vertices and 32 triangles; playing feedback, pausing, and advancing once added one history update and swapped A/B read/write names. ASCII/mosaic, water/flag with grid lines, and sphere/torus variants were exercised. Table selection updated the URL and moved focus back to the Gallery; the actual renderer-source tab was inspected. Both themes and the 390 px layout were checked with no document-level horizontal overflow.
+
+Verification boundary: forced context restoration, cross-display DPR changes, and the RGBA8 fallback were not exercised in the browser. Their handling is evidenced by final source. Resource cleanup and visibility/resize listeners are recorded from implementation inspection. This documentation pass records the completed implementation and reviewer handoffs; the QA images remain local, uncommitted evidence. No shipping raster asset or approved comp was added, so raster provenance does not introduce a new asset entry.
+
+### Historical seven-step finish evidence
+
+The earlier **ship** verdict covered the original seven-step noise ring and explanatory chapters before the Gallery extension. It recorded **132 tests across 17 files**, passing type/build/diff checks, successful shader compile/link/draw, zero warp, displacement inspection reducing current-pane Value noise cost from 12 to 8, equal panes at zero glow, diagram A/B swapping, the actual fragment-source tab, mobile `scrollWidth = 390`, and no console errors.
+
+Its local captures, under `.impeccable/review/`, are `handbook-desktop.jpg`, `handbook-desktop-full.jpg`, `handbook-desktop-light.jpg`, `handbook-mobile.jpg`, `handbook-mobile-full.jpg`, `handbook-warp.jpg`, `handbook-warp-zero.jpg`, `handbook-composition.jpg`, `handbook-glow-zero.jpg`, and `handbook-ping-pong.jpg`. At that stage, Ping-Pong coverage was limited to the binding illustration. Actual GPU feedback is part of the later Gallery implementation and verification above.
+
+Documentation boundary: this established-world extension adds no system tokens or global rules. `DESIGN.md`, `PRODUCT.md`, and `.impeccable/design.json` retain their existing authority. The viewport correction's copy length, toolbar arrangement, and measured visible Canvas height describe this lesson only.

@@ -13,6 +13,8 @@ import {
 } from './components/ImageProcessingArticles';
 import { LessonArticle } from './components/LessonArticle';
 import { MatrixMathArticle } from './components/MatrixMathArticle';
+import { OpenShadersArticle } from './components/OpenShadersArticle';
+import { ShaderHandbookArticle } from './components/ShaderHandbookArticle';
 import {
   DotAndCrossArticle,
   InverseAndNormalsArticle,
@@ -208,6 +210,8 @@ export function App() {
         {lessonId === 'camera-3d' && <Camera3DArticle toc={inlineTableOfContents} />}
         {lessonId === 'matrix-naming-3d' && <MatrixNaming3DArticle toc={inlineTableOfContents} />}
         {lessonId === 'model-view-projection' && <ModelViewProjectionArticle toc={inlineTableOfContents} />}
+        {lessonId === 'openshaders-breakdown' && <OpenShadersArticle toc={inlineTableOfContents} theme={theme} />}
+        {lessonId === 'shader-effects-handbook' && <ShaderHandbookArticle toc={inlineTableOfContents} />}
         <TableOfContents
           items={tableOfContentsByLesson[lessonId]}
           sourceHref={sourceByLesson[lessonId]}

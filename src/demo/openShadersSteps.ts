@@ -1,0 +1,58 @@
+export const openShadersSteps = [
+  {
+    title: '建立坐标', short: '坐标',
+    description: '先给每个片段一个位置。坐标减去画面中心，再统一除以高度，横纵两轴就有相同的尺度。圆与网格帮你确认宽高比。',
+    input: 'gl_FragCoord 与绘图目标尺寸', operation: '居中，按高度归一化', output: '二维查询坐标 p',
+    observe: '中间的圆应保持正圆。关闭对照、改变窗口宽度，确认横纵方向没有被分别拉伸。',
+    code: 'vec2 p = (gl_FragCoord.xy - 0.5 * u_resolution)\n       / u_resolution.y;',
+  },
+  {
+    title: '点亮一个光斑', short: '光斑',
+    description: '每个位置查询到中心的平方距离。用距离构造倒数衰减，中心明亮、外围渐暗。正的 softness 限制峰值，避免中心除以零。',
+    input: '坐标 p', operation: '按平方距离计算亮度', output: '连续的发光强度 glow',
+    observe: '调节曝光，观察亮度范围。此时只有一个解析光斑，后续所有光丝都从这个核出发。',
+    code: 'float glow = 0.0021 / (dot(p, p) + 0.0018);\nvec3 light = glow * vec3(0.75, 0.82, 0.9);',
+  },
+  {
+    title: '把光斑拉成细丝', short: '拉伸',
+    description: '计算距离前，给横纵坐标不同的倍率。纵轴倍率越小，亮度沿纵向变化越慢，圆形光斑逐渐变成长条。',
+    input: '二维坐标', operation: '各向异性缩放', output: '细长的发光核',
+    observe: '把纵轴尺度从 0.17 调到 1。图案会变短；这是查询坐标缩放改变亮度分布的结果。',
+    code: 'vec2 stretched = p * vec2(2.1, u_stretch);\nfloat glow = 0.0021 /\n  (dot(stretched, stretched) + 0.0018);',
+  },
+  {
+    title: '让坐标连续弯曲', short: '扭曲',
+    description: '用正弦波改变查询坐标，再计算光斑。横向先更新，纵向读取更新后的横坐标；两次扰动共同改变光丝的形状。时间推进波的相位。',
+    input: '坐标、时间、扰动强度', operation: '依次执行两个正弦位移', output: '弯曲的发光核',
+    observe: '将扭曲强度设为 0，再逐渐增加。点击“播放流动”，或拖动时间相位，查看同一个场怎样连续变化。',
+    code: 'q.x -= sin(q.y * u_frequency.x + t) * 0.13 * u_warp;\nq.y -= sin(q.x * u_frequency.y - t) * 0.028 * u_warp;',
+  },
+  {
+    title: '重复折叠并累加', short: '折叠',
+    description: '每层执行扭曲、旋转剪切与缩小，再查询一个光斑。片段保留本像素的累加值，几十层细丝共同形成流动的褶皱。',
+    input: '本像素的查询坐标与层数', operation: '重复变换，逐层加光', output: '层叠的丝带光场',
+    observe: '先看 1 层，再试 12、36、80 层。每一层都是新的坐标查询，层数同时改变结构和计算量。',
+    code: 'mat2 fold = mat2(cos(2.13), sin(2.13),\n                 -0.964, cos(2.13));\nq = fold * q * 0.953;\nlight += glow * tint * exp2(-length(q) * 0.36);',
+  },
+  {
+    title: '配色与压缩高光', short: '配色',
+    description: '用层号、时间和半径生成色相变化，在 OKLCH 中控制亮度与彩度，再转换为线性 RGB。多层相加后，用 Tone mapping 将高亮度压入显示范围。',
+    input: '层号、场强度与色相', operation: '分层配色，压缩累加亮度', output: '带颜色的丝带',
+    observe: '调整色相。关闭高光压缩并增大曝光，查看直接截断到 0–1 后，高光怎样丢失颜色层次。',
+    code: 'vec3 tint = oklch(lightness, chroma, hue);\nlight += glow * tint;\nvec3 shown = (light * (2.51 * light + 0.03)) /\n  (light * (2.43 * light + 0.59) + 0.14);',
+  },
+  {
+    title: '叠加表面风格', short: '后处理',
+    description: '第一遍绘制把光场写入纹理。第二遍读取同一份颜色，通过颗粒、字符、网点或 UV 偏移赋予它不同风格。这里可以自由选择全部九种分类。',
+    input: '第一遍输出的 u_scene 纹理', operation: '重采样或改变颜色表达', output: '具有表面风格的完整效果',
+    observe: '先切换 Mosaic 和 Halftone，再比较 Liquid 与 Chroma。它们共享同一源场，只改变第二遍绘制的运算。',
+    code: '// Liquid：偏移 UV 后重新采样。\nvec3 liquid = texture(u_scene, uv + shift).rgb;\n// Chroma：不同通道使用不同位置。\nvec3 chroma = vec3(texture(u_scene, uv + split).r,\n                   texture(u_scene, uv).g,\n                   texture(u_scene, uv - split).b);',
+  },
+  {
+    title: '拆开计算与显示分辨率', short: '分辨率',
+    description: '把昂贵的基础场放到较小的离屏纹理中求值，再升采样到显示尺寸。细颗粒、网点和字符仍在最终分辨率生成，平滑场的计算量可以独立下降。',
+    input: '较低分辨率的光场纹理', operation: '线性升采样，再做后处理', output: '原尺寸的显示画面',
+    observe: '在 1×、½×、¼× 之间切换，对照源场像素数与细丝清晰度。这里统计基础场的片段数，实际帧率还取决于设备和纹理采样成本。',
+    code: '// 每个方向减半，基础场片段数约减至 1/4。\ngl.bindFramebuffer(gl.FRAMEBUFFER, fieldFbo);\ngl.viewport(0, 0, fieldWidth, fieldHeight);\ngl.drawArrays(gl.TRIANGLES, 0, 3);\n// 第二遍恢复显示尺寸，并采样 fieldTexture。',
+  },
+] as const;

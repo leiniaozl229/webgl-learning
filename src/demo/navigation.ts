@@ -27,6 +27,8 @@ export const lessonIds = [
   'camera-3d',
   'matrix-naming-3d',
   'model-view-projection',
+  'openshaders-breakdown',
+  'shader-effects-handbook',
 ] as const;
 
 export type LessonId = typeof lessonIds[number];
@@ -59,6 +61,8 @@ export const lessonTitles: Record<LessonId, string> = {
   'camera-3d': '三维相机',
   'matrix-naming-3d': 'WebGL2 三维矩阵命名',
   'model-view-projection': '模型、视图与投影矩阵',
+  'openshaders-breakdown': 'OpenShaders 效果拆解',
+  'shader-effects-handbook': 'Shader 效果常见手法',
 };
 
 export interface NavigationItem {
@@ -136,6 +140,13 @@ export const navigationGroups: NavigationGroup[] = [
       { id: 'model-view-projection', label: '模型、视图与投影', href: lessonHref('model-view-projection') },
     ],
   },
+  {
+    label: 'Shader 实战',
+    items: [
+      { id: 'openshaders-breakdown', label: 'OpenShaders 效果拆解', href: lessonHref('openshaders-breakdown') },
+      { id: 'shader-effects-handbook', label: 'Shader 效果常见手法', href: lessonHref('shader-effects-handbook') },
+    ],
+  },
 ];
 
 // 上一篇 / 下一篇按侧边栏顺序派生，保证分页与目录始终一致。
@@ -157,6 +168,36 @@ export function adjacentLessons(lessonId: LessonId): { previous?: LessonId; next
 }
 
 export const tableOfContentsByLesson: Record<LessonId, TableOfContentsItem[]> = {
+  'shader-effects-handbook': [
+    { label: '十六类效果实验台', href: '#effect-gallery' },
+    { label: '七步噪声光环实验', href: '#handbook-experiment' },
+    { label: '十六类效果速查', href: '#effect-index' },
+    { label: '输入、运算与输出', href: '#effect-dataflow' },
+    { label: '坐标变换', href: '#effect-coordinates' },
+    { label: 'SDF 与形状边缘', href: '#effect-sdf' },
+    { label: '波形与时间', href: '#effect-waves' },
+    { label: '噪声、fBM 与扭曲', href: '#effect-noise' },
+    { label: '颜色与亮度', href: '#effect-color' },
+    { label: '发光与丝带', href: '#effect-glow' },
+    { label: '法线、反射与折射', href: '#effect-material' },
+    { label: '纹理扭曲与色差', href: '#effect-sampling' },
+    { label: '颗粒与单元表达', href: '#effect-stylization' },
+    { label: 'Bloom 管线', href: '#effect-bloom' },
+    { label: 'Ping-Pong 帧间状态', href: '#effect-feedback' },
+    { label: '三维射线步进', href: '#effect-3d' },
+    { label: '顶点位移', href: '#effect-geometry' },
+    { label: '工程与性能', href: '#effect-performance' },
+    { label: '组合自己的效果', href: '#effect-recipes' },
+    { label: '继续实验', href: '#next-steps' },
+  ],
+  'openshaders-breakdown': [
+    { label: '八步交互拆解', href: '#ribbon-walkthrough' },
+    { label: '名字怎样进入 Shader', href: '#name-to-uniforms' },
+    { label: '两遍绘制的数据流', href: '#field-and-post' },
+    { label: '九种表面表达', href: '#surface-techniques' },
+    { label: '与原站的实现差别', href: '#production-differences' },
+    { label: '继续实验', href: '#next-steps' },
+  ],
   'getting-webgl2': [
     { label: '现在还需要兼容检查吗', href: '#availability' },
     { label: '创建 WebGL2 上下文', href: '#create-context' },
@@ -407,6 +448,8 @@ export const tableOfContentsByLesson: Record<LessonId, TableOfContentsItem[]> = 
 };
 
 export const sourceByLesson: Record<LessonId, string> = {
+  'shader-effects-handbook': 'https://thebookofshaders.com/',
+  'openshaders-breakdown': 'https://openshaders.com/explore',
   'getting-webgl2': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-getting-webgl2.html',
   'common-apis': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-fundamentals.html',
   fundamentals: 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-fundamentals.html',
