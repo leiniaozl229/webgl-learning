@@ -7,10 +7,11 @@ export const LESSON_NAVIGATION_EVENT = 'webgl-learning:navigate';
 interface LessonLinkProps extends Omit<ComponentProps<'a'>, 'href'> {
   lessonId: LessonId;
   hash?: string;
+  params?: Record<string, string>;
 }
 
-export function LessonLink({ lessonId, hash = 'lesson-title', onClick, ...props }: LessonLinkProps) {
-  const href = lessonHref(lessonId, hash);
+export function LessonLink({ lessonId, hash = 'lesson-title', params, onClick, ...props }: LessonLinkProps) {
+  const href = lessonHref(lessonId, hash, params);
 
   function navigate(event: MouseEvent<HTMLAnchorElement>) {
     onClick?.(event);

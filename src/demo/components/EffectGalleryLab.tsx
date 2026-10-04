@@ -15,7 +15,9 @@ function Parameter({ label, value, min, max, step, onChange }: {
   return <label className="ribbon-range" htmlFor={id}><span>{label}<output htmlFor={id}>{value.toFixed(digits)}</output></span><input id={id} aria-label={label} type="range" value={value} min={min} max={max} step={step} onChange={(event) => onChange(Number(event.target.value))} /></label>;
 }
 
-export function EffectGalleryLab({ effect, onSelect }: { effect: EffectId; onSelect: (value: EffectId) => void }) {
+export function EffectGalleryLab({ effect, onSelect, effects = effectIds }: {
+  effect: EffectId; onSelect: (value: EffectId) => void; effects?: readonly EffectId[];
+}) {
   const [options, setOptions] = useState<EffectOptions>(() => effectDefaults(effect));
   const [playing, setPlaying] = useState(false), [time, setTime] = useState(0);
   const [info, setInfo] = useState<EffectFrameInfo | null>(null), [error, setError] = useState<string | null>(null);
@@ -26,6 +28,7 @@ export function EffectGalleryLab({ effect, onSelect }: { effect: EffectId; onSel
   const effectId = useId(), variantId = useId();
   const recipe = effectRecipes.find((item) => item.id === effect)!;
   const effectIndex = effectIds.indexOf(effect);
+  const selectionIndex = effects.indexOf(effect);
   const isFeedback = effect === 'feedback', isMesh = effect === 'geometry';
 
   useEffect(() => {
@@ -125,10 +128,10 @@ export function EffectGalleryLab({ effect, onSelect }: { effect: EffectId; onSel
   const variantControls = recipe.controls.filter((_, index) => !(effect === 'cells' && options.variant === 1 && index === 1) && !(isFeedback && options.variant === 0 && index === 2));
 
   return <div className="ribbon-lab effect-gallery-lab">
-    <div className="ribbon-lab__toolbar effect-gallery__toolbar">
-      <label className="ribbon-select" htmlFor={effectId}>查看效果<select id={effectId} value={effect} onChange={(event) => onSelect(event.target.value as EffectId)}>{effectRecipes.map((item, index) => <option key={item.id} value={item.id}>{index + 1}. {item.name}</option>)}</select></label>
-      <div><button type="button" aria-label="上一个效果" disabled={effectIndex === 0} onClick={() => onSelect(effectIds[effectIndex - 1])}><ArrowLeft aria-hidden="true" /></button><span>{effectIndex + 1} / 16</span><button type="button" aria-label="下一个效果" disabled={effectIndex === 15} onClick={() => onSelect(effectIds[effectIndex + 1])}><ArrowRight aria-hidden="true" /></button></div>
-    </div>
+    {effects.length > 1 ? <div className="ribbon-lab__toolbar effect-gallery__toolbar">
+      <label className="ribbon-select" htmlFor={effectId}>本页案例<select id={effectId} value={effect} onChange={(event) => onSelect(event.target.value as EffectId)}>{effects.map((id) => <option key={id} value={id}>{effectRecipes.find((item) => item.id === id)!.name}</option>)}</select></label>
+      <div><button type="button" aria-label="上一个案例" disabled={selectionIndex === 0} onClick={() => onSelect(effects[selectionIndex - 1])}><ArrowLeft aria-hidden="true" /></button><span>{selectionIndex + 1} / {effects.length}</span><button type="button" aria-label="下一个案例" disabled={selectionIndex === effects.length - 1} onClick={() => onSelect(effects[selectionIndex + 1])}><ArrowRight aria-hidden="true" /></button></div>
+    </div> : <div className="ribbon-lab__toolbar effect-gallery__single"><strong>{recipe.name}</strong></div>}
     <div className="ribbon-lab__toolbar"><label><input type="checkbox" checked={options.compare} onChange={(event) => setOptions((current) => ({ ...current, compare: event.target.checked }))} /><span><span className="effect-gallery__long-label">显示</span>基础对照</span></label><div><button type="button" disabled={!!error} aria-pressed={playing} onClick={() => setPlaying((value) => !value)}>{playing ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}<span>{playing ? '暂停' : '播放'}<span className="effect-gallery__long-label">效果</span></span></button>{isFeedback && <button type="button" disabled={!!error} onClick={advance}><StepForward aria-hidden="true" /><span><span className="effect-gallery__long-label">前进</span>一帧</span></button>}<button type="button" onClick={reset}><RotateCcw aria-hidden="true" /><span>重置<span className="effect-gallery__long-label">效果</span></span></button></div></div>
     <div className="ribbon-lab__workbench">
       <div className="ribbon-lab__preview" data-compare={options.compare}>

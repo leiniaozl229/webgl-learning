@@ -15,6 +15,8 @@ import { LessonArticle } from './components/LessonArticle';
 import { MatrixMathArticle } from './components/MatrixMathArticle';
 import { OpenShadersArticle } from './components/OpenShadersArticle';
 import { ShaderHandbookArticle } from './components/ShaderHandbookArticle';
+import { ShaderEffectArticle } from './components/ShaderEffectArticle';
+import { getEffectLesson, legacyEffectLesson } from './effectLessons';
 import {
   DotAndCrossArticle,
   InverseAndNormalsArticle,
@@ -65,9 +67,19 @@ export function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(readInitialSidebarCollapsed);
   const [isDesktop, setIsDesktop] = useState(readInitialDesktopLayout);
+  const effectLesson = getEffectLesson(lessonId);
 
   useEffect(() => {
-    const updateLesson = () => setLessonId(readLessonId());
+    const updateLesson = () => {
+      const legacy = legacyEffectLesson(window.location.search, window.location.hash);
+      if (legacy) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('lesson', legacy.id);
+        window.history.replaceState(null, '', url);
+      }
+      setLessonId(readLessonId());
+    };
+    updateLesson();
     window.addEventListener('popstate', updateLesson);
     window.addEventListener(LESSON_NAVIGATION_EVENT, updateLesson);
     return () => {
@@ -212,6 +224,7 @@ export function App() {
         {lessonId === 'model-view-projection' && <ModelViewProjectionArticle toc={inlineTableOfContents} />}
         {lessonId === 'openshaders-breakdown' && <OpenShadersArticle toc={inlineTableOfContents} theme={theme} />}
         {lessonId === 'shader-effects-handbook' && <ShaderHandbookArticle toc={inlineTableOfContents} />}
+        {effectLesson && <ShaderEffectArticle key={effectLesson.id} lesson={effectLesson} toc={inlineTableOfContents} />}
         <TableOfContents
           items={tableOfContentsByLesson[lessonId]}
           sourceHref={sourceByLesson[lessonId]}

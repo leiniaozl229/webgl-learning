@@ -1,12 +1,29 @@
 # Shader 效果常见手法
 
-配套交互课程：[Shader 效果常见手法](http://127.0.0.1:5193/?lesson=shader-effects-handbook)。页面包含十六类实时效果、参数与基础对照、七步噪声光环实验和 Ping-Pong 绑定演示。速查表中的每个效果名称都能打开对应实验；Bloom 使用五遍绘制，拖尾保存 GPU 帧间状态，水面与旗帜使用可变形网格。
+配套交互课程：[Shader 效果常见手法总览](http://127.0.0.1:5193/?lesson=shader-effects-handbook)。十六类效果按手法拆成十篇独立课程，每页保留实时参数、基础对照与实际源码。七步噪声光环位于“噪声与色彩流动”；Bloom 使用五遍绘制，拖尾保存 GPU 帧间状态，水面与旗帜使用可变形网格。原手册的 effect 分享链接会定位到对应新页面。
 
 这份文档面向已经了解 Shader、Uniform 和纹理的 WebGL2 学习者。目标是把一种视觉效果拆成可解释的数据流：坐标怎样变化，图案怎样产生，颜色怎样合成，以及哪些结果需要保存在纹理中。
 
 多数网页 shader 可以按“坐标变换 → 标量场或纹理采样 → 颜色映射 → 合成与后处理”理解。复杂效果通常由几种基础手法组合而成。与本手册配套的 [OpenShaders 实现研究](./openshaders-implementation-study.md) 记录了一个实际网站怎样组合这些手法。
 
 本文的公式和教学代码为独立示例；网站的具体实现以配套研究中的源码证据为准。完整示例采用 WebGL2 和 `#version 300 es`，中间的 GLSL 片段放进同版本片段着色器中使用。
+
+## 独立案例课程
+
+| 课程 | 本页案例 |
+| --- | --- |
+| [波纹与呼吸](http://127.0.0.1:5193/?lesson=shader-waves) | 径向波纹、呼吸圆形 |
+| [SDF 形状与描边](http://127.0.0.1:5193/?lesson=shader-sdf) | 圆角框、挖孔图标 |
+| [噪声与色彩流动](http://127.0.0.1:5193/?lesson=shader-noise) | 云雾、彩色流动场、七步噪声光环 |
+| [丝带与流动光线](http://127.0.0.1:5193/?lesson=shader-ribbons) | 重复扭曲与光斑累加 |
+| [玻璃与色散](http://127.0.0.1:5193/?lesson=shader-glass) | 液体与玻璃、色散与虹彩 |
+| [颗粒与像素风格](http://127.0.0.1:5193/?lesson=shader-pixel-style) | 星光、胶片颗粒、抖动、网点、ASCII 与马赛克 |
+| [Bloom 光晕](http://127.0.0.1:5193/?lesson=shader-bloom) | 亮部提取、两次模糊与合成 |
+| [拖尾与扩散](http://127.0.0.1:5193/?lesson=shader-feedback) | GPU 历史纹理、Ping-Pong、邻域扩散 |
+| [三维 SDF 与步进](http://127.0.0.1:5193/?lesson=shader-raymarch) | 球体、圆环体、命中与光照 |
+| [水面与旗帜](http://127.0.0.1:5193/?lesson=shader-geometry) | 索引网格、顶点位移与解析法线 |
+
+案例页的选择器只包含本页相关效果；手册目录、侧边栏和上一篇／下一篇均可进入独立课程。URL 中的 `effect` 参数保留具体案例，例如 `?lesson=shader-glass&effect=chroma#effect-gallery`。
 
 ## 效果与实现手法速查
 

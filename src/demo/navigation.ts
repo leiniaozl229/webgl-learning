@@ -29,6 +29,7 @@ export const lessonIds = [
   'model-view-projection',
   'openshaders-breakdown',
   'shader-effects-handbook',
+  ...effectLessons.map((lesson) => lesson.id),
 ] as const;
 
 export type LessonId = typeof lessonIds[number];
@@ -63,6 +64,7 @@ export const lessonTitles: Record<LessonId, string> = {
   'model-view-projection': '模型、视图与投影矩阵',
   'openshaders-breakdown': 'OpenShaders 效果拆解',
   'shader-effects-handbook': 'Shader 效果常见手法',
+  ...Object.fromEntries(effectLessons.map((lesson) => [lesson.id, lesson.title])) as Record<EffectLessonId, string>,
 };
 
 export interface NavigationItem {
@@ -82,9 +84,11 @@ export interface TableOfContentsItem {
   href: string;
 }
 
-export function lessonHref(lessonId: LessonId, hash = 'lesson-title'): string {
+export function lessonHref(lessonId: LessonId, hash = 'lesson-title', params?: Record<string, string>): string {
   const baseUrl = import.meta.env.BASE_URL || '/';
-  return `${baseUrl}?lesson=${lessonId}#${hash}`;
+  const search = new URLSearchParams(params);
+  search.delete('lesson');
+  return `${baseUrl}?lesson=${lessonId}${search.size ? '&' + search.toString() : ''}#${hash}`;
 }
 
 export const navigationGroups: NavigationGroup[] = [
@@ -145,6 +149,7 @@ export const navigationGroups: NavigationGroup[] = [
     items: [
       { id: 'openshaders-breakdown', label: 'OpenShaders 效果拆解', href: lessonHref('openshaders-breakdown') },
       { id: 'shader-effects-handbook', label: 'Shader 效果常见手法', href: lessonHref('shader-effects-handbook') },
+      ...effectLessons.map((lesson) => ({ id: lesson.id, label: lesson.title, href: lessonHref(lesson.id) })),
     ],
   },
 ];
@@ -168,24 +173,17 @@ export function adjacentLessons(lessonId: LessonId): { previous?: LessonId; next
 }
 
 export const tableOfContentsByLesson: Record<LessonId, TableOfContentsItem[]> = {
+  ...Object.fromEntries(effectLessons.map((lesson) => [lesson.id, [
+    { label: '实时实验与源码', href: '#effect-gallery' },
+    ...lesson.principles.map((anchor) => ({ label: effectPrincipleTitles[anchor], href: '#' + anchor })),
+    ...(lesson.id === 'shader-noise' ? [{ label: '七步噪声光环', href: '#handbook-experiment' }] : []),
+    { label: '继续实验', href: '#next-steps' },
+  ]])) as Record<EffectLessonId, TableOfContentsItem[]>,
   'shader-effects-handbook': [
-    { label: '十六类效果实验台', href: '#effect-gallery' },
-    { label: '七步噪声光环实验', href: '#handbook-experiment' },
+    { label: '十篇案例课程', href: '#effect-gallery' },
     { label: '十六类效果速查', href: '#effect-index' },
     { label: '输入、运算与输出', href: '#effect-dataflow' },
     { label: '坐标变换', href: '#effect-coordinates' },
-    { label: 'SDF 与形状边缘', href: '#effect-sdf' },
-    { label: '波形与时间', href: '#effect-waves' },
-    { label: '噪声、fBM 与扭曲', href: '#effect-noise' },
-    { label: '颜色与亮度', href: '#effect-color' },
-    { label: '发光与丝带', href: '#effect-glow' },
-    { label: '法线、反射与折射', href: '#effect-material' },
-    { label: '纹理扭曲与色差', href: '#effect-sampling' },
-    { label: '颗粒与单元表达', href: '#effect-stylization' },
-    { label: 'Bloom 管线', href: '#effect-bloom' },
-    { label: 'Ping-Pong 帧间状态', href: '#effect-feedback' },
-    { label: '三维射线步进', href: '#effect-3d' },
-    { label: '顶点位移', href: '#effect-geometry' },
     { label: '工程与性能', href: '#effect-performance' },
     { label: '组合自己的效果', href: '#effect-recipes' },
     { label: '继续实验', href: '#next-steps' },
@@ -448,6 +446,7 @@ export const tableOfContentsByLesson: Record<LessonId, TableOfContentsItem[]> = 
 };
 
 export const sourceByLesson: Record<LessonId, string> = {
+  ...Object.fromEntries(effectLessons.map((lesson) => [lesson.id, lesson.source])) as Record<EffectLessonId, string>,
   'shader-effects-handbook': 'https://thebookofshaders.com/',
   'openshaders-breakdown': 'https://openshaders.com/explore',
   'getting-webgl2': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-getting-webgl2.html',
@@ -479,11 +478,14 @@ export const sourceByLesson: Record<LessonId, string> = {
   'model-view-projection': 'https://webgl2fundamentals.org/webgl/lessons/webgl-3d-matrix-naming.html',
 };
 
-export function parseLessonId(search: string): LessonId {
+export function parseLessonId(search: string, hash = ''): LessonId {
+  const migrated = legacyEffectLesson(search, hash);
+  if (migrated) return migrated.id;
   const lesson = new URLSearchParams(search).get('lesson');
   return (lessonIds as readonly string[]).includes(lesson ?? '') ? lesson as LessonId : 'fundamentals';
 }
 
 export function readLessonId(): LessonId {
-  return parseLessonId(window.location.search);
+  return parseLessonId(window.location.search, window.location.hash);
 }
+import { effectLessons, effectPrincipleTitles, legacyEffectLesson, type EffectLessonId } from './effectLessons';

@@ -18,6 +18,8 @@ import { DotAndCrossArticle, InverseAndNormalsArticle, TrigonometryArticle, Vect
 import { MatrixMathArticle } from './components/MatrixMathArticle';
 import { OpenShadersArticle } from './components/OpenShadersArticle';
 import { ShaderHandbookArticle } from './components/ShaderHandbookArticle';
+import { ShaderEffectArticle } from './components/ShaderEffectArticle';
+import { effectLessons, type EffectLessonId } from './effectLessons';
 import { ShadersAndGlslArticle } from './components/ShadersAndGlslArticle';
 import { StateDiagramArticle } from './components/StateDiagramArticle';
 import { Matrices2DArticle, Rotation2DArticle, Scale2DArticle, Translation2DArticle, Unified2DTransformsArticle } from './components/Transform2DArticles';
@@ -25,6 +27,7 @@ import { Camera3DArticle, MatrixNaming3DArticle, ModelViewProjectionArticle, Ort
 import { type LessonId, lessonIds, tableOfContentsByLesson } from './navigation';
 
 const articles: Record<LessonId, ComponentType> = {
+  ...Object.fromEntries(effectLessons.map((lesson) => [lesson.id, (() => <ShaderEffectArticle lesson={lesson} />) as ComponentType])) as Record<EffectLessonId, ComponentType>,
   'getting-webgl2': GettingWebgl2Article,
   'common-apis': CommonApisArticle,
   fundamentals: LessonArticle,
