@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 
 import type { LessonId } from '../navigation';
 import { CodeBlock } from './CodeBlock';
+import { HomogeneousWSection } from './HomogeneousWSection';
 import { LessonLink } from './LessonLink';
 import { LessonPagination } from './LessonPagination';
 import { MathChapterRoute } from './MathChapterRoute';
@@ -111,11 +112,11 @@ void main() {
 export function VectorsArticle({ toc }: { toc?: ReactNode }) {
   return (
     <article className="lesson-article">
-      <Hero title="向量、长度与单位化" lead={<>顶点位置、移动速度、表面法线和光线方向都用向量表示。本篇先区分“点”和“方向”，再讲清加减、缩放、长度与单位化，以及它们在 GLSL 中的写法。</>} meta={['Vector', 'normalize', '约 18 分钟']} />
+      <Hero title="向量、长度与单位化" lead={<>顶点位置、移动速度、表面法线和光线方向都用向量表示。本篇先区分位置与方向，解释 w 怎样参与平移，再讲清加减、缩放、长度与单位化，以及它们在 GLSL 中的写法。</>} meta={['Vector', 'normalize', '约 22 分钟']} />
       {toc}
       <MathChapterRoute current="vectors" />
       <LearningNote id="vectors-learning" items={[
-        '区分位置（点）与方向（向量），理解 W = 1 与 W = 0 的差别',
+        '区分位置（点）与方向（向量），用平移实验理解 w = 1 与 w = 0',
         '用“首尾相接”理解向量加法，用“终点减起点”得到方向',
         '计算二维、三维向量的长度以及两点距离',
         '说明单位化保留什么、丢弃什么，并正确处理零向量',
@@ -126,13 +127,14 @@ export function VectorsArticle({ toc }: { toc?: ReactNode }) {
         <h2>点与向量写法相同，含义不同</h2>
         <p>点和向量都写成 <code>(x, y)</code> 或 <code>(x, y, z)</code>。点回答“在哪里”，例如顶点位置；向量回答“朝哪走、走多远”，例如速度、法线和光照方向。两点相减得到向量：<code>B − A</code> 是从 A 指向 B 的位移。</p>
         <PointVectorDiagram />
-        <p>这层区别在矩阵运算里有具体后果。位置补上 <code>W = 1</code>，矩阵的平移列会作用到它；方向补上 <code>W = 0</code>，平移列被乘以 0，只剩旋转和缩放。同一个 <code>mat4</code> 因此能同时正确处理顶点和法线方向。</p>
         <FormulaCards items={[
           { badge: 'P', title: '点 + 向量 = 点', formula: 'position + velocity', detail: '从某个位置出发，沿位移到达新位置。' },
           { badge: 'V', title: '点 − 点 = 向量', formula: 'target − eye', detail: '两个位置之差给出方向与距离。' },
-          { badge: 'W', title: '齐次分量', formula: 'vec4(p, 1.0) / vec4(d, 0.0)', detail: '位置受平移影响，方向只受旋转与缩放影响。' },
+          { badge: 'w', title: '齐次分量', formula: '位置 w = 1；方向 w = 0', detail: '把三维 xyz 扩展成四个分量，让矩阵按用途处理平移。' },
         ]} />
       </section>
+
+      <HomogeneousWSection />
 
       <section id="add-and-subtract" className="lesson-section">
         <h2>加法首尾相接，减法得到指向</h2>
@@ -178,14 +180,19 @@ export function VectorsArticle({ toc }: { toc?: ReactNode }) {
         <h2>容易混淆的地方</h2>
         <Pitfalls items={[
           { question: '顶点着色器已经单位化了法线，为何片段着色器还要再做一次？', answer: <>Varying 在三角形内部做线性插值。两个长度为 1、方向不同的向量取平均后，长度会小于 1。片段着色器读取 <code>v_normal</code> 后应再次 <code>normalize</code>。</> },
-          { question: '方向向量误用了 W = 1 会怎样？', answer: '方向会被平移列“带走”。例如物体移动到 (100, 0, 0) 后，法线也被加上 100，光照完全错误。方向使用 W = 0，或只用 mat4 左上角的 mat3 变换。' },
-          { question: '裁剪空间里长度为 1 的向量，在屏幕上一定一样长吗？', answer: '裁剪空间的 X、Y 都映射到 −1…+1，但 Canvas 通常宽于高，同样 1 个单位在水平方向对应更多像素。只有在同一个、各轴等比的坐标空间里比较长度才有意义，这也是投影矩阵要乘 aspect 的原因。' },
+          { question: '方向向量误用了 w = 1 会怎样？', answer: '平移项会混进方向。例如速度 (1, 0, 0) 经过 (100, 0, 0) 的平移后，会错误地变为 (101, 0, 0)。普通方向用 w = 0；法线遇到非均匀缩放时，还需要逆转置法线矩阵。' },
+          { question: 'NDC 中长度为 1 的向量，在屏幕上一定一样长吗？', answer: '透视除法后的 NDC 可视范围为每轴 −1…+1。Canvas 通常宽于高，同样 1 个单位在水平方向对应更多像素。只有在同一个、各轴等比的坐标空间里比较长度才有意义，投影矩阵中的 aspect 用于补偿宽高比。' },
           { question: '如何安全地单位化？', answer: <>先检查长度是否接近 0。JavaScript 中返回 <code>null</code> 或回退到默认方向；GLSL 中对零向量调用 <code>normalize</code> 的结果未定义，应在上传数据前排除这种情况。</> },
         ]} />
       </section>
 
       <LessonPagination current="vectors" heading="接下来">向量已经能表示方向与长度。下一页用单位圆把角度转换成方向，建立 sin、cos 与弧度之间的直觉。</LessonPagination>
-      <Footer links={[{ href: 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-3d-camera.html', label: '参考：WebGL2 三维相机（向量运算）' }]} />
+      <Footer links={[
+        { href: 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-3d-camera.html', label: '参考：WebGL2 三维相机（向量运算）' },
+        { href: 'https://webgl2fundamentals.org/webgl/lessons/webgl-3d-perspective.html', label: '参考：透视投影与 w' },
+        { href: 'https://webgl2fundamentals.org/webgl/lessons/webgl-3d-perspective-correct-texturemapping.html', label: '参考：w 与透视正确插值' },
+        { href: 'https://registry.khronos.org/OpenGL/specs/es/3.0/es_spec_3.0.pdf#page=95', label: '规范：透视除法（§2.13）' },
+      ]} />
     </article>
   );
 }

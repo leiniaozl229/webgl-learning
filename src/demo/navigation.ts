@@ -249,6 +249,8 @@ export const tableOfContentsByLesson: Record<LessonId, TableOfContentsItem[]> = 
   ],
   vectors: [
     { label: '点与向量', href: '#points-and-vectors' },
+    { label: 'w 与齐次坐标', href: '#homogeneous-w' },
+    { label: 'w 平移对照实验', href: '#w-translation-lab' },
     { label: '加法与减法', href: '#add-and-subtract' },
     { label: '标量乘法', href: '#scalar-multiply' },
     { label: '长度与距离', href: '#length' },

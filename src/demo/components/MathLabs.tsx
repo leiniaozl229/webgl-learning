@@ -1,5 +1,6 @@
 import { RotateCcw } from 'lucide-react';
 import { useId, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react';
+import { transformPoint4, translation4 } from '../../core/transforms3d';
 
 import {
   add2,
@@ -261,6 +262,59 @@ export function VectorLab() {
           { label: 'a', value: `${formatVector(a)} · |a| = ${format(length2(a))}`, tone: 'a' },
           ...(usesB ? [{ label: 'b', value: `${formatVector(b)} · |b| = ${format(length2(b))}`, tone: 'b' as Tone }] : []),
           { label: '结果', value: result ? `${formatVector(result)} · 长度 ${format(length2(result))}` : '零向量没有方向，无法单位化', tone: result ? 'result' : 'bad' },
+        ]} />
+      )}
+    />
+  );
+}
+
+/* ---------- 齐次分量与平移 ---------- */
+
+export function HomogeneousWLab() {
+  const [translation, setTranslation] = useState<Vector2>([3, 2]);
+  const matrix = translation4(translation[0], translation[1], 0);
+  // 使用同一矩阵和相同 xyz，让第四个分量成为唯一差别。
+  const point = transformPoint4(matrix, [2, 1, 0, 1]);
+  const direction = transformPoint4(matrix, [2, 1, 0, 0]);
+  const pointXY: Vector2 = [point[0], point[1]];
+  const directionXY: Vector2 = [direction[0], direction[1]];
+  const unchanged = translation[0] === 0 && translation[1] === 0;
+  const format4 = (value: readonly number[]) => '(' + value.map((item) => format(item)).join(', ') + ')';
+
+  return (
+    <LabShell
+      title="w 与平移"
+      hint="一份平移矩阵，同时作用于 w = 1 的位置和 w = 0 的方向"
+      onReset={() => setTranslation([3, 2])}
+      controls={(
+        <>
+          <RangeInput label="X 平移量 tx" value={translation[0]} min={-3} max={3} step={0.25} onChange={(x) => setTranslation([x, translation[1]])} />
+          <RangeInput label="Y 平移量 ty" value={translation[1]} min={-3} max={3} step={0.25} onChange={(y) => setTranslation([translation[0], y])} />
+          <p className="math-lab__formula"><code>x′ = 2 + tx × w</code><code>y′ = 1 + ty × w</code></p>
+          <p className="math-lab__hint">P′ 是平移后的圆点；d′ 是从原点出发的箭头。平移量变化时，P′ 移动，d′ 的方向和长度保持不变。</p>
+        </>
+      )}
+      visual={(
+        <Plane range={6} label="w 平移对照：位置圆点 P′ 随平移移动，方向箭头 d′ 保持不变" handles={[]}>
+          {(toSvg) => (
+            <>
+              <Arrow from={toSvg([2, 1])} to={toSvg(pointXY)} tone="result" dashed width={2} />
+              <Arrow from={toSvg([0, 0])} to={toSvg(directionXY)} tone="b" />
+              <circle className="math-point math-tone--a" cx={toSvg([2, 1])[0]} cy={toSvg([2, 1])[1]} r="5" />
+              <circle className="math-point math-tone--result" cx={toSvg(pointXY)[0]} cy={toSvg(pointXY)[1]} r="7" />
+              {!unchanged && <Label at={toSvg([2, 1])} tone="a" dy={24}>P</Label>}
+              <Label at={toSvg(pointXY)} tone="result" dy={24}>{unchanged ? 'P′ = P' : 'P′'}</Label>
+              <Label at={toSvg(directionXY)} tone="b" dy={-14}>d′ = d</Label>
+            </>
+          )}
+        </Plane>
+      )}
+      readout={(
+        <Readout rows={[
+          { label: '位置输入 P · w = 1', value: '(2, 1, 0, 1)', tone: 'a' },
+          { label: '位置输出 P′ · 加上平移', value: format4(point), tone: 'result' },
+          { label: '方向输入 d · w = 0', value: '(2, 1, 0, 0)', tone: 'b' },
+          { label: '方向输出 d′ · 平移贡献为 0', value: format4(direction), tone: 'b' },
         ]} />
       )}
     />
