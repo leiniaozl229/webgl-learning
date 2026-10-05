@@ -37,6 +37,18 @@ export function project2(b: Vector2, onto: Vector2): Vector2 | null {
 export const degreesToRadians = (degrees: number): number => degrees * Math.PI / 180;
 export const radiansToDegrees = (radians: number): number => radians * 180 / Math.PI;
 
+const TAU = Math.PI * 2;
+
+/** 把任意角度折回 (−π, π]：θ 与 θ ± 2π 指向同一方向，折回后每个方向只剩一种写法。 */
+export function wrapAngle(radians: number): number {
+  const wrapped = ((radians + Math.PI) % TAU + TAU) % TAU - Math.PI;
+  // 取模会把 +π 折成 −π；保留右端 π，让“正后方”只有一个表示。
+  return wrapped === -Math.PI ? Math.PI : wrapped;
+}
+
+/** 从 from 转到 to 的最短角度差：正数逆时针、负数顺时针（Y 轴向上时），绝对值不超过 π。 */
+export const shortestAngleDelta = (from: number, to: number): number => wrapAngle(to - from);
+
 /** 极坐标转笛卡尔坐标：圆、扇形和环形几何的顶点都可以这样生成。 */
 export const polarToCartesian = (radius: number, radians: number): Vector2 => [
   radius * Math.cos(radians),

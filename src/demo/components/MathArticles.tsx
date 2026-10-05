@@ -7,7 +7,8 @@ import { HomogeneousWSection } from './HomogeneousWSection';
 import { LessonLink } from './LessonLink';
 import { LessonPagination } from './LessonPagination';
 import { MathChapterRoute } from './MathChapterRoute';
-import { DeterminantLab, DotLab, NormalMatrixLab, PointVectorDiagram, TrigLab, VectorLab, WindingLab } from './MathLabs';
+import { AtanLab, DeterminantLab, DotLab, FovFigure, NormalMatrixLab, PointVectorDiagram, RadianDiagram, TrigLab, TurnLab, VectorLab, WindingLab } from './MathLabs';
+import { PolarLab } from './PolarLab';
 
 /* ---------- 共用结构 ---------- */
 
@@ -199,12 +200,94 @@ export function VectorsArticle({ toc }: { toc?: ReactNode }) {
 
 /* ---------- 2. 角度、弧度与三角函数 ---------- */
 
+function MathTable({ caption, head, rows }: { caption: string; head: string[]; rows: ReactNode[][] }) {
+  return (
+    <div className="math-table">
+      <table>
+        <caption className="sr-only">{caption}</caption>
+        <thead><tr>{head.map((cell) => <th key={cell} scope="col">{cell}</th>)}</tr></thead>
+        <tbody>{rows.map((row, rowIndex) => <tr key={rowIndex}>{row.map((cell, index) => index === 0 ? <th key={index} scope="row">{cell}</th> : <td key={index}>{cell}</td>)}</tr>)}</tbody>
+      </table>
+    </div>
+  );
+}
+
+const quadrants = [
+  { id: 'i', name: '第一象限', range: '0°–90°', cos: '+', sin: '+' },
+  { id: 'ii', name: '第二象限', range: '90°–180°', cos: '−', sin: '+' },
+  { id: 'iii', name: '第三象限', range: '180°–270°', cos: '−', sin: '−' },
+  { id: 'iv', name: '第四象限', range: '270°–360°', cos: '+', sin: '−' },
+];
+
+function QuadrantGrid() {
+  return (
+    <ul className="math-quadrants" aria-label="四个象限中 cos 与 sin 的符号">
+      {quadrants.map((quadrant) => (
+        <li key={quadrant.id} data-quadrant={quadrant.id}>
+          <strong>{quadrant.name}</strong>
+          <span>{quadrant.range}</span>
+          <code className="math-tone--a">cos {quadrant.cos}</code>
+          <code className="math-tone--b">sin {quadrant.sin}</code>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+const angleUnitsCode = `// 只在界面与计算的边界换算：读入时转成弧度，显示时再转回度数。
+const DEG_TO_RAD = Math.PI / 180;
+const RAD_TO_DEG = 180 / Math.PI;
+
+const slider = document.querySelector<HTMLInputElement>('#rotation')!;
+const label = document.querySelector<HTMLOutputElement>('#rotation-label')!;
+
+// 之后的状态、Uniform 和矩阵参数都保存弧度。
+let rotation = slider.valueAsNumber * DEG_TO_RAD;
+
+// 角速度 ω 的单位是 rad/s：每帧转过 ω × 经过的秒数。
+const angularSpeed = Math.PI; // 每秒半圈
+
+function update(deltaSeconds: number) {
+  // 对 2π 取模，角度始终保持在一圈之内。
+  rotation = (rotation + angularSpeed * deltaSeconds) % (Math.PI * 2);
+  gl.useProgram(program);
+  gl.uniform1f(rotationLocation, rotation); // 着色器中的 sin、cos 直接使用
+  label.value = \`\${(rotation * RAD_TO_DEG).toFixed(0)}°\`;
+}`;
+
+const oscillationCode = `#version 300 es
+precision highp float;
+
+const float TAU = 6.283185307179586;  // 2π；GLSL 没有内置圆周率常量
+
+uniform float u_time;   // 秒，由 JavaScript 每帧上传，已对周期取模
+out vec4 outColor;
+
+void main() {
+  // A = 0.5、c = 0.5：把 sin 的 −1…1 映射到 0…1。
+  // f = 0.5 Hz：ω = 2π × 0.5，每 2 秒完成一次往返。
+  float pulse = 0.5 + 0.5 * sin(TAU * 0.5 * u_time);
+  outColor = vec4(vec3(0.08, 0.62, 0.79) * pulse, 1.0);
+}`;
+
+const timeUploadCode = `const period = 2; // 秒，对应片段着色器中的 f = 0.5 Hz
+
+function frame(now: DOMHighResTimeStamp) {
+  // 对周期取模：u_time 始终小于 2，长时间运行也保留足够的小数精度。
+  const seconds = (now / 1000) % period;
+  gl.useProgram(program);
+  gl.uniform1f(timeLocation, seconds);
+  gl.drawArrays(gl.TRIANGLES, 0, vertexCount);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);`;
+
 const circleCode = `// 把圆切成 segments 个扇形，每个扇形是 1 个三角形（圆心 + 圆周上相邻两点）。
 function createCircleVertices(radius: number, segments: number): Float32Array {
   const vertices = new Float32Array(segments * 3 * 2);
   for (let i = 0; i < segments; i += 1) {
-    const angle0 = (i / segments) * Math.PI * 2;        // 弧度
-    const angle1 = ((i + 1) / segments) * Math.PI * 2;
+    const angle0 = (i / segments) * Math.PI * 2;        // 弧度：0 → 2π
+    const angle1 = ((i + 1) / segments) * Math.PI * 2;  // 最后一段的 angle1 = 2π，回到起点
     vertices.set([
       0, 0,
       radius * Math.cos(angle0), radius * Math.sin(angle0),
@@ -214,21 +297,47 @@ function createCircleVertices(radius: number, segments: number): Float32Array {
   return vertices;
 }
 
-const circle = createCircleVertices(0.8, 48);
+const circle = createCircleVertices(0.8, 48);  // 48 × 3 = 144 个顶点，共 1152 字节
+
+gl.bindVertexArray(circleVao);                 // 下面的读取规则记录进这个 VAO
 gl.bindBuffer(gl.ARRAY_BUFFER, circleBuffer);
 gl.bufferData(gl.ARRAY_BUFFER, circle, gl.STATIC_DRAW);
+gl.enableVertexAttribArray(positionLocation);
 // 每个顶点 2 个 float：stride = 8 字节，offset = 0 字节。
 gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 8, 0);
-gl.drawArrays(gl.TRIANGLES, 0, 48 * 3);`;
+
+gl.useProgram(program);
+gl.drawArrays(gl.TRIANGLES, 0, circle.length / 2);`;
 
 const atan2Code = `// 让箭头指向鼠标：先求方向向量，再求角度。
+// Canvas 像素坐标的 Y 轴向下，得到的正角度在屏幕上表现为顺时针。
 const dx = mouseX - arrowX;
 const dy = mouseY - arrowY;
 
-// 参数顺序是 (y, x)。返回值范围 (−π, π]，四个象限都能区分。
+// 参数顺序是 (y, x)。atan2 同时检查两个分量的符号，返回 −π…π，四个象限都能区分。
 const angle = Math.atan2(dy, dx);
 
-// GLSL 中对应双参数版本：float angle = atan(dy, dx);`;
+// 两个单位向量求夹角：浮点误差可能让点积略大于 1，先限制范围，否则 acos 返回 NaN。
+const cosine = Math.min(1, Math.max(-1, dot3(normalA, normalB)));
+const between = Math.acos(cosine); // 0…π，只有夹角大小，不区分转向
+
+// GLSL：float angle = atan(dy, dx);  float between = acos(clamp(d, -1.0, 1.0));`;
+
+const turnCode = `// 把任意角度差折回 −π…π：sin、cos 只保留方向，atan2 取出该方向上绝对值最小的角度。
+function shortestAngle(from: number, to: number): number {
+  const delta = to - from;
+  return Math.atan2(Math.sin(delta), Math.cos(delta));
+}
+
+// 每帧最多转 turnSpeed × deltaSeconds 弧度，平滑地转向目标。
+function turnToward(heading: number, target: number, turnSpeed: number, deltaSeconds: number): number {
+  const delta = shortestAngle(heading, target);
+  const maxStep = turnSpeed * deltaSeconds;
+  return heading + Math.min(maxStep, Math.max(-maxStep, delta));
+}
+
+// 两个角度之间插值同理：沿最短差值前进，t 取 0…1。
+const lerpAngle = (from: number, to: number, t: number) => from + shortestAngle(from, to) * t;`;
 
 const perspectiveCode = `export function perspective4(fieldOfViewRadians: number, aspect: number, near: number, far: number): Matrix4 {
   // 视锥半高 = 1 × tan(fov / 2)；取倒数后，视锥边缘正好映射到 ±1。
@@ -242,104 +351,181 @@ const perspectiveCode = `export function perspective4(fieldOfViewRadians: number
   ];
 }`;
 
-const oscillationCode = `#version 300 es
+const colorWheelCode = `#version 300 es
 precision highp float;
 
-uniform float u_time;   // 秒，由 JavaScript 每帧上传
+const float PI = 3.141592653589793;  // GLSL ES 3.00 没有内置圆周率常量
+
+in vec2 v_uv;          // 0…1 的坐标，由顶点着色器输出并经光栅化插值
+uniform float u_time;  // 秒，由 JavaScript 每帧上传
 out vec4 outColor;
 
 void main() {
-  // sin 在 −1 与 1 之间往返；× 0.5 + 0.5 把范围映射到 0…1。
-  // 乘以 2π × 0.5 表示每秒完成 0.5 个周期。
-  float pulse = 0.5 + 0.5 * sin(u_time * 6.2831853 * 0.5);
-  outColor = vec4(vec3(0.08, 0.62, 0.79) * pulse, 1.0);
-}`;
+  vec2 p = v_uv * 2.0 - 1.0;           // 以画面中心为原点，范围 −1…1
+  float angle = atan(p.y, p.x);        // 双参数版本，相当于 atan2，返回 −π…π
+  float t = angle / (2.0 * PI) + 0.5;  // 映射到 0…1：绕中心转一圈，t 走完一次
 
-const timeUploadCode = `function frame(now: DOMHighResTimeStamp) {
-  // 对周期取模，避免运行数小时后 float 精度下降导致动画抖动。
-  const period = 2; // 秒
-  const seconds = (now / 1000) % period;
-  gl.useProgram(program);
-  gl.uniform1f(timeLocation, seconds);
-  gl.drawArrays(gl.TRIANGLES, 0, vertexCount);
-  requestAnimationFrame(frame);
-}
-requestAnimationFrame(frame);`;
+  // cos 对 vec3 逐分量计算：R、G、B 的相位各差 1/3 圈（120°），u_time 让色环旋转。
+  vec3 color = 0.5 + 0.5 * cos(2.0 * PI * (t + vec3(0.0, 1.0, 2.0) / 3.0) + u_time);
+  outColor = vec4(color, 1.0);
+}`;
 
 export function TrigonometryArticle({ toc }: { toc?: ReactNode }) {
   return (
     <article className="lesson-article">
-      <Hero title="角度、弧度与三角函数" lead={<>旋转、圆形几何、视野角和周期动画都依赖三角函数。本篇把角度放到单位圆上，解释代码为何使用弧度，以及 <code>sin</code>、<code>cos</code>、<code>tan</code>、<code>atan2</code> 在 WebGL2 中各自负责什么。</>} meta={['Radians', 'Unit Circle', '约 20 分钟']} />
+      <Hero title="角度、弧度与三角函数" lead={<>旋转、圆形几何、视野角和周期动画都依赖三角函数。本篇从弧长出发定义弧度，在单位圆上读出 <code>sin</code>、<code>cos</code>、<code>tan</code>，再把它们放进 WebGL2：生成圆形顶点、用 <code>atan2</code> 从方向反求角度、驱动周期动画，并决定透视投影的视野。</>} meta={['Radians', 'Unit Circle', 'atan2', '约 35 分钟']} />
       {toc}
       <MathChapterRoute current="trigonometry" />
       <LearningNote id="trig-learning" items={[
-        '说明弧度的定义，并在角度与弧度之间换算',
-        <>从单位圆读出 <code>cos</code> 与 <code>sin</code>，理解它们是方向向量的两个分量</>,
-        '用极坐标生成圆形顶点数据',
-        <>用 <code>atan2</code> 从方向向量求角度</>,
-        <>理解透视投影里 <code>tan(fov / 2)</code> 的作用，以及用 <code>sin</code> 驱动周期动画</>,
+        '用“弧长 ÷ 半径”定义弧度，说明代码为何统一使用弧度',
+        <>从单位圆读出 <code>cos</code>、<code>sin</code>、<code>tan</code>，判断四个象限中的符号与周期</>,
+        <>用 <code>A · sin(ω·t + φ) + c</code> 控制周期动画的幅度、速度与相位</>,
+        '用极坐标生成圆形顶点，追踪角度从滑块经 Uniform 到达顶点着色器的路径',
+        <>用 <code>atan2</code> 从方向求角度，并用最短角度差跨过 ±180° 边界</>,
+        <>理解透视投影里 <code>tan(fov / 2)</code> 的作用</>,
       ]} />
 
       <section id="radian-definition" className="lesson-section">
         <h2>弧度用弧长度量角度</h2>
-        <p>弧度（radian）定义为“弧长 ÷ 半径”。在半径为 1 的圆上，弧度就等于沿圆周走过的长度。整圆周长 <code>2πr</code>，所以一圈是 <code>2π</code> 弧度，也就是 360°；1 弧度约为 57.3°。</p>
-        <p>JavaScript 的 <code>Math.sin</code>、<code>Math.cos</code> 和 GLSL 的 <code>sin</code>、<code>cos</code> 都接收弧度。界面上给人看的角度用度数，进入计算前乘以 <code>π / 180</code>。GLSL 也内置 <code>radians()</code> 与 <code>degrees()</code> 负责换算。</p>
+        <p>角度描述“转了多少”。度数把一圈约定为 360 份；弧度（radian）直接用圆来量：圆心角所对的弧长除以半径，就是这个角的弧度值。弧长恰好等于半径时，角度为 1 弧度，约 57.3°。</p>
+        <RadianDiagram />
+        <p>整圆周长是 <code>2πr</code>，除以半径得到 <code>2π</code>，所以一圈 = 2π 弧度 = 360°，半圈 = π = 180°。在半径为 1 的单位圆上，弧度值就是沿圆周走过的长度，后面的实验会一直画出这段弧。</p>
         <FormulaCards items={[
-          { badge: '30°', title: 'π / 6', formula: '≈ 0.524 rad', detail: '1/12 圈' },
-          { badge: '90°', title: 'π / 2', formula: '≈ 1.571 rad', detail: '1/4 圈，方向与起点垂直' },
-          { badge: '180°', title: 'π', formula: '≈ 3.142 rad', detail: '半圈，方向完全相反' },
+          { badge: '° → rad', title: '度数换算为弧度', formula: 'rad = deg × π / 180', detail: <>反向换算乘 <code>180 / π</code>；GLSL 内置 <code>radians()</code> 与 <code>degrees()</code>。</> },
+          { badge: 's', title: '弧长', formula: 's = r · θ', detail: 'θ 使用弧度时，弧长等于半径乘角度，公式里没有换算系数。' },
+          { badge: '1 rad', title: '一弧度', formula: '180° / π ≈ 57.3°', detail: '一圈约 6.28 弧度。代码中直接写 2π，比手写小数更精确。' },
         ]} />
+      </section>
+
+      <section id="why-radians" className="lesson-section">
+        <h2>为什么代码统一使用弧度</h2>
+        <p>弧度让角度与长度共用一套单位。圆周运动中，弧长 <code>s = r·θ</code>、线速度 <code>v = r·ω</code> 都可以直接相乘，其中角速度（angular velocity）ω 表示每秒转过的弧度。角度很小时还有 <code>sin θ ≈ θ</code>，例如 <code>sin(0.01) ≈ 0.0099998</code>；这类近似与求导公式也只在弧度下保持简洁。因此 JavaScript 的 <code>Math.sin</code>、<code>Math.cos</code>、<code>Math.atan2</code> 与 GLSL 的 <code>sin</code>、<code>cos</code>、<code>atan</code> 都以弧度作为输入或返回值。</p>
+        <p>度数更适合给人阅读，例如滑块、配置文件和调试面板。实践中只在界面与计算的边界换算一次：读到度数后立即乘 <code>π / 180</code>，之后的状态、Uniform 和矩阵参数都保持弧度，需要显示时再换回度数。</p>
+        <CodeBlock label="angle-units.ts">{angleUnitsCode}</CodeBlock>
+        <p>GLSL 没有内置的圆周率常量，需要时在着色器顶部写 <code>const float PI = 3.141592653589793;</code>。<code>radians(60.0)</code> 等价于 <code>60.0 * PI / 180.0</code>，适合着色器里固定不变的角度。</p>
       </section>
 
       <section id="unit-circle" className="lesson-section">
         <h2>单位圆把角度变成方向</h2>
-        <p>从 +X 轴出发、沿逆时针转过角度 θ（Y 轴向上时），停在单位圆上的点坐标是 <code>(cos θ, sin θ)</code>。因此 <code>cos</code> 是方向的 X 分量，<code>sin</code> 是 Y 分量。由勾股定理可得 <code>sin² θ + cos² θ = 1</code>，所以这个点永远是单位向量。</p>
-        <p><code>tan θ = sin θ / cos θ</code> 是这条方向线的斜率。θ 接近 90° 时 cos 趋近 0，tan 趋向无穷大。二维旋转用的正是这对数值：旋转后的 X 轴是 <code>(cos θ, sin θ)</code>，Y 轴是 <code>(−sin θ, cos θ)</code>。</p>
+        <p>从 +X 轴出发、沿逆时针转过角度 θ（Y 轴向上时），停在单位圆上的点坐标是 <code>(cos θ, sin θ)</code>。因此 <code>cos</code> 是方向的 X 分量，<code>sin</code> 是 Y 分量。由勾股定理可得 <code>sin² θ + cos² θ = 1</code>，这个点总是单位向量；反过来，上一篇得到的任何二维单位向量，都能写成某个角度的 <code>(cos θ, sin θ)</code>。</p>
+        <QuadrantGrid />
+        <p>角度继续增大，点依次经过四个象限，cos 与 sin 的符号随之变化。转满一圈回到起点，所以 θ 与 θ + 2π 表示同一方向，sin 和 cos 的周期都是 2π。负角度表示顺时针转动，<code>−90°</code> 与 <code>270°</code> 指向同一处。对称关系还给出 <code>cos(−θ) = cos θ</code>、<code>sin(−θ) = −sin θ</code>，以及 <code>sin(θ + π/2) = cos θ</code>：两条波形形状相同，只差四分之一个周期。</p>
+        <p><code>tan θ = sin θ / cos θ</code> 是这条方向线的斜率。把方向线延长到竖线 <code>x = 1</code>，交点高度就是 <code>tan θ</code>。θ 接近 90° 时方向线越来越陡，交点趋向无穷远；θ 等于 90° 或 270° 时 cos 为 0，tan 没有定义。方向反转 180° 后斜率不变，所以 tan 的周期是 π。</p>
+        <MathTable caption="常用角度的弧度与三角函数值" head={['角度', '弧度', 'cos', 'sin', 'tan']} rows={[
+          ['0°', '0', '1', '0', '0'],
+          ['30°', 'π/6', '√3/2 ≈ 0.866', '1/2', '√3/3 ≈ 0.577'],
+          ['45°', 'π/4', '√2/2 ≈ 0.707', '√2/2 ≈ 0.707', '1'],
+          ['60°', 'π/3', '1/2', '√3/2 ≈ 0.866', '√3 ≈ 1.732'],
+          ['90°', 'π/2', '0', '1', '未定义'],
+          ['180°', 'π', '−1', '0', '0'],
+          ['270°', '3π/2', '0', '−1', '未定义'],
+        ]} />
+        <p>二维旋转用的正是这对数值：X 轴单位向量 <code>(1, 0)</code> 转过 θ 后变成 <code>(cos θ, sin θ)</code>，Y 轴 <code>(0, 1)</code> 变成 <code>(−sin θ, cos θ)</code>。<LessonLink lessonId="rotation-2d">二维旋转</LessonLink>页会把这两根轴组合成旋转公式。</p>
       </section>
 
       <section id="trig-lab" className="lesson-section lesson-section--wide">
         <h2>三角函数实验</h2>
-        <p>拖动圆上的点或滑块。左侧的 cos、sin 两段线和右侧波形上的两个圆点始终对应同一个角度。试试 90° 与 270°：cos 为 0，tan 没有定义。</p>
+        <p>拖动圆上的点或滑块。单位圆上的 cos、sin 两段线与波形图上的两个圆点始终对应同一个角度；沿圆周加粗的弧就是弧长，它的数值与弧度相同。勾选“显示 tan θ”，观察方向线与 <code>x = 1</code> 的交点：接近 90° 时交点冲出画面，越过 90° 后从下方重新出现。</p>
         <TrigLab />
+      </section>
+
+      <section id="oscillation" className="lesson-section">
+        <h2>用 sin 做周期动画</h2>
+        <p>把波形图的横轴从角度换成时间，<code>sin</code> 就成了动画曲线：数值在 −1 与 1 之间平滑往返，每 2π 重复一次，适合呼吸灯、摆动和波浪。完整写法是 <code>y = A · sin(ω · t + φ) + c</code>，四个参数分别控制幅度、快慢、起点和中心。</p>
+        <FormulaCards items={[
+          { badge: 'A', title: '振幅与中心', formula: 'A · sin(…) + c', detail: <>A 决定往返幅度，c 平移中心。<code>0.5 + 0.5 · sin</code> 把 −1…1 映射到 0…1，可直接作为颜色或混合权重。</> },
+          { badge: 'ω', title: '角频率', formula: 'ω = 2π · f', detail: 'f 是每秒循环次数（Hz），ω 是每秒转过的弧度，周期 T = 1 / f。' },
+          { badge: 'φ', title: '相位', formula: 'sin(ω · t + φ)', detail: '让不同物体处在周期的不同位置。φ 随位置变化（例如 k·x）时，整体会形成一道移动的波。' },
+        ]} />
+        <p>时间由 JavaScript 每帧写入 Uniform，GPU 为每个片段计算同一条公式。<code>u_time</code> 在上传前先对周期取模：32 位 float 只有约 7 位有效数字，数值越大，小数部分越粗糙。</p>
+        <CodeBlock label="fragment.glsl" language="glsl">{oscillationCode}</CodeBlock>
+        <CodeBlock label="animate.ts">{timeUploadCode}</CodeBlock>
       </section>
 
       <section id="polar-geometry" className="lesson-section">
         <h2>用极坐标生成圆形顶点</h2>
-        <p>极坐标用“半径 r + 角度 θ”描述位置，转换成笛卡尔坐标是 <code>(r·cos θ, r·sin θ)</code>。把一圈均分成 N 份，每份与圆心组成一个三角形，就能用 <code>TRIANGLES</code> 画出圆。N 越大边缘越平滑，顶点数为 <code>3N</code>；后续学习索引绘制后可以复用重复的圆心顶点。</p>
-        <CodeBlock label="vertex-data.ts">{circleCode}</CodeBlock>
+        <p>极坐标（polar coordinates）用“半径 r + 角度 θ”描述位置，转换成笛卡尔坐标是 <code>(r·cos θ, r·sin θ)</code>。把一圈均分成 N 份，第 i 个圆周点的角度是 <code>i / N × 2π</code>；每份与圆心组成一个三角形，就能用 <code>TRIANGLES</code> 画出圆。N 越大，多边形越接近圆。</p>
+        <p>数据量：每个扇形 3 个顶点，每个顶点 2 个 float，共 <code>3N × 2 × 4 = 24N</code> 字节，N = 48 时为 1152 字节。下面的写法在 JavaScript 中算好 x、y，一次上传后保持不变，适合静态几何。WebGL2 也支持 <code>gl.TRIANGLE_FAN</code>：圆心加 N + 1 个圆周点即可，共 N + 2 个顶点。</p>
+        <CodeBlock label="circle-vertices.ts">{circleCode}</CodeBlock>
       </section>
 
-      <section id="atan2" className="lesson-section">
+      <section id="polar-lab" className="lesson-section lesson-section--wide">
+        <h2>在顶点着色器中计算 sin 与 cos</h2>
+        <p>如果扇形的角度要随滑块或时间变化，每次都在 CPU 上重算并重新上传整份 Buffer 会很浪费。下面的实验把三角函数移到顶点着色器：Buffer 只保存每个顶点的 <code>(t, ring)</code>，其中 <code>t</code> 是 0…1 的角度进度，<code>ring</code> 区分圆心（0）与圆周（1）；起始角、扫掠角和波形参数作为 Uniform 上传，GPU 为每个顶点计算 <code>θ = θ₀ + t × sweep</code>，再用 <code>cos</code>、<code>sin</code> 得到位置。</p>
+        <PolarLab />
+        <p>观察读数中的 <code>bufferData</code> 次数：只有分段数 N 改变顶点数量时才会重新上传，拖动角度和波形参数只更新几个 Uniform。线框使用同一个 VAO 再画一次，图元模式换成 <code>LINE_STRIP</code>，相邻顶点依次连线，正好经过每个三角形的边。半径公式里的 <code>k · t · sweep + φ</code> 就是周期动画中的相位：φ 随时间增加时，波峰沿圆周移动。</p>
+        <FormulaCards items={[
+          { badge: 'CPU', title: '在 CPU 上生成顶点', formula: 'Buffer = (x, y)', detail: '形状固定时最直接；角度一变就要重算并重新上传整份数据。' },
+          { badge: 'GPU', title: '在顶点着色器中逐顶点计算', formula: 'Buffer = (t, ring)', detail: '角度来自 Uniform，修改参数只需上传几个数字，适合动画。' },
+          { badge: 'u', title: '共享角度预先计算', formula: 'u_rotation = (sin θ, cos θ)', detail: '所有顶点共用同一个角度时，在 CPU 上算一次 sin、cos 再上传，避免每个顶点重复计算。' },
+        ]} />
+      </section>
+
+      <section id="atan2" className="lesson-section lesson-section--wide">
         <h2>atan2：从方向反求角度</h2>
-        <p>已知方向 <code>(x, y)</code> 求角度时，单参数 <code>atan(y / x)</code> 会丢失象限信息：<code>(1, 1)</code> 与 <code>(−1, −1)</code> 的比值相同，而且 x = 0 时会除以零。<code>Math.atan2(y, x)</code> 同时检查两个分量的符号，返回 (−π, π] 范围内的准确角度。</p>
+        <p>已知方向 <code>(x, y)</code> 求角度时，单参数 <code>atan(y / x)</code> 只看比值：<code>(1, 1)</code> 与 <code>(−1, −1)</code> 的比值相同，返回值只落在 −90°…90°，x = 0 时还要除以零。<code>Math.atan2(y, x)</code> 同时检查两个分量的符号，返回 −π…π 之间的准确角度；GLSL 用双参数重载 <code>atan(y, x)</code> 提供同样的功能。</p>
+        <AtanLab />
+        <p>其余反三角函数也有固定的返回范围。输入超出定义域时，JavaScript 返回 <code>NaN</code>，GLSL 的结果未定义。两个单位向量的点积可能因浮点误差得到 1.0000001，用 <code>acos</code> 求夹角前先把它限制到 −1…1。</p>
+        <MathTable caption="反三角函数的输入范围、返回范围与常见用途" head={['函数', '输入', '返回值', '常见用途']} rows={[
+          [<code>asin(v)</code>, '−1…1', '−π/2…π/2', '由高度比例求仰角'],
+          [<code>acos(v)</code>, '−1…1', '0…π', '由点积求两个单位向量的夹角，不区分转向'],
+          [<code>atan(v)</code>, '任意实数', '−π/2…π/2', '由斜率求倾角'],
+          [<code>atan2(y, x)</code>, '任意 x、y', '−π…π', '由方向向量求完整角度'],
+        ]} />
         <CodeBlock label="aim.ts">{atan2Code}</CodeBlock>
+      </section>
+
+      <section id="shortest-turn" className="lesson-section lesson-section--wide">
+        <h2>角度差与最短转向</h2>
+        <p>atan2 的结果在 −180° 与 180° 处首尾相接。箭头朝向 170°、目标在 −170° 时，直接相减得到 −340°，箭头会顺时针绕一大圈，逆时针转 20° 其实就能到达。把角度差折回 −π…π，就得到最短转向：正数逆时针，负数顺时针。</p>
+        <TurnLab />
+        <p>折回的方法正好用到本篇的三件工具：<code>sin</code>、<code>cos</code> 把角度差还原成方向，<code>atan2</code> 再从这个方向取出绝对值最小的角度。两个角度之间插值也一样，先求最短差，再按比例前进。</p>
+        <CodeBlock label="turn-toward.ts">{turnCode}</CodeBlock>
       </section>
 
       <section id="field-of-view" className="lesson-section">
         <h2>视野角通过 tan 决定缩放</h2>
-        <p>透视相机的视野角（FOV）是视锥上下边缘的夹角。距离相机 1 个单位处，视锥半高是 <code>tan(fov / 2)</code>。透视矩阵乘以它的倒数，让视锥边缘恰好映射到裁剪空间的 ±1：FOV 越大，<code>1 / tan</code> 越小，同一物体在屏幕上越小。FOV 接近 180° 时 tan 趋向无穷，因此常用范围约为 30°–90°。</p>
+        <p>透视相机的视野角（field of view，FOV）是视锥上下边缘的夹角。距离相机 1 个单位处，视锥半高是 <code>tan(fov / 2)</code>。透视矩阵乘以它的倒数，经过透视除法后，视锥边缘恰好落在 NDC 的 ±1：FOV 越大，<code>1 / tan</code> 越小，同一物体在屏幕上越小。FOV 接近 180° 时 tan 趋向无穷，因此常用范围约为 30°–90°。</p>
+        <FovFigure />
         <CodeBlock label="perspective.ts">{perspectiveCode}</CodeBlock>
+        <p>参数 <code>fieldOfViewRadians</code> 同样是弧度：界面里的 60° 先乘 <code>π / 180</code> 再传入。在<LessonLink lessonId="perspective-3d" hash="perspective-lab">三维透视投影实验</LessonLink>中调整 FOV，可以看到同一组几何随之放大或缩小。</p>
       </section>
 
-      <section id="oscillation" className="lesson-section">
-        <h2>用 sin 做平滑往返动画</h2>
-        <p><code>sin(t)</code> 在 −1 与 1 之间平滑往返，每 <code>2π</code> 重复一次，非常适合呼吸灯、摆动和波浪。<code>0.5 + 0.5 · sin(t)</code> 把范围映射到 0…1，可以直接当作颜色或混合权重。时间由 JavaScript 每帧写入 Uniform，GPU 为每个片段计算同一条公式。</p>
-        <CodeBlock label="fragment.glsl" language="glsl">{oscillationCode}</CodeBlock>
-        <CodeBlock label="animate.ts">{timeUploadCode}</CodeBlock>
+      <section id="glsl-trig" className="lesson-section">
+        <h2>JavaScript 与 GLSL 对照</h2>
+        <p>GLSL ES 3.00 的角度与三角函数和 JavaScript 一一对应，参数同样使用弧度。它们还接受 <code>vec2</code>–<code>vec4</code>，对每个分量分别计算，例如 <code>cos(vec3(a, b, c))</code> 一次得到三个余弦值。</p>
+        <MathTable caption="JavaScript 与 GLSL ES 3.00 的角度和三角函数对照" head={['用途', 'JavaScript', 'GLSL ES 3.00']} rows={[
+          ['度数 → 弧度', <code>deg * Math.PI / 180</code>, <code>radians(deg)</code>],
+          ['弧度 → 度数', <code>rad * 180 / Math.PI</code>, <code>degrees(rad)</code>],
+          ['正弦、余弦、正切', <code>Math.sin / cos / tan</code>, <><code>sin / cos / tan</code>，可逐分量作用于向量</>],
+          ['反正弦、反余弦', <><code>Math.asin / acos</code>，超出 −1…1 返回 NaN</>, <><code>asin / acos</code>，超出 −1…1 时结果未定义</>],
+          ['由方向求角度', <><code>Math.atan2(y, x)</code>，(0, 0) 返回 0</>, <><code>atan(y, x)</code>，x、y 同为 0 时结果未定义</>],
+          ['圆周率', <code>Math.PI</code>, <code>const float PI = 3.141592653589793;</code>],
+        ]} />
+        <p>下面的片段着色器把每个像素看作从画面中心出发的方向，用 <code>atan(y, x)</code> 求出它的角度，再让 R、G、B 三个通道的余弦相位各差 120°，得到一圈随时间旋转的色环。</p>
+        <CodeBlock label="fragment.glsl" language="glsl">{colorWheelCode}</CodeBlock>
       </section>
 
       <section id="pitfalls" className="lesson-section">
         <h2>容易混淆的地方</h2>
         <Pitfalls items={[
           { question: <>为何 <code>Math.sin(90)</code> 不等于 1？</>, answer: <>90 被当作 90 弧度，约等于 14 圈多一点。先换算：<code>Math.sin(90 * Math.PI / 180)</code>。</> },
-          { question: '同样的正角度，为何有的页面顺时针转、有的逆时针转？', answer: <>公式假定 Y 轴向上时，正角度逆时针转动。Canvas 像素坐标 Y 轴向下，同一公式在屏幕上表现为顺时针。<LessonLink lessonId="rotation-2d">二维旋转</LessonLink>页面正是这种情况。</> },
-          { question: <><code>Math.atan2</code> 的参数顺序是什么？</>, answer: <>先 y 后 x：<code>Math.atan2(y, x)</code>。GLSL 的双参数 <code>atan(y, x)</code> 同样先 y 后 x。</> },
-          { question: '动画运行很久后为何开始抖动？', answer: <>32 位 float 只有约 7 位有效数字。<code>u_time</code> 越大，小数部分越粗糙。周期动画可以先对周期取模再上传。</> },
+          { question: '同样的正角度，为何有的页面顺时针转、有的逆时针转？', answer: <>公式假定 Y 轴向上时，正角度逆时针转动。Canvas 像素坐标 Y 轴向下，同一公式在屏幕上表现为顺时针，<LessonLink lessonId="rotation-2d">二维旋转</LessonLink>页面正是这种情况。用鼠标的像素坐标调用 <code>atan2</code> 时，角度方向同样会翻转。</> },
+          { question: <><code>Math.atan2</code> 的参数顺序是什么？</>, answer: <>先 y 后 x：<code>Math.atan2(y, x)</code>。GLSL 的双参数 <code>atan(y, x)</code> 同样先 y 后 x；只传一个比值的 <code>atan(y / x)</code> 会丢失象限。</> },
+          { question: '用点积求夹角时，为何偶尔得到 NaN？', answer: <>两个单位向量的点积理论上在 −1…1 之间，浮点误差可能算出 1.0000001，超出了 <code>acos</code> 的定义域。先用 <code>clamp(d, -1.0, 1.0)</code> 或 <code>Math.min(1, Math.max(-1, d))</code> 限制范围。</> },
+          { question: '箭头转向目标时，为何偶尔绕一大圈？', answer: <>直接相减的角度差可能接近 ±360°。先用 <code>atan2(sin Δ, cos Δ)</code> 把差值折回 −π…π，再按最短方向旋转或插值。</> },
+          { question: '动画运行很久后为何开始抖动？', answer: <>32 位 float 只有约 7 位有效数字，<code>u_time</code> 越大，小数部分越粗糙。片段着色器使用 <code>mediump</code> 时，规范只保证约 2⁻¹⁰ 的相对精度，问题会更早出现。周期动画先对周期取模再上传，并为时间相关的计算声明 <code>highp</code>。</> },
+          { question: <>GLSL 中直接写 <code>PI</code> 为何编译失败？</>, answer: <>GLSL ES 3.00 没有内置圆周率常量。在着色器顶部定义 <code>const float PI = 3.141592653589793;</code>，或用 <code>radians(180.0)</code> 得到 π。</> },
         ]} />
       </section>
 
-      <LessonPagination current="trigonometry" heading="接下来">sin、cos 已经能把角度变成方向。下一页反过来，用点积从两个方向求夹角，并用叉积找到同时垂直于它们的方向。</LessonPagination>
-      <Footer links={[{ href: 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-2d-rotation.html', label: '参考：WebGL2 二维旋转' }, { href: 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-3d-perspective.html', label: '参考：WebGL2 三维透视投影' }]} />
+      <LessonPagination current="trigonometry" heading="接下来">sin、cos 把角度变成方向，atan2 又能把方向变回角度。下一页用点积从两个方向求夹角，并用叉积找到同时垂直于它们的方向。</LessonPagination>
+      <Footer links={[
+        { href: 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-2d-rotation.html', label: '参考：WebGL2 二维旋转' },
+        { href: 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-3d-perspective.html', label: '参考：WebGL2 三维透视投影' },
+        { href: 'https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Math/atan2', label: 'MDN：Math.atan2()' },
+        { href: 'https://registry.khronos.org/OpenGL/specs/es/3.0/GLSL_ES_Specification_3.00.pdf#page=93', label: '规范：GLSL ES 3.00 角度与三角函数（§8.1）' },
+      ]} />
     </article>
   );
 }

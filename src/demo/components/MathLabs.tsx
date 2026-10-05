@@ -1,10 +1,11 @@
 import { RotateCcw } from 'lucide-react';
-import { useId, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react';
 import { transformPoint4, translation4 } from '../../core/transforms3d';
 
 import {
   add2,
   cross2,
+  degreesToRadians,
   determinant2,
   dot2,
   inverse2,
@@ -14,9 +15,11 @@ import {
   project2,
   radiansToDegrees,
   scale2,
+  shortestAngleDelta,
   signedAngle2,
   subtract2,
   transformVector2,
+  wrapAngle,
   type Matrix2,
   type Vector2,
 } from '../../core/mathBasics';
@@ -141,19 +144,21 @@ function Label({ at, tone, children, dx = 10, dy = -10 }: { at: Point; tone: Ton
   return <text className={`math-label math-tone--${tone}`} x={x} y={y} aria-hidden="true">{children}</text>;
 }
 
-/** 从 start 方向转到 end 方向的圆弧，用来标记夹角。 */
-function AngleArc({ center, radius, start, sweep, tone }: { center: Point; radius: number; start: number; sweep: number; tone: Tone }) {
+/** 从 start 方向转到 end 方向的圆弧，用来标记夹角；转满一圈时画整圆。 */
+function AngleArc({ center, radius, start, sweep, tone, className }: { center: Point; radius: number; start: number; sweep: number; tone: Tone; className?: string }) {
   if (Math.abs(sweep) < 0.01) return null;
+  const classes = `math-arc math-tone--${tone}${className ? ` ${className}` : ''}`;
+  if (Math.abs(sweep) >= Math.PI * 2 - 1e-6) return <circle className={classes} cx={center[0]} cy={center[1]} r={radius} aria-hidden="true" />;
   const from: Point = [center[0] + Math.cos(start) * radius, center[1] - Math.sin(start) * radius];
   const to: Point = [center[0] + Math.cos(start + sweep) * radius, center[1] - Math.sin(start + sweep) * radius];
   const largeArc = Math.abs(sweep) > Math.PI ? 1 : 0;
   const sweepFlag = sweep > 0 ? 0 : 1;
-  return <path className={`math-arc math-tone--${tone}`} d={`M${from[0]} ${from[1]}A${radius} ${radius} 0 ${largeArc} ${sweepFlag} ${to[0]} ${to[1]}`} aria-hidden="true" />;
+  return <path className={classes} d={`M${from[0]} ${from[1]}A${radius} ${radius} 0 ${largeArc} ${sweepFlag} ${to[0]} ${to[1]}`} aria-hidden="true" />;
 }
 
-function LabShell({ title, hint, onReset, controls, visual, readout }: { title: string; hint: string; onReset: () => void; controls: ReactNode; visual: ReactNode; readout: ReactNode }) {
+function LabShell({ title, hint, onReset, controls, visual, readout, className, live = true }: { title: string; hint: string; onReset: () => void; controls: ReactNode; visual: ReactNode; readout: ReactNode; className?: string; live?: boolean }) {
   return (
-    <div className="math-lab">
+    <div className={className ? `math-lab ${className}` : 'math-lab'}>
       <header>
         <div><strong>{title}</strong><small>{hint}</small></div>
         <button type="button" onClick={onReset}><RotateCcw aria-hidden="true" /> 重置</button>
@@ -162,7 +167,8 @@ function LabShell({ title, hint, onReset, controls, visual, readout }: { title: 
         <div className="math-lab__controls">{controls}</div>
         <div className="math-lab__visual">{visual}</div>
       </div>
-      <div className="math-lab__readout" aria-live="polite">{readout}</div>
+      {/* 动画进行中关闭朗读，避免每一帧的数值都被屏幕阅读器播报。 */}
+      <div className="math-lab__readout" aria-live={live ? 'polite' : 'off'}>{readout}</div>
     </div>
   );
 }
@@ -175,7 +181,7 @@ function Segmented<T extends string>({ label, value, options, onChange }: { labe
   );
 }
 
-function RangeInput({ label, value, min, max, step, display, onChange }: { label: string; value: number; min: number; max: number; step: number; display?: string; onChange: (value: number) => void }) {
+export function RangeInput({ label, value, min, max, step, display, onChange }: { label: string; value: number; min: number; max: number; step: number; display?: string; onChange: (value: number) => void }) {
   return (
     <label className="math-lab__range">
       <span>{label}<code>{display ?? format(value)}</code></span>
@@ -184,7 +190,7 @@ function RangeInput({ label, value, min, max, step, display, onChange }: { label
   );
 }
 
-function Readout({ rows }: { rows: Array<{ label: ReactNode; value: ReactNode; tone?: Tone }> }) {
+export function Readout({ rows }: { rows: Array<{ label: ReactNode; value: ReactNode; tone?: Tone }> }) {
   return <dl className="math-readout">{rows.map((row, index) => <div key={index} className={row.tone ? `math-tone--${row.tone}` : undefined}><dt>{row.label}</dt><dd>{row.value}</dd></div>)}</dl>;
 }
 
@@ -330,12 +336,36 @@ function radiansLabel(degrees: number) {
   return known[String(degrees)] ?? `${format(ratio, 3)}π`;
 }
 
+function formatDegrees(radians: number, digits = 1) {
+  return `${format(radiansToDegrees(radians), digits)}°`;
+}
+
+/** 角度所在的象限决定 cos、sin 的符号；正好落在坐标轴上时，有一个分量为 0。 */
+function quadrantLabel(degrees: number) {
+  const angle = ((degrees % 360) + 360) % 360;
+  const onAxis: Record<number, string> = {
+    0: '正 X 轴：cos = 1，sin = 0',
+    90: '正 Y 轴：cos = 0，sin = 1',
+    180: '负 X 轴：cos = −1，sin = 0',
+    270: '负 Y 轴：cos = 0，sin = −1',
+  };
+  if (onAxis[angle]) return onAxis[angle];
+  if (angle < 90) return '第一象限：cos > 0，sin > 0';
+  if (angle < 180) return '第二象限：cos < 0，sin > 0';
+  if (angle < 270) return '第三象限：cos < 0，sin < 0';
+  return '第四象限：cos > 0，sin < 0';
+}
+
+// tan 在 π/2、3π/2 附近趋向无穷，波形图只画出这个范围内的部分。
+const TAN_CHART_LIMIT = 1.25;
+
 export function TrigLab() {
   const [degrees, setDegrees] = useState(30);
-  const radians = degrees * Math.PI / 180;
+  const [showTangent, setShowTangent] = useState(false);
+  const radians = degreesToRadians(degrees);
   const cosine = Math.cos(radians);
   const sine = Math.sin(radians);
-  const tangentDefined = Math.abs(cosine) > 1e-6;
+  const tangent = Math.abs(cosine) > 1e-6 ? sine / cosine : null;
   const point: Vector2 = [cosine, sine];
 
   function setFromDirection(value: Vector2) {
@@ -351,28 +381,50 @@ export function TrigLab() {
   const samples = Array.from({ length: 73 }, (_, index) => index / 72 * Math.PI * 2);
   const sinePath = samples.map((angle, index) => `${index ? 'L' : 'M'}${waveX(angle)} ${waveY(Math.sin(angle))}`).join('');
   const cosinePath = samples.map((angle, index) => `${index ? 'L' : 'M'}${waveX(angle)} ${waveY(Math.cos(angle))}`).join('');
+  // 超出图表或靠近渐近线时断开路径，避免把 +∞ 与 −∞ 两端连成一条竖线。
+  let tangentPath = '';
+  let drawingTangent = false;
+  for (let index = 0; showTangent && index <= 240; index += 1) {
+    const angle = index / 240 * Math.PI * 2;
+    const value = Math.tan(angle);
+    const visible = Math.abs(Math.cos(angle)) > 1e-3 && Math.abs(value) <= TAN_CHART_LIMIT;
+    if (visible) tangentPath += `${drawingTangent ? 'L' : 'M'}${waveX(angle).toFixed(1)} ${waveY(value).toFixed(1)}`;
+    drawingTangent = visible;
+  }
+  const tangentOnChart = tangent !== null && Math.abs(tangent) <= TAN_CHART_LIMIT;
 
   return (
     <LabShell
+      className="trig-lab"
       title="Unit Circle Lab"
-      hint="拖动圆上的点或滑块，观察同一个角度在圆和波形上的位置"
-      onReset={() => setDegrees(30)}
+      hint="拖动圆上的点或滑块，观察同一个角度在圆、弧长和波形上的位置"
+      onReset={() => { setDegrees(30); setShowTangent(false); }}
       controls={(
         <>
           <RangeInput label="角度 θ" value={degrees} min={0} max={360} step={1} display={`${degrees}°`} onChange={setDegrees} />
-          <div className="math-lab__chips" role="group" aria-label="常用角度">
-            {[0, 30, 45, 90, 135, 180, 270].map((value) => <button type="button" key={value} aria-pressed={degrees === value} onClick={() => setDegrees(value)}>{value}°</button>)}
+          <div className="math-lab__chips math-lab__chips--grid" style={{ '--chip-columns': 5 } as CSSProperties} role="group" aria-label="常用角度">
+            {[0, 30, 45, 60, 90, 135, 180, 225, 270, 315].map((value) => <button type="button" key={value} aria-pressed={degrees === value} onClick={() => setDegrees(value)}>{value}°</button>)}
           </div>
-          <svg className="math-wave" viewBox={`0 0 ${waveWidth} ${waveHeight}`} role="img" aria-label={`sin 与 cos 在 0 到 2π 之间的波形，当前角度 ${degrees}°`}>
+          <svg className="math-wave" viewBox={`0 0 ${waveWidth} ${waveHeight}`} role="img" aria-label={`sin 与 cos${showTangent ? '、tan' : ''} 在 0 到 2π 之间的波形，当前角度 ${degrees}°`}>
             <line className="math-wave__axis" x1="20" y1={waveY(0)} x2={waveWidth - 20} y2={waveY(0)} />
+            {showTangent ? <>
+              <line className="math-wave__asymptote" x1={waveX(Math.PI / 2)} y1="6" x2={waveX(Math.PI / 2)} y2={waveHeight - 14} />
+              <line className="math-wave__asymptote" x1={waveX(Math.PI * 1.5)} y1="6" x2={waveX(Math.PI * 1.5)} y2={waveHeight - 14} />
+              <path className="math-wave__curve math-tone--muted" d={tangentPath} />
+            </> : null}
             <path className="math-wave__curve math-tone--a" d={cosinePath} />
             <path className="math-wave__curve math-tone--b" d={sinePath} />
             <line className="math-wave__marker" x1={waveX(radians)} y1="8" x2={waveX(radians)} y2={waveHeight - 8} />
             <circle className="math-tone--a math-wave__dot" cx={waveX(radians)} cy={waveY(cosine)} r="4.5" />
             <circle className="math-tone--b math-wave__dot" cx={waveX(radians)} cy={waveY(sine)} r="4.5" />
+            {showTangent && tangentOnChart ? <circle className="math-tone--muted math-wave__dot" cx={waveX(radians)} cy={waveY(tangent)} r="4" /> : null}
             <text x="22" y={waveHeight - 4}>0</text><text x={waveX(Math.PI) - 4} y={waveHeight - 4}>π</text><text x={waveWidth - 32} y={waveHeight - 4}>2π</text>
           </svg>
-          <p className="math-lab__hint"><b className="math-tone--a">cos</b> 是圆上点的 X 分量，<b className="math-tone--b">sin</b> 是 Y 分量。把角度展开成横轴，就得到两条相差 90° 的波形。</p>
+          <label className="math-lab__toggle">
+            <input type="checkbox" checked={showTangent} onChange={(event) => setShowTangent(event.target.checked)} />
+            <span><strong>显示 tan θ</strong><small>方向线与竖线 x = 1 的交点高度；波形图中的灰线</small></span>
+          </label>
+          <p className="math-lab__hint"><b className="math-tone--a">cos</b> 是圆上点的 X 分量，<b className="math-tone--b">sin</b> 是 Y 分量；把角度展开成横轴，就得到两条相差 90° 的波形。沿圆周加粗的弧就是弧长，半径为 1 时它的长度等于弧度值。</p>
         </>
       )}
       visual={(
@@ -381,16 +433,29 @@ export function TrigLab() {
             const origin = toSvg([0, 0]);
             const foot = toSvg([cosine, 0]);
             const tip = toSvg(point);
+            const tangentTip = tangent === null ? null : Math.max(-1.45, Math.min(1.45, tangent));
             return (
               <>
                 <circle className="math-unit-circle" cx={origin[0]} cy={origin[1]} r={unit} />
+                <AngleArc center={origin} radius={unit} start={0} sweep={radians} tone="result" className="math-arc--length" />
                 <AngleArc center={origin} radius={unit * 0.28} start={0} sweep={radians} tone="result" />
+                {showTangent ? (
+                  <g aria-hidden="true">
+                    <line className="math-dashed" x1={toSvg([1, -2])[0]} y1={toSvg([1, -2])[1]} x2={toSvg([1, 2])[0]} y2={toSvg([1, 2])[1]} />
+                    {tangentTip !== null ? <>
+                      <line className="math-dashed" x1={toSvg(scale2(point, -3))[0]} y1={toSvg(scale2(point, -3))[1]} x2={toSvg(scale2(point, 3))[0]} y2={toSvg(scale2(point, 3))[1]} />
+                      <Arrow from={toSvg([1, 0])} to={toSvg([1, tangentTip])} tone="muted" width={4} />
+                      {Math.abs(tangentTip) > 0.2 ? <Label at={toSvg([1, tangentTip / 2])} tone="muted" dx={8} dy={4}>tan</Label> : null}
+                    </> : null}
+                  </g>
+                ) : null}
                 <line className="math-segment math-tone--a" x1={origin[0]} y1={origin[1]} x2={foot[0]} y2={foot[1]} />
                 <line className="math-segment math-tone--b" x1={foot[0]} y1={foot[1]} x2={tip[0]} y2={tip[1]} />
                 <Arrow from={origin} to={tip} tone="result" />
                 <Label at={[(origin[0] + foot[0]) / 2, foot[1]]} tone="a" dx={-12} dy={cosine * sine >= 0 ? 18 : -8}>cos</Label>
                 <Label at={[foot[0], (foot[1] + tip[1]) / 2]} tone="b" dx={cosine >= 0 ? 8 : -30} dy={4}>sin</Label>
                 <Label at={origin} tone="result" dx={Math.cos(radians / 2) * unit * 0.42 - 4} dy={-Math.sin(radians / 2) * unit * 0.42 + 5}>θ</Label>
+                {degrees >= 60 ? <Label at={toSvg(polarToCartesian(0.8, radians / 2))} tone="result" dx={-12} dy={5}>弧长</Label> : null}
               </>
             );
           }}
@@ -399,10 +464,200 @@ export function TrigLab() {
       readout={(
         <Readout rows={[
           { label: '角度 → 弧度', value: `${degrees}° = ${radiansLabel(degrees)} ≈ ${format(radians, 3)} rad`, tone: 'result' },
+          { label: '单位圆上的弧长', value: `${format(radians, 3)}，与弧度值相同`, tone: 'result' },
           { label: 'cos θ', value: format(cosine, 3), tone: 'a' },
           { label: 'sin θ', value: format(sine, 3), tone: 'b' },
-          { label: 'tan θ = sin / cos', value: tangentDefined ? format(sine / cosine, 3) : '未定义（cos = 0）' },
+          { label: 'tan θ = sin / cos', value: tangent !== null ? format(tangent, 3) : '未定义（cos = 0）' },
           { label: 'sin² + cos²', value: format(sine * sine + cosine * cosine, 3) },
+          { label: '象限与符号', value: quadrantLabel(degrees) },
+          { label: '同一方向的其他写法', value: `${degrees}° = ${degrees - 360}° = ${degrees + 360}°` },
+        ]} />
+      )}
+    />
+  );
+}
+
+/* ---------- atan 与 atan2 ---------- */
+
+const atanPresets: Array<{ label: string; value: Vector2 }> = [
+  { label: 'Ⅰ', value: [2, 1.5] },
+  { label: 'Ⅱ', value: [-2, 1.5] },
+  { label: 'Ⅲ', value: [-2, -1.5] },
+  { label: 'Ⅳ', value: [2, -1.5] },
+  { label: 'x = 0', value: [0, 2] },
+  { label: '原点', value: [0, 0] },
+];
+
+export function AtanLab() {
+  const initial: Vector2 = [-2, 1.5];
+  const [direction, setDirection] = useState<Vector2>(initial);
+  // 吸附可能产生 −0；`|| 0` 统一成 +0，避免 y / −0 得到方向相反的无穷大。
+  const x = direction[0] || 0;
+  const y = direction[1] || 0;
+  const isZero = length2(direction) < 1e-6;
+  const exact = Math.atan2(y, x);
+  const ratio = y / x;
+  const single = Math.atan(ratio);
+  const misses = !isZero && x < 0;
+  const ratioText = Number.isNaN(ratio) ? 'NaN' : Number.isFinite(ratio) ? format(ratio) : ratio > 0 ? '+∞' : '−∞';
+  const status = isZero ? '零向量没有方向：Math.atan2(0, 0) 返回 0，GLSL 的 atan(0.0, 0.0) 结果未定义'
+    : x === 0 ? 'x = 0：y / x 除以零，JavaScript 得到 ±∞，atan 仍返回 ±90°；GLSL 中这一步的结果未定义'
+      : misses ? 'x < 0：y / x 与对角方向的比值相同，atan 指向相反的象限，结果差了 180°'
+        : 'x > 0：两种写法结果相同';
+
+  return (
+    <LabShell
+      className="trig-lab"
+      title="atan vs atan2"
+      hint="拖动方向终点，比较只看比值的 atan 与同时看两个符号的 atan2"
+      onReset={() => setDirection(initial)}
+      controls={(
+        <>
+          <p className="math-lab__formula"><code>atan(y / x) ∈ (−90°, 90°)</code><code>atan2(y, x) ∈ [−180°, 180°]</code></p>
+          <div className="math-lab__chips math-lab__chips--grid" style={{ '--chip-columns': 3 } as CSSProperties} role="group" aria-label="方向预设">
+            {atanPresets.map((preset) => <button type="button" key={preset.label} aria-pressed={direction[0] === preset.value[0] && direction[1] === preset.value[1]} onClick={() => setDirection(preset.value)}>{preset.label}</button>)}
+          </div>
+          <p className="math-lab__hint">把终点拖到左半平面：<code>(−2, 1.5)</code> 与 <code>(2, −1.5)</code> 的比值都是 −0.75，<b className="math-tone--bad">atan</b> 只能返回同一个角度；<b className="math-tone--good">atan2</b> 额外检查 x、y 的符号，始终指向真实方向。</p>
+        </>
+      )}
+      visual={(
+        <Plane range={3} label="atan 与 atan2 对照平面" handles={[{ id: 'direction', label: '方向 (x, y) 的终点', value: direction, tone: 'result', onChange: setDirection }]}>
+          {(toSvg, unit) => {
+            const origin = toSvg([0, 0]);
+            const wrongTip = polarToCartesian(1.6, single);
+            return (
+              <>
+                <circle className="math-unit-circle" cx={origin[0]} cy={origin[1]} r={unit} />
+                {!isZero ? <AngleArc center={origin} radius={unit * 0.55} start={0} sweep={exact} tone="good" /> : null}
+                {misses ? <>
+                  <AngleArc center={origin} radius={unit * 0.85} start={0} sweep={single} tone="bad" className="math-arc--dashed" />
+                  <Arrow from={origin} to={toSvg(wrongTip)} tone="bad" dashed width={2} />
+                  <Label at={toSvg(wrongTip)} tone="bad" dx={-24} dy={wrongTip[1] >= 0 ? -10 : 20}>atan</Label>
+                </> : null}
+                <Arrow from={origin} to={toSvg(direction)} tone="result" />
+                <Label at={toSvg(direction)} tone="result" dy={direction[1] >= 0 ? -10 : 22}>(x, y)</Label>
+                {!isZero ? <Label at={toSvg(polarToCartesian(0.75, exact / 2))} tone="good" dx={-14} dy={5}>atan2</Label> : null}
+              </>
+            );
+          }}
+        </Plane>
+      )}
+      readout={(
+        <Readout rows={[
+          { label: '(x, y) 与 y / x', value: `${formatVector([x, y])} · y / x = ${ratioText}` },
+          { label: 'atan(y / x)', value: Number.isNaN(single) ? 'NaN（0 / 0）' : formatDegrees(single), tone: misses ? 'bad' : undefined },
+          { label: 'atan2(y, x)', value: formatDegrees(exact), tone: 'good' },
+          { label: '结论', value: status, tone: isZero || misses ? 'bad' : x === 0 ? undefined : 'good' },
+        ]} />
+      )}
+    />
+  );
+}
+
+/* ---------- 最短转向 ---------- */
+
+/** 转向演示使用固定角速度 ω = π rad/s，绕远路时耗时也会成比例变长。 */
+const TURN_SPEED = Math.PI;
+
+function turnLabel(delta: number) {
+  if (Math.abs(delta) < 1e-6) return '已对准';
+  return delta > 0 ? '逆时针' : '顺时针';
+}
+
+export function TurnLab() {
+  const initialHeading = degreesToRadians(150);
+  const initialTarget: Vector2 = [-2, -0.75];
+  const [heading, setHeading] = useState(initialHeading);
+  const [target, setTarget] = useState<Vector2>(initialTarget);
+  const [turning, setTurning] = useState(false);
+  const frameRef = useRef(0);
+
+  useEffect(() => () => cancelAnimationFrame(frameRef.current), []);
+
+  // 动画期间 heading 可能越过 ±π，比较与显示前统一折回 (−π, π]。
+  const current = wrapAngle(heading);
+  const hasTarget = length2(target) > 1e-6;
+  const targetAngle = Math.atan2(target[1], target[0]);
+  const naive = targetAngle - current;
+  const shortest = shortestAngleDelta(current, targetAngle);
+  const takesLongWay = hasTarget && Math.abs(naive - shortest) > 1e-6;
+
+  function stop() {
+    cancelAnimationFrame(frameRef.current);
+    setTurning(false);
+  }
+
+  function turn(delta: number) {
+    cancelAnimationFrame(frameRef.current);
+    const from = current;
+    const finish = () => { setHeading(wrapAngle(from + delta)); setTurning(false); };
+    if (Math.abs(delta) < 1e-6 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      finish();
+      return;
+    }
+    const duration = Math.abs(delta) / TURN_SPEED * 1000;
+    const start = performance.now();
+    setTurning(true);
+    const step = (now: number) => {
+      const progress = Math.min((now - start) / duration, 1);
+      if (progress >= 1) {
+        finish();
+        return;
+      }
+      setHeading(from + delta * progress);
+      frameRef.current = requestAnimationFrame(step);
+    };
+    frameRef.current = requestAnimationFrame(step);
+  }
+
+  return (
+    <LabShell
+      className="trig-lab"
+      live={!turning}
+      title="Shortest Turn Lab"
+      hint="拖动朝向与目标，比较直接相减与最短角度差两种转法"
+      onReset={() => { stop(); setHeading(initialHeading); setTarget(initialTarget); }}
+      controls={(
+        <>
+          <p className="math-lab__formula"><code>Δ = target − heading</code><code>shortest = atan2(sin Δ, cos Δ)</code></p>
+          <button type="button" className="math-lab__action" disabled={!hasTarget} onClick={() => turn(shortest)}>按最短角度差转向</button>
+          <button type="button" className="math-lab__action" disabled={!hasTarget} onClick={() => turn(naive)}>按直接相减转向</button>
+          <p className="math-lab__hint">两种转法都以 π rad/s 匀速旋转。初始状态下直接相减会顺时针绕过 309°，最短角度差只需逆时针转 51°；把目标拖到箭头附近时，两种结果相同。</p>
+        </>
+      )}
+      visual={(
+        <Plane
+          range={3}
+          label="最短转向平面"
+          handles={[
+            { id: 'heading', label: '当前朝向（圆上的点）', value: polarToCartesian(2, current), tone: 'result', snap: 0, onChange: (value) => { stop(); if (length2(value) > 0.05) setHeading(Math.atan2(value[1], value[0])); } },
+            { id: 'target', label: '目标位置', value: target, tone: 'b', onChange: (value) => { stop(); setTarget(value); } },
+          ]}
+        >
+          {(toSvg, unit) => {
+            const origin = toSvg([0, 0]);
+            const headingTip = polarToCartesian(2, current);
+            return (
+              <>
+                <circle className="math-unit-circle" cx={origin[0]} cy={origin[1]} r={unit * 2} />
+                {takesLongWay ? <AngleArc center={origin} radius={unit * 0.7} start={current} sweep={naive} tone="bad" className="math-arc--dashed" /> : null}
+                {hasTarget ? <AngleArc center={origin} radius={unit * 1.25} start={current} sweep={shortest} tone="good" /> : null}
+                {hasTarget ? <Arrow from={origin} to={toSvg(target)} tone="b" dashed width={2} /> : null}
+                <Arrow from={origin} to={toSvg(headingTip)} tone="result" />
+                <Label at={toSvg(headingTip)} tone="result" dy={headingTip[1] >= 0 ? -12 : 24}>朝向</Label>
+                {hasTarget ? <Label at={toSvg(target)} tone="b" dy={target[1] >= 0 ? -12 : 24}>目标</Label> : null}
+                {hasTarget && Math.abs(shortest) > 0.2 ? <Label at={toSvg(polarToCartesian(1.25, current + shortest / 2))} tone="good" dx={-12} dy={5}>最短</Label> : null}
+              </>
+            );
+          }}
+        </Plane>
+      )}
+      readout={(
+        <Readout rows={[
+          { label: '当前朝向 heading', value: formatDegrees(current), tone: 'result' },
+          { label: '目标角 atan2(y, x)', value: hasTarget ? formatDegrees(targetAngle) : '目标在原点，没有方向', tone: hasTarget ? 'b' : 'bad' },
+          { label: '直接相减', value: `${formatDegrees(naive)} · ${turnLabel(naive)}`, tone: takesLongWay ? 'bad' : undefined },
+          { label: '最短角度差', value: `${formatDegrees(shortest)} · ${turnLabel(shortest)}`, tone: 'good' },
         ]} />
       )}
     />
@@ -745,6 +1000,106 @@ export function PointVectorDiagram() {
         <Label at={toSvg(add2([3, 1.75], offset))} tone="muted" dx={-60} dy={-6}>同一个向量</Label>
       </svg>
       <figcaption id={`${id}-caption`}>点固定在某个位置；向量只记录“方向 + 长度”，平移到任何起点都表示同一个位移。</figcaption>
+    </figure>
+  );
+}
+
+/* ---------- 静态示意：弧度 ---------- */
+
+export function RadianDiagram() {
+  const id = useId();
+  const center: Point = [118, 102];
+  const radius = 62;
+  const at = (angle: number, distance = radius): Point => [center[0] + Math.cos(angle) * distance, center[1] - Math.sin(angle) * distance];
+  // 下方的直尺与圆使用同一比例：1 个刻度 = 1 个半径的长度。
+  const rulerY = 208;
+  const rulerX = (radii: number) => 16 + radii * radius;
+  const arcEnd = at(1);
+  return (
+    <figure className="math-figure math-figure--compact" aria-labelledby={`${id}-caption`}>
+      <svg viewBox="0 0 420 246" role="img" aria-label="圆上与半径等长的弧对应 1 弧度，约 57.3°；把圆周拉直后，半圈长 π 个半径，一圈长 2π 个半径">
+        <circle className="math-unit-circle" cx={center[0]} cy={center[1]} r={radius} />
+        {[1, 2, 3, 4, 5, 6].map((value) => {
+          const [x1, y1] = at(value, radius - 5);
+          const [x2, y2] = at(value, radius + 5);
+          const [tx, ty] = at(value, radius + 15);
+          return <g key={value} aria-hidden="true"><line className="math-radian-tick" x1={x1} y1={y1} x2={x2} y2={y2} /><text className="math-figure__note" x={tx - 3} y={ty + 4}>{value}</text></g>;
+        })}
+        <line className="math-radian-tick math-tone--result" x1={at(Math.PI, radius - 6)[0]} y1={center[1]} x2={at(Math.PI, radius + 6)[0]} y2={center[1]} />
+        <Label at={at(Math.PI, radius - 18)} tone="result" dx={-4} dy={5}>π</Label>
+        <line className="math-dashed" x1={center[0]} y1={center[1]} x2={arcEnd[0]} y2={arcEnd[1]} />
+        <line className="math-segment math-tone--a" x1={center[0]} y1={center[1]} x2={center[0] + radius} y2={center[1]} />
+        <AngleArc center={center} radius={radius} start={0} sweep={1} tone="a" className="math-arc--length" />
+        <AngleArc center={center} radius={18} start={0} sweep={1} tone="result" />
+        <Label at={[center[0] + radius / 2, center[1]]} tone="a" dx={-4} dy={18}>r</Label>
+        <Label at={at(0.5, 24)} tone="result" dx={2} dy={2}>1 rad</Label>
+        <Label at={at(0.45, radius + 10)} tone="a" dx={2} dy={4}>弧长 = r</Label>
+        <g className="math-figure__legend" aria-hidden="true">
+          <text x="250" y="56">弧度 = 弧长 ÷ 半径</text>
+          <text x="250" y="84">1 rad ≈ 57.3°</text>
+          <text x="250" y="112">π rad = 180°（半圈）</text>
+          <text x="250" y="140">2π rad = 360°（一圈）</text>
+        </g>
+        <line className="math-radian-ruler" x1={rulerX(0)} y1={rulerY} x2={rulerX(Math.PI * 2)} y2={rulerY} />
+        <line className="math-segment math-tone--a" x1={rulerX(0)} y1={rulerY} x2={rulerX(1)} y2={rulerY} />
+        {[0, 1, 2, 3, 4, 5, 6].map((value) => (
+          <g key={value} aria-hidden="true">
+            <line className="math-radian-tick" x1={rulerX(value)} y1={rulerY - 6} x2={rulerX(value)} y2={rulerY + 6} />
+            <text className="math-figure__note" x={rulerX(value) - (value ? 6 : 3)} y={rulerY + 22}>{value ? `${value}r` : '0'}</text>
+          </g>
+        ))}
+        <line className="math-radian-tick math-tone--result" x1={rulerX(Math.PI)} y1={rulerY - 10} x2={rulerX(Math.PI)} y2={rulerY + 6} />
+        <line className="math-radian-tick math-tone--result" x1={rulerX(Math.PI * 2)} y1={rulerY - 10} x2={rulerX(Math.PI * 2)} y2={rulerY + 6} />
+        <text className="math-label math-tone--result" x={rulerX(Math.PI) - 20} y={rulerY - 16} aria-hidden="true">πr 半圈</text>
+        <text className="math-label math-tone--result" x={rulerX(Math.PI * 2) - 50} y={rulerY - 16} aria-hidden="true">2πr 一圈</text>
+      </svg>
+      <figcaption id={`${id}-caption`}>沿圆周量出一段与半径等长的弧，它所对的圆心角就是 1 弧度。把圆周拉直成下方的直尺：半圈约 3.14 个半径，所以 180° = π；一圈约 6.28 个半径，所以 360° = 2π。</figcaption>
+    </figure>
+  );
+}
+
+/* ---------- 交互示意：视野角与 tan ---------- */
+
+export function FovFigure() {
+  const id = useId();
+  const [fov, setFov] = useState(60);
+  const half = degreesToRadians(fov) / 2;
+  const tanHalf = Math.tan(half);
+  // 侧视图：相机在左侧朝 +X 看，100 像素代表 1 个单位距离。
+  const eye: Point = [40, 120];
+  const unitPx = 100;
+  const planeX = eye[0] + unitPx;
+  const halfPx = tanHalf * unitPx;
+  const reach = 380;
+  const edge = (sign: 1 | -1): Point => [eye[0] + reach, eye[1] - sign * tanHalf * reach];
+  const halfLabelY = Math.max(16, Math.min(eye[1] - 8, eye[1] - halfPx / 2 + 4));
+  return (
+    <figure className="math-figure math-figure--compact fov-figure" aria-labelledby={`${id}-caption`}>
+      <svg viewBox="0 0 420 240" role="img" aria-label={`视野角 ${fov}° 的侧视图：距离相机 1 个单位处，视锥半高 tan(fov / 2) = ${tanHalf.toFixed(3)}`}>
+        <polygon className="fov-figure__frustum" points={[eye, edge(1), edge(-1)].map((point) => point.join(',')).join(' ')} />
+        <line className="math-dashed" x1={eye[0]} y1={eye[1]} x2={412} y2={eye[1]} />
+        <line className="fov-figure__edge" x1={eye[0]} y1={eye[1]} x2={edge(1)[0]} y2={edge(1)[1]} />
+        <line className="fov-figure__edge" x1={eye[0]} y1={eye[1]} x2={edge(-1)[0]} y2={edge(-1)[1]} />
+        <line className="math-segment math-tone--result" x1={planeX} y1={eye[1] - halfPx} x2={planeX} y2={eye[1] + halfPx} />
+        <line className="math-segment math-tone--a" x1={planeX} y1={eye[1]} x2={planeX} y2={eye[1] - halfPx} />
+        <AngleArc center={eye} radius={30} start={-half} sweep={half * 2} tone="result" />
+        <circle className="math-point math-tone--result" cx={eye[0]} cy={eye[1]} r="5" />
+        <text className="math-label math-tone--result" x={eye[0] - 14} y={eye[1] + 24} aria-hidden="true">相机</text>
+        <text className="math-label math-tone--result" x={eye[0] + 36} y={eye[1] - 6} aria-hidden="true">fov</text>
+        <text className="math-label math-tone--muted" x={eye[0] + unitPx / 2 - 4} y={eye[1] + 18} aria-hidden="true">1</text>
+        <text className="math-label math-tone--a" x={planeX + 8} y={halfLabelY} aria-hidden="true">tan(fov / 2)</text>
+      </svg>
+      <div className="fov-figure__controls">
+        <label className="math-lab__range">
+          <span>视野角 fov<code>{fov}°</code></span>
+          <input type="range" min={10} max={170} step={1} value={fov} onChange={(event) => setFov(Number(event.target.value))} />
+        </label>
+        <dl>
+          <div><dt>tan(fov / 2)</dt><dd>{tanHalf.toFixed(3)}</dd></div>
+          <div><dt>1 / tan(fov / 2)</dt><dd>{(1 / tanHalf).toFixed(3)}</dd></div>
+        </dl>
+      </div>
+      <figcaption id={`${id}-caption`}>侧视图：相机位于左侧并朝右看。距离相机 1 个单位处，视锥上半部分的高度是 <code>tan(fov / 2)</code>；透视矩阵乘以它的倒数，经过透视除法后，视锥上边缘正好落在 NDC 的 <code>y = 1</code>。拖到 90° 以上，tan 增长得越来越快。</figcaption>
     </figure>
   );
 }

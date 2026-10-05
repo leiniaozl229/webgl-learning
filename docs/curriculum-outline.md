@@ -52,6 +52,8 @@
 
 推荐顺序：向量 → 三角函数 → 点积与叉积 → 矩阵 → 逆矩阵与法线矩阵。每篇配一个可拖拽的 SVG 坐标平面实验，并落到对应的 GLSL / TypeScript 写法；可测试的数学函数位于 `src/core/mathBasics.ts`。
 
+三角函数一篇另有 WebGL2 极坐标实验：Buffer 只保存 `(t, ring)`，角度与正弦波形由 Uniform 在顶点着色器中计算，源码位于 `src/core/polarVertexData.ts`、`polarVertex.glsl` 与 `polarFragment.glsl`。
+
 ## 5. 二维变换与矩阵
 
 - [x] 二维平移

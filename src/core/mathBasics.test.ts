@@ -16,11 +16,13 @@ import {
   polarToCartesian,
   project2,
   radiansToDegrees,
+  shortestAngleDelta,
   signedAngle2,
   subtract2,
   transformVector2,
   transformVector3,
   transpose3,
+  wrapAngle,
   type Matrix2,
 } from './mathBasics';
 import type { Matrix3 } from './transforms2d';
@@ -63,6 +65,24 @@ describe('angles and trigonometry', () => {
   it('converts between degrees and radians', () => {
     expect(degreesToRadians(180)).toBeCloseTo(Math.PI);
     expect(radiansToDegrees(Math.PI / 2)).toBeCloseTo(90);
+  });
+
+  it('wraps any angle into (−π, π]', () => {
+    expect(wrapAngle(degreesToRadians(270))).toBeCloseTo(degreesToRadians(-90));
+    expect(wrapAngle(degreesToRadians(-450))).toBeCloseTo(degreesToRadians(-90));
+    expect(wrapAngle(Math.PI)).toBe(Math.PI);
+    expect(wrapAngle(-Math.PI)).toBe(Math.PI);
+    expect(wrapAngle(0.25)).toBeCloseTo(0.25);
+  });
+
+  it('finds the shortest turn across the ±180° boundary', () => {
+    const from = degreesToRadians(170);
+    const to = degreesToRadians(-170);
+    // 直接相减是 −340°，最短转向是逆时针 20°。
+    expect(radiansToDegrees(to - from)).toBeCloseTo(-340);
+    expect(radiansToDegrees(shortestAngleDelta(from, to))).toBeCloseTo(20);
+    expect(radiansToDegrees(shortestAngleDelta(to, from))).toBeCloseTo(-20);
+    expect(shortestAngleDelta(1, 1)).toBe(0);
   });
 
   it('places polar coordinates on the unit circle', () => {
