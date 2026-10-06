@@ -7,7 +7,7 @@ import { HomogeneousWSection } from './HomogeneousWSection';
 import { LessonLink } from './LessonLink';
 import { LessonPagination } from './LessonPagination';
 import { MathChapterRoute } from './MathChapterRoute';
-import { AtanLab, DeterminantLab, DotLab, FovFigure, NormalMatrixLab, PointVectorDiagram, RadianDiagram, TrigLab, TurnLab, VectorLab, WindingLab } from './MathLabs';
+import { AtanLab, CircleVerticesLab, DeterminantLab, DotLab, FovFigure, NormalMatrixLab, OscillationLab, PointVectorDiagram, RadianDiagram, TrigLab, TurnLab, VectorLab, WindingLab } from './MathLabs';
 import { PolarLab } from './PolarLab';
 
 /* ---------- 共用结构 ---------- */
@@ -264,9 +264,9 @@ uniform float u_time;   // 秒，由 JavaScript 每帧上传，已对周期取�
 out vec4 outColor;
 
 void main() {
-  // A = 0.5、c = 0.5：把 sin 的 −1…1 映射到 0…1。
+  // A = 0.3、c = 0.5：亮度围绕 0.5 波动，范围为 0.2…0.8。
   // f = 0.5 Hz：ω = 2π × 0.5，每 2 秒完成一次往返。
-  float pulse = 0.5 + 0.5 * sin(TAU * 0.5 * u_time);
+  float pulse = 0.5 + 0.3 * sin(TAU * 0.5 * u_time);
   outColor = vec4(vec3(0.08, 0.62, 0.79) * pulse, 1.0);
 }`;
 
@@ -433,11 +433,16 @@ export function TrigonometryArticle({ toc }: { toc?: ReactNode }) {
         <h2>用 sin 做周期动画</h2>
         <p>把波形图的横轴从角度换成时间，<code>sin</code> 就成了动画曲线：数值在 −1 与 1 之间平滑往返，每 2π 重复一次，适合呼吸灯、摆动和波浪。完整写法是 <code>y = A · sin(ω · t + φ) + c</code>，四个参数分别控制幅度、快慢、起点和中心。</p>
         <FormulaCards items={[
-          { badge: 'A', title: '振幅与中心', formula: 'A · sin(…) + c', detail: <>A 决定往返幅度，c 平移中心。<code>0.5 + 0.5 · sin</code> 把 −1…1 映射到 0…1，可直接作为颜色或混合权重。</> },
+          { badge: 'A', title: '振幅', formula: 'A · sin(…)', detail: <>A 决定离中心最远的距离。A = 0.3 时，数值在中心上下各变化 0.3；A = 0 时数值恒定。</> },
           { badge: 'ω', title: '角频率', formula: 'ω = 2π · f', detail: 'f 是每秒循环次数（Hz），ω 是每秒转过的弧度，周期 T = 1 / f。' },
           { badge: 'φ', title: '相位', formula: 'sin(ω · t + φ)', detail: '让不同物体处在周期的不同位置。φ 随位置变化（例如 k·x）时，整体会形成一道移动的波。' },
         ]} />
-        <p>时间由 JavaScript 每帧写入 Uniform，GPU 为每个片段计算同一条公式。<code>u_time</code> 在上传前先对周期取模：32 位 float 只有约 7 位有效数字，数值越大，小数部分越粗糙。</p>
+        <p><strong>c 是中心值（偏移量）</strong>，决定数值围绕哪里波动。A ≥ 0 时，最小值是 <code>c − A</code>，最大值是 <code>c + A</code>。例如 <code>0.5 + 0.3 · sin(…)</code> 围绕 0.5 波动，范围为 0.2～0.8；把 c 改为 0.6，整条曲线向上移动 0.1，范围变成 0.3～0.9。</p>
+        <p>先确定属性的目标范围，就能反推 <code>A = (最大值 − 最小值) / 2</code>、<code>c = (最大值 + 最小值) / 2</code>。透明度和颜色混合比例常用 0～1；缩放可以在 0.9～1.1 间呼吸（A = 0.1、c = 1）；位置偏移可以在 −20～20 间摆动（A = 20、c = 0）。</p>
+        <h3>小案例：亮度在 0.2～0.8 之间呼吸</h3>
+        <p>取 A = 0.3、c = 0.5、f = 0.5 Hz、φ = 0，得到 <code>brightness = 0.5 + 0.3 · sin(π · t)</code>，每 2 秒循环一次。下方 SVG 用这个数值乘蓝色的 RGB 分量，预览明暗变化；拖动 c 观察中心线，拖动 A 观察波峰与波谷的距离。</p>
+        <OscillationLab />
+        <p>下面的 WebGL2 示例采用相同的默认参数：时间由 JavaScript 每帧写入 Uniform，GPU 为每个片段计算亮度并乘到 RGB 上，输出的 alpha 固定为 1。<code>u_time</code> 在上传前先对周期取模：32 位 float 只有约 7 位有效数字，数值越大，小数部分越粗糙。</p>
         <CodeBlock label="fragment.glsl" language="glsl">{oscillationCode}</CodeBlock>
         <CodeBlock label="animate.ts">{timeUploadCode}</CodeBlock>
       </section>
@@ -446,6 +451,10 @@ export function TrigonometryArticle({ toc }: { toc?: ReactNode }) {
         <h2>用极坐标生成圆形顶点</h2>
         <p>极坐标（polar coordinates）用“半径 r + 角度 θ”描述位置，转换成笛卡尔坐标是 <code>(r·cos θ, r·sin θ)</code>。把一圈均分成 N 份，第 i 个圆周点的角度是 <code>i / N × 2π</code>；每份与圆心组成一个三角形，就能用 <code>TRIANGLES</code> 画出圆。N 越大，多边形越接近圆。</p>
         <p>数据量：每个扇形 3 个顶点，每个顶点 2 个 float，共 <code>3N × 2 × 4 = 24N</code> 字节，N = 48 时为 1152 字节。下面的写法在 JavaScript 中算好 x、y，一次上传后保持不变，适合静态几何。WebGL2 也支持 <code>gl.TRIANGLE_FAN</code>：圆心加 N + 1 个圆周点即可，共 N + 2 个顶点。</p>
+        <h3>小案例：从一个三角形拼出六边形</h3>
+        <p>取 r = 0.8、N = 6，相邻圆周点相差 60°。第 0 段的三个顶点依次是圆心 <code>(0, 0)</code>、0° 的 <code>(0.8, 0)</code>、60° 的 <code>(0.4, 0.693)</code>。把它们按 x、y 顺序写进 <code>Float32Array</code>，再补齐其余 5 段，就得到六边形：6 个三角形、18 个顶点、144 字节。</p>
+        <CircleVerticesLab />
+        <p>上方 SVG 展示 JavaScript 算出的顶点和连接关系。调大 N，直线边越来越短，轮廓逐渐接近虚线圆；切换高亮段可以检查每次循环写入的 6 个数字。下面的 WebGL2 代码将整份数组上传到 GPU Buffer，VAO 记录每次读取 2 个 float 的规则，顶点着色器再把读到的坐标写入 <code>gl_Position</code>，由 <code>drawArrays(TRIANGLES)</code> 每 3 个顶点组成一个三角形。</p>
         <CodeBlock label="circle-vertices.ts">{circleCode}</CodeBlock>
       </section>
 

@@ -1704,6 +1704,14 @@ body.code-window-open { overflow: hidden; }
 .math-lab__chips--grid { display: grid; grid-template-columns: repeat(var(--chip-columns, 4), minmax(0, 1fr)); }
 .math-lab__chips--grid button { min-width: 0; padding: 0 0.25rem; }
 
+.trig-mini-lab input[type="range"], .trig-mini-lab button { min-height: 2.75rem; }
+.trig-mini-lab__play { display: inline-flex; align-items: center; gap: var(--space-xs); }
+.trig-mini-lab__play svg { width: 1rem; height: 1rem; }
+.trig-mini-lab__chart { max-width: 30rem; }
+.trig-mini-lab__lamp-outline { fill: none; stroke: var(--color-code-muted); stroke-width: 1.5; }
+.trig-mini-lab__triangle { fill: var(--color-accent); fill-opacity: 0.08; stroke: var(--color-code-muted); stroke-width: 1; stroke-linejoin: round; }
+.trig-mini-lab__triangle[data-selected="true"] { fill-opacity: 0.35; stroke: var(--color-accent-strong); stroke-width: 2; }
+
 .math-quadrants { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; margin: var(--space-lg) 0; padding: 0; overflow: hidden; border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-border-strong); list-style: none; }
 .math-quadrants li { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-content: center; gap: 0.15rem var(--space-sm); padding: var(--space-md); background: var(--color-surface); }
 .math-quadrants li[data-quadrant="i"] { grid-area: 1 / 2; }

@@ -1,4 +1,5 @@
-import { RotateCcw } from 'lucide-react';
+import { Pause, Play, RotateCcw } from 'lucide-react';
+import { useReducedMotion } from 'motion/react';
 import { useEffect, useId, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react';
 import { transformPoint4, translation4 } from '../../core/transforms3d';
 
@@ -192,6 +193,143 @@ export function RangeInput({ label, value, min, max, step, display, onChange }: 
 
 export function Readout({ rows }: { rows: Array<{ label: ReactNode; value: ReactNode; tone?: Tone }> }) {
   return <dl className="math-readout">{rows.map((row, index) => <div key={index} className={row.tone ? `math-tone--${row.tone}` : undefined}><dt>{row.label}</dt><dd>{row.value}</dd></div>)}</dl>;
+}
+
+/* ---------- 三角函数的小案例：同一公式同时驱动数值和图形 ---------- */
+
+export function OscillationLab() {
+  const [amplitude, setAmplitude] = useState(0.3);
+  const [center, setCenter] = useState(0.5);
+  const [time, setTime] = useState(0);
+  const [playing, setPlaying] = useState(false);
+  const timeRef = useRef(0);
+  const reducedMotion = useReducedMotion();
+  const animating = playing && !reducedMotion;
+
+  useEffect(() => {
+    if (!animating) return;
+    let frame = 0;
+    let previous: number | null = null;
+    const tick = (now: number) => {
+      // 暂停后从当前时间继续；限制单帧间隔，避免后台标签恢复时突然跳变。
+      if (previous !== null) timeRef.current = (timeRef.current + Math.min((now - previous) / 1000, 0.1)) % 2;
+      previous = now;
+      setTime(timeRef.current);
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [animating]);
+
+  function changeTime(value: number) {
+    setPlaying(false);
+    timeRef.current = value;
+    setTime(value);
+  }
+
+  const brightness = center + amplitude * Math.sin(Math.PI * time);
+  const x = (seconds: number) => 42 + seconds / 2 * 276;
+  const y = (value: number) => 258 - value * 116;
+  const curve = Array.from({ length: 81 }, (_, i) => {
+    const seconds = i / 80 * 2;
+    return `${i === 0 ? 'M' : 'L'}${x(seconds)} ${y(center + amplitude * Math.sin(Math.PI * seconds))}`;
+  }).join(' ');
+  const lampColor = `rgb(${[0.08, 0.62, 0.79].map((channel) => channel * brightness * 255).join(' ')})`;
+
+  return (
+    <LabShell
+      className="trig-mini-lab"
+      title="小案例 · 呼吸灯"
+      hint="先手动拖动时间，再播放一个 2 秒周期"
+      live={!animating}
+      onReset={() => { setPlaying(false); setAmplitude(0.3); setCenter(0.5); timeRef.current = 0; setTime(0); }}
+      controls={<>
+        <RangeInput label="中心值 c" value={center} min={0.3} max={0.7} step={0.01} onChange={setCenter} />
+        <RangeInput label="振幅 A" value={amplitude} min={0} max={0.3} step={0.01} onChange={setAmplitude} />
+        <RangeInput label="时间 t" value={time} min={0} max={2} step={0.01} display={`${format(time)} s`} onChange={changeTime} />
+        <button type="button" className="math-lab__action trig-mini-lab__play" disabled={Boolean(reducedMotion)} aria-pressed={animating} onClick={() => setPlaying(!animating)}>
+          {animating ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}{animating ? '暂停呼吸' : '播放呼吸'}
+        </button>
+        {reducedMotion ? <p>已遵循减少动态效果设置，请拖动时间查看各个时刻。</p> : null}
+        <p>保持 A 不变调整 c：整条曲线与中心线一起移动，往返幅度保持相同。本案例限制参数，使亮度始终落在 0～1。</p>
+      </>}
+      visual={(
+        <svg className="math-wave trig-mini-lab__chart" viewBox="0 0 360 292" role="img" aria-label={`呼吸灯的亮度曲线，中心 ${format(center)}，范围 ${format(center - amplitude)} 到 ${format(center + amplitude)}，当前亮度 ${format(brightness)}`}>
+          <circle className="trig-mini-lab__lamp-outline" cx="180" cy="54" r="33" />
+          <circle cx="180" cy="54" r="29" fill={lampColor} />
+          <text x="180" y="106" textAnchor="middle">RGB × brightness = {format(brightness)}</text>
+          {[0, 1].map((value) => <g key={value}><line className="math-wave__axis" x1="42" y1={y(value)} x2="318" y2={y(value)} /><text x="20" y={y(value) + 4}>{value}</text></g>)}
+          <line className="math-dashed" x1="42" y1={y(center)} x2="318" y2={y(center)} />
+          <text x="323" y={y(center) + 4}>c</text>
+          <path className="math-wave__curve math-tone--result" d={curve} />
+          <line className="math-wave__marker" x1={x(time)} y1="135" x2={x(time)} y2="263" />
+          <circle className="math-wave__dot math-tone--result" cx={x(time)} cy={y(brightness)} r="5" />
+          <text x="42" y="282">0 s</text><text x="180" y="282" textAnchor="middle">1 s</text><text x="318" y="282" textAnchor="end">2 s</text>
+        </svg>
+      )}
+      readout={<Readout rows={[
+        { label: '当前公式 · f = 0.5 Hz，φ = 0', value: `${format(center)} + ${format(amplitude)} × sin(π × ${format(time)})` },
+        { label: '最小值 c − A / 最大值 c + A', value: `${format(center - amplitude)} / ${format(center + amplitude)}` },
+        { label: '当前 brightness（乘到 RGB 上）', value: format(brightness, 3), tone: 'result' },
+      ]} />}
+    />
+  );
+}
+
+export function CircleVerticesLab() {
+  const [segments, setSegments] = useState(6);
+  const [radius, setRadius] = useState(0.8);
+  const [selected, setSelected] = useState(0);
+  const angle0 = selected / segments * Math.PI * 2;
+  const angle1 = (selected + 1) / segments * Math.PI * 2;
+  const start = polarToCartesian(radius, angle0);
+  const end = polarToCartesian(radius, angle1);
+
+  return (
+    <LabShell
+      className="trig-mini-lab"
+      title="小案例 · 圆形顶点"
+      hint="蓝色三角形对应循环中的第 i 段；虚线是理想圆周"
+      onReset={() => { setSegments(6); setRadius(0.8); setSelected(0); }}
+      controls={<>
+        <RangeInput label="分段数 N" value={segments} min={3} max={48} step={1} display={`${segments}`} onChange={(value) => { setSegments(value); setSelected(Math.min(selected, value - 1)); }} />
+        <RangeInput label="半径 r" value={radius} min={0.2} max={0.8} step={0.05} onChange={setRadius} />
+        <RangeInput label="高亮段 i（从 0 开始）" value={selected} min={0} max={segments - 1} step={1} display={`${selected}`} onChange={setSelected} />
+        <div className="math-lab__chips" role="group" aria-label="圆形分段预设">
+          {[3, 6, 12, 48].map((value) => <button type="button" key={value} aria-pressed={segments === value} onClick={() => { setSegments(value); setSelected(0); }}>N = {value}</button>)}
+        </div>
+        <p>每段都写入圆心 C 和两个圆周点 P、Q。相邻三角形会重复保存圆心与共享的圆周点，供 TRIANGLES 每次读取 3 个顶点。</p>
+      </>}
+      visual={(
+        <Plane range={1} label={`${segments} 个三角形组成的圆形轮廓，高亮第 ${selected} 段`} handles={[]}>
+          {(toSvg, unit) => {
+            const origin = toSvg([0, 0]);
+            const p = toSvg(start);
+            const q = toSvg(end);
+            return <>
+              {Array.from({ length: segments }, (_, i) => {
+                const a = toSvg(polarToCartesian(radius, i / segments * Math.PI * 2));
+                const b = toSvg(polarToCartesian(radius, (i + 1) / segments * Math.PI * 2));
+                return <polygon key={i} className="trig-mini-lab__triangle" data-selected={i === selected} points={`${origin.join(',')} ${a.join(',')} ${b.join(',')}`} />;
+              })}
+              <circle className="math-unit-circle" cx={origin[0]} cy={origin[1]} r={radius * unit} />
+              <g className="math-tone--result"><circle className="math-point" cx={p[0]} cy={p[1]} r="4" /><circle className="math-point" cx={q[0]} cy={q[1]} r="4" /></g>
+              <Label at={origin} tone="muted" dx={-20} dy={20}>C</Label>
+              <Label at={p} tone="result" dx={8} dy={18}>P</Label>
+              <Label at={q} tone="result" dx={-18} dy={-10}>Q</Label>
+            </>;
+          }}
+        </Plane>
+      )}
+      readout={<Readout rows={[
+        { label: 'P、Q 的角度', value: `${format(radiansToDegrees(angle0), 1)}° → ${format(radiansToDegrees(angle1), 1)}°` },
+        { label: 'P = (r·cos θᵢ, r·sin θᵢ)', value: formatVector(start), tone: 'result' },
+        { label: 'Q = (r·cos θᵢ₊₁, r·sin θᵢ₊₁)', value: formatVector(end), tone: 'result' },
+        { label: `第 ${selected} 段写入数组的 6 个 float（显示值保留 3 位小数）`, value: `[0, 0, ${format(start[0], 3)}, ${format(start[1], 3)}, ${format(end[0], 3)}, ${format(end[1], 3)}]` },
+        { label: '整个圆的顶点数 / Buffer 大小', value: `${segments} × 3 = ${segments * 3} 个顶点 / ${segments * 24} 字节` },
+      ]} />}
+    />
+  );
 }
 
 /* ---------- 1. 向量运算 ---------- */
