@@ -1,5 +1,5 @@
 import { Collapsible } from '@base-ui/react/collapsible';
-import { ChevronDown, ChevronRight, X } from 'lucide-react';
+import { ChevronDown, X } from 'lucide-react';
 
 import { navigationGroups, type LessonId } from '../navigation';
 import { LessonLink } from './LessonLink';
@@ -45,7 +45,7 @@ export function Sidebar({ open, collapsed, isDesktop, lessonId, onClose }: Sideb
                     <li key={item.label}>
                       {item.href && item.id ? (
                         <LessonLink className={`nav-item${item.id === lessonId ? ' nav-item--active' : ''}`} lessonId={item.id} onClick={onClose} aria-current={item.id === lessonId ? 'page' : undefined}>
-                          <span>{item.label}</span><ChevronRight aria-hidden="true" />
+                          <span>{item.label}</span>
                         </LessonLink>
                       ) : (
                         <span className="nav-item nav-item--disabled"><span>{item.label}</span>{item.badge ? <small>{item.badge}</small> : null}</span>

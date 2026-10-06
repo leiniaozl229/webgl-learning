@@ -1,4 +1,4 @@
-import { ExternalLink, Menu, Moon, PanelLeftClose, PanelLeftOpen, Sun, Triangle } from 'lucide-react';
+import { ExternalLink, Menu, Moon, Sun, Triangle } from 'lucide-react';
 
 import { LessonLink } from './LessonLink';
 
@@ -49,7 +49,7 @@ export function SiteHeader({
           aria-expanded={!sidebarCollapsed}
           title={sidebarCollapsed ? '展开课程导航' : '收起课程导航'}
         >
-          {sidebarCollapsed ? <PanelLeftOpen aria-hidden="true" /> : <PanelLeftClose aria-hidden="true" />}
+          <Menu aria-hidden="true" />
         </button>
         <LessonLink className="brand-link" lessonId="fundamentals" aria-label="WebGL2 Learning 首页">
           <span className="brand-mark" aria-hidden="true"><Triangle /></span>
