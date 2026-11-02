@@ -21,6 +21,7 @@ import { ShaderHandbookArticle } from './components/ShaderHandbookArticle';
 import { ShaderEffectArticle } from './components/ShaderEffectArticle';
 import { effectLessons, type EffectLessonId } from './effectLessons';
 import { ShadersAndGlslArticle } from './components/ShadersAndGlslArticle';
+import { ControlledRibbonArticle } from './components/ControlledRibbonArticle';
 import { StateDiagramArticle } from './components/StateDiagramArticle';
 import { Matrices2DArticle, Rotation2DArticle, Scale2DArticle, Translation2DArticle, Unified2DTransformsArticle } from './components/Transform2DArticles';
 import { Camera3DArticle, MatrixNaming3DArticle, ModelViewProjectionArticle, Orthographic3DArticle, Perspective3DArticle } from './components/Transform3DArticles';
@@ -57,6 +58,7 @@ const articles: Record<LessonId, ComponentType> = {
   'model-view-projection': ModelViewProjectionArticle,
   'openshaders-breakdown': OpenShadersArticle,
   'shader-effects-handbook': ShaderHandbookArticle,
+  'controlled-ribbon': ControlledRibbonArticle,
 };
 
 describe.each(lessonIds)('lesson %s', (lessonId) => {

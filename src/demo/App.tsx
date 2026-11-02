@@ -15,6 +15,7 @@ import { LessonArticle } from './components/LessonArticle';
 import { MatrixMathArticle } from './components/MatrixMathArticle';
 import { OpenShadersArticle } from './components/OpenShadersArticle';
 import { ShaderHandbookArticle } from './components/ShaderHandbookArticle';
+import { ControlledRibbonArticle } from './components/ControlledRibbonArticle';
 import { ShaderEffectArticle } from './components/ShaderEffectArticle';
 import { getEffectLesson, legacyEffectLesson } from './effectLessons';
 import {
@@ -223,6 +224,7 @@ export function App() {
         {lessonId === 'matrix-naming-3d' && <MatrixNaming3DArticle toc={inlineTableOfContents} />}
         {lessonId === 'model-view-projection' && <ModelViewProjectionArticle toc={inlineTableOfContents} />}
         {lessonId === 'openshaders-breakdown' && <OpenShadersArticle toc={inlineTableOfContents} theme={theme} />}
+        {lessonId === 'controlled-ribbon' && <ControlledRibbonArticle toc={inlineTableOfContents} />}
         {lessonId === 'shader-effects-handbook' && <ShaderHandbookArticle toc={inlineTableOfContents} />}
         {effectLesson && <ShaderEffectArticle key={effectLesson.id} lesson={effectLesson} toc={inlineTableOfContents} />}
         <TableOfContents

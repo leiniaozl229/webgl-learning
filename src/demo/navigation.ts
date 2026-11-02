@@ -29,6 +29,7 @@ export const lessonIds = [
   'model-view-projection',
   'openshaders-breakdown',
   'shader-effects-handbook',
+  'controlled-ribbon',
   ...effectLessons.map((lesson) => lesson.id),
 ] as const;
 
@@ -64,6 +65,7 @@ export const lessonTitles: Record<LessonId, string> = {
   'model-view-projection': '模型、视图与投影矩阵',
   'openshaders-breakdown': 'OpenShaders 效果拆解',
   'shader-effects-handbook': 'Shader 效果常见手法',
+  'controlled-ribbon': '可控光带：亮边与柔光面',
   ...Object.fromEntries(effectLessons.map((lesson) => [lesson.id, lesson.title])) as Record<EffectLessonId, string>,
 };
 
@@ -148,6 +150,7 @@ export const navigationGroups: NavigationGroup[] = [
     label: 'Shader 实战',
     items: [
       { id: 'openshaders-breakdown', label: 'OpenShaders 效果拆解', href: lessonHref('openshaders-breakdown') },
+      { id: 'controlled-ribbon', label: '可控光带', href: lessonHref('controlled-ribbon') },
       { id: 'shader-effects-handbook', label: 'Shader 效果常见手法', href: lessonHref('shader-effects-handbook') },
       ...effectLessons.map((lesson) => ({ id: lesson.id, label: lesson.title, href: lessonHref(lesson.id) })),
     ],
@@ -186,6 +189,15 @@ export const tableOfContentsByLesson: Record<LessonId, TableOfContentsItem[]> = 
     { label: '坐标变换', href: '#effect-coordinates' },
     { label: '工程与性能', href: '#effect-performance' },
     { label: '组合自己的效果', href: '#effect-recipes' },
+    { label: '继续实验', href: '#next-steps' },
+  ],
+  'controlled-ribbon': [
+    { label: '拖动亮边，调出光面', href: '#ribbon-lab' },
+    { label: '从 OpenShaders 借来的两件事', href: '#borrow-openshaders' },
+    { label: '亮边来自细线的疏密', href: '#edge-from-spacing' },
+    { label: '用控制点设计走向', href: '#edge-curve' },
+    { label: '让控制点飘起来', href: '#drift' },
+    { label: '参数对照', href: '#parameter-map' },
     { label: '继续实验', href: '#next-steps' },
   ],
   'openshaders-breakdown': [
@@ -455,6 +467,7 @@ export const sourceByLesson: Record<LessonId, string> = {
   ...Object.fromEntries(effectLessons.map((lesson) => [lesson.id, lesson.source])) as Record<EffectLessonId, string>,
   'shader-effects-handbook': 'https://thebookofshaders.com/',
   'openshaders-breakdown': 'https://openshaders.com/explore',
+  'controlled-ribbon': 'https://openshaders.com/explore',
   'getting-webgl2': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-getting-webgl2.html',
   'common-apis': 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-fundamentals.html',
   fundamentals: 'https://webgl2fundamentals.org/webgl/lessons/zh_cn/webgl-fundamentals.html',
