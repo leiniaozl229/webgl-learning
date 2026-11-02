@@ -6,7 +6,8 @@ import {
   type BackgroundKind, type EmitterFrameInfo, type EmitterOptions,
 } from '../core/ribbonEmitter';
 
-const storageKey = 'ribbon-emitter-options';
+// 参数含义或默认值有变化时换一个版本号，旧版本存下的值不再覆盖新默认值。
+const storageKey = 'ribbon-emitter-options-v2';
 
 // 全屏时像素多，默认按 ½ 分辨率绘制；光带是平滑的光场，放大后几乎看不出差别。
 const pageDefaults: EmitterOptions = { ...defaultEmitterOptions, scale: 0.5 };
@@ -235,8 +236,10 @@ export function EmitterPage() {
         </fieldset>
         <fieldset><legend>每条光带的随机形态</legend>
           <Range label="长度" min={0.4} max={2.2} value={options.length} onChange={(value) => change('length', value)} />
-          <Range label="宽度" min={0.05} max={0.5} value={options.width} onChange={(value) => change('width', value)} />
-          <Range label="随机浮动" min={0} max={0.8} value={options.variance} onChange={(value) => change('variance', value)} />
+          <Range label="宽度" min={0.05} max={1} value={options.width} onChange={(value) => change('width', value)} />
+          <Range label="宽度差异" min={0} max={1} value={options.widthRandom} onChange={(value) => change('widthRandom', value)} />
+          <Range label="宽度起伏" min={0} max={0.9} value={options.widthWave} onChange={(value) => change('widthWave', value)} />
+          <Range label="长度与扭转浮动" min={0} max={0.8} value={options.variance} onChange={(value) => change('variance', value)} />
           <Range label="弯曲随机度" min={0} max={1.2} value={options.curl} onChange={(value) => change('curl', value)} />
           <Range label="飘动幅度" min={0} max={0.4} step={0.005} value={options.drift} onChange={(value) => change('drift', value)} />
           <Range label="扭转圈数" min={0} max={2} value={options.twist} onChange={(value) => change('twist', value)} />
@@ -246,6 +249,10 @@ export function EmitterPage() {
         <fieldset><legend>亮边与光面</legend>
           <Range label="层数" min={4} max={48} step={1} value={options.layers} onChange={(value) => change('layers', value)} />
           <Range label="亮边集中度 γ" min={1} max={6} value={options.gamma} onChange={(value) => change('gamma', value)} />
+          <Range label="亮线强度" min={0} max={2} value={options.edgeCore} onChange={(value) => change('edgeCore', value)} />
+          <Range label="亮线宽度" min={0.0005} max={0.006} step={0.0001} value={options.edgeWidth} onChange={(value) => change('edgeWidth', value)} />
+          <Range label="亮边明暗变化" min={0} max={1} value={options.edgeVary} onChange={(value) => change('edgeVary', value)} />
+          <Range label="各条亮线差异" min={0} max={1} value={options.edgeRandom} onChange={(value) => change('edgeRandom', value)} />
           <Range label="柔和度" min={0.001} max={0.03} step={0.001} value={options.softness} onChange={(value) => change('softness', value)} />
           <Range label="光面平滑" min={0} max={2.5} value={options.smoothing} onChange={(value) => change('smoothing', value)} />
           <Range label="外缘渐隐" min={0} max={1} value={options.outerFade} onChange={(value) => change('outerFade', value)} />

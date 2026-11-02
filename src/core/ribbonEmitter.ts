@@ -30,8 +30,12 @@ export interface EmitterOptions {
   travel: number;
   length: number;
   width: number;
-  /** 长度、宽度、扭转在平均值上下浮动的比例。 */
+  /** 长度、扭转、寿命在平均值上下浮动的比例。 */
   variance: number;
+  /** 每条光带宽度的差异：0 = 一样宽，1 = 从平均宽度的 0.1 倍到 3 倍。 */
+  widthRandom: number;
+  /** 宽度沿长度的起伏：光带一段宽、一段窄，并随时间缓慢流动。 */
+  widthWave: number;
   /** 控制点之间方向随机转折的幅度（弧度）：越大越弯。 */
   curl: number;
   /** 每个控制点绕自己中心飘动的幅度，根部为 0。 */
@@ -44,6 +48,14 @@ export interface EmitterOptions {
   softness: number;
   smoothing: number;
   outerFade: number;
+  /** 亮边上那条锐利细线的强度：0 = 只有柔和的叠加亮边。 */
+  edgeCore: number;
+  /** 亮线的半宽（场景单位，1 = 画面高度）。 */
+  edgeWidth: number;
+  /** 各条光带亮线的强弱粗细差异。 */
+  edgeRandom: number;
+  /** 亮边沿长度的明暗变化：0 = 整条一样亮，1 = 只剩几段高光。 */
+  edgeVary: number;
   edgeHue: number;
   faceHue: number;
   /** 每条光带色相的随机偏移（圈）。 */
@@ -66,9 +78,9 @@ export interface EmitterOptions {
 export const defaultEmitterOptions: EmitterOptions = {
   source: [-0.72, -0.32], direction: 0.32, spread: 0.9,
   interval: 1.6, life: 9, growth: 0.3, release: 0.6, travel: 0.25,
-  length: 1.3, width: 0.22, variance: 0.35, curl: 0.5, drift: 0.12,
+  length: 1.3, width: 0.22, variance: 0.35, widthRandom: 0.55, widthWave: 0.35, curl: 0.35, drift: 0.1,
   twist: 0.6, twistFlow: 0.6, rootPinch: 0.85,
-  layers: 32, gamma: 2.6, softness: 0.007, smoothing: 1.2, outerFade: 0.5,
+  layers: 32, gamma: 2.6, softness: 0.005, smoothing: 1.2, outerFade: 0.5, edgeCore: 0.8, edgeWidth: 0.0018, edgeRandom: 0.6, edgeVary: 0.85,
   edgeHue: 0.95, faceHue: 0.78, hueJitter: 0.04, sourceGlow: 0.6,
   background: 'radial', backgroundFrom: '#1a1033', backgroundTo: '#000000', backgroundAngle: 90, backgroundCenter: [-0.5, -0.25], backgroundRadius: 1.2,
   exposure: 1, scale: 0.75, speed: 0.4,
@@ -97,12 +109,12 @@ const backgroundKinds: Record<BackgroundKind, number> = { solid: 0, linear: 1, r
 interface Ribbon {
   born: number;
   /** 寿命、方向、长度、宽度、扭转、扭转相位、色相各一个随机数。 */
-  rolls: { life: number; angle: number; length: number; width: number; twist: number; phase: number; hue: number };
+  rolls: { life: number; angle: number; length: number; width: number; twist: number; phase: number; hue: number; edge: number; edgeWidth: number; wave: number };
   side: 1 | -1;
-  /** 五个控制点的方向转折与 x 间距抖动，以及各自飘动的频率和相位。 */
+  /** 五个控制点的方向转折与间距抖动，以及各自飘动的两个频率和相位。 */
   bends: number[];
   gaps: number[];
-  wobble: { f1: number; f2: number; p1: number; p2: number }[];
+  wobble: { f1: number; f2: number; p1: number }[];
 }
 
 export interface RibbonInstance {
@@ -120,8 +132,13 @@ export interface RibbonInstance {
   head: number;
   tail: number;
   hueShift: number;
-  /** 出生时抽定的相位，光面丝纹用它错开，不随数组位置变化。 */
+  /** 出生时抽定的相位，光面丝纹和起伏用它错开，不随数组位置变化。 */
   seed: number;
+  /** 这条光带亮线的强度倍数与宽度倍数。 */
+  edgeGain: number;
+  edgeScale: number;
+  /** 这条光带宽度沿长度起伏的幅度。 */
+  wave: number;
   age: number;
 }
 
@@ -144,6 +161,11 @@ const smoothstep = (a: number, b: number, x: number) => {
 
 /** 在平均值上下 variance 比例内取值：roll = 0.5 时正好等于平均值。 */
 const vary = (mean: number, roll: number, variance: number) => mean * (1 + (roll * 2 - 1) * variance);
+
+/** 宽度倍数：roll 先按 1.5 次方偏向 0，再在 [1 − 0.9r, 1 + 2r] 之间插值；r = 1 时最宽可达平均宽度的 3 倍。 */
+export function widthFactor(roll: number, randomness: number) {
+  return 1 - 0.9 * randomness + roll ** 1.5 * 2.9 * randomness;
+}
 
 /** 一条光带当前的寿命比例 0..1；超过 1 表示已经消失。 */
 export function ageOf(ribbon: Ribbon, time: number, options: EmitterOptions) {
@@ -173,30 +195,35 @@ export function instanceOf(ribbon: Ribbon, time: number, options: EmitterOptions
   const origin: Point = [options.source[0] + axis[0] * travel, options.source[1] + axis[1] * travel];
 
   // 控制点：每段方向在上一段基础上随机转一点（随机游走），弯曲只在局部坐标里发生。
-  // 方向限制在 ±1.1 弧度内，x 一定递增，曲线仍是 y = C(x)。
+  // 方向限制在 ±0.55 弧度（约 30°）内：曲线保持平缓，按竖直距离近似垂直距离的误差很小，不会扭成钩子。
   let heading = 0, x = 0, y = 0;
   const points: Point[] = [[0, 0]];
   for (let i = 1; i < 5; i++) {
-    heading = Math.min(Math.max(heading + (ribbon.bends[i] - 0.5) * 2 * options.curl, -1.1), 1.1);
+    heading = Math.min(Math.max(heading + (ribbon.bends[i] - 0.5) * 2 * options.curl, -0.55), 0.55);
     const step = (length / 4) * (0.8 + 0.4 * ribbon.gaps[i]);
     x += step * Math.cos(heading);
     y += step * Math.sin(heading);
     // 飘动：每个点有自己的两组频率与相位，幅度从根部的 0 增长到末端。
-    const { f1, f2, p1, p2 } = ribbon.wobble[i];
+    // 只在垂直于发射方向上摆，x 间距保持不变，相邻点不会挤到一起。
+    const { f1, f2, p1 } = ribbon.wobble[i];
     const reach = options.drift * (i / 4) ** 0.8;
-    points.push([x + reach * 0.3 * Math.sin(time * f2 + p2), y + reach * (Math.sin(time * f1 + p1) + 0.4 * Math.sin(time * f2 * 1.7 + p1 * 2))]);
+    points.push([x, y + reach * (Math.sin(time * f1 + p1) + 0.4 * Math.sin(time * f2 * 1.7 + p1 * 2))]);
   }
   for (let i = 1; i < 5; i++) points[i][0] = Math.max(points[i][0], points[i - 1][0] + 0.02);
 
   const { head, tail, intensity } = lifecycle(age, options.growth, options.release);
   return {
     origin, axis, points, length,
-    width: vary(options.width, rolls.width, options.variance) * ribbon.side,
+    // 宽度的随机偏向细的一端：多数光带细而锐利，偶尔一条很宽，画面有主次。
+    width: options.width * widthFactor(rolls.width, options.widthRandom) * ribbon.side,
     twist: vary(options.twist, rolls.twist, options.variance),
     twistPhase: rolls.phase * Math.PI * 2 + time * options.twistFlow,
     intensity, head, tail,
     hueShift: (rolls.hue - 0.5) * 2 * options.hueJitter,
     seed: rolls.phase * 37,
+    edgeGain: Math.max(1 + (rolls.edge * 2 - 1) * options.edgeRandom * 1.2, 0),
+    edgeScale: 1 + (rolls.edgeWidth * 2 - 1) * options.edgeRandom * 0.7,
+    wave: options.widthWave * (0.3 + 1.4 * rolls.wave),
     age,
   };
 }
@@ -215,11 +242,11 @@ export function createEmitter(seed = 1) {
     const r = random;
     return {
       born,
-      rolls: { life: r(), angle: r(), length: r(), width: r(), twist: r(), phase: r(), hue: r() },
+      rolls: { life: r(), angle: r(), length: r(), width: r(), twist: r(), phase: r(), hue: r(), edge: r(), edgeWidth: r(), wave: r() },
       side: r() < 0.5 ? 1 : -1,
       bends: Array.from({ length: 5 }, r),
       gaps: Array.from({ length: 5 }, r),
-      wobble: Array.from({ length: 5 }, () => ({ f1: 0.5 + r() * 0.6, f2: 0.3 + r() * 0.5, p1: r() * Math.PI * 2, p2: r() * Math.PI * 2 })),
+      wobble: Array.from({ length: 5 }, () => ({ f1: 0.5 + r() * 0.6, f2: 0.3 + r() * 0.5, p1: r() * Math.PI * 2 })),
     };
   }
 
@@ -249,6 +276,53 @@ export function createEmitter(seed = 1) {
   return { update, reset };
 }
 
+/** OKLCH → 线性 RGB，与 ribbonCommon.glsl 里的 oklch() 相同。 */
+export function oklch(lightness: number, chroma: number, hueTurns: number): [number, number, number] {
+  const h = hueTurns * Math.PI * 2;
+  const a = chroma * Math.cos(h), b = chroma * Math.sin(h);
+  const l = (lightness + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+  const m = (lightness - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+  const s = (lightness - 0.0894841775 * a - 1.2914855480 * b) ** 3;
+  const clamp = (value: number) => Math.min(Math.max(value, 0), 1);
+  return [
+    clamp(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s),
+    clamp(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s),
+    clamp(-0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s),
+  ];
+}
+
+/** 着色器里细线层数的上限，也是调色板纹理的层数列数；第 MAX_LAYERS 列放亮线颜色。 */
+export const MAX_LAYERS = 48;
+
+/**
+ * 每层只和层号有关的量：(tᵞ, 细线间距系数, 0.08t·cos 7t, 0.08t·sin 7t)。
+ * 原本每个像素对每层都要算两次 pow 和一次 sin，现在每帧在这里算一次。
+ */
+export function fillLayerShape(target: Float32Array, options: Pick<EmitterOptions, 'layers' | 'gamma'>) {
+  const { layers, gamma } = options;
+  for (let i = 0; i < Math.min(layers, MAX_LAYERS); i++) {
+    const t = (i + 0.5) / layers;
+    target[i * 4] = t ** gamma;
+    target[i * 4 + 1] = (gamma * Math.max(t, 0.5 / layers) ** (gamma - 1)) / layers;
+    target[i * 4 + 2] = 0.08 * t * Math.cos(7 * t);
+    target[i * 4 + 3] = 0.08 * t * Math.sin(7 * t);
+  }
+}
+
+/** 第 row 行：一条光带每层的颜色（已乘外缘渐隐与柔和度），a = 亮边权重 (1 − t)²；最后一列是亮线颜色。 */
+export function fillPaletteRow(target: Float32Array, row: number, hueShift: number, options: Pick<EmitterOptions, 'layers' | 'softness' | 'outerFade' | 'edgeHue' | 'faceHue'>) {
+  const { layers, softness, outerFade, edgeHue, faceHue } = options;
+  const base = row * (MAX_LAYERS + 1) * 4;
+  for (let i = 0; i < Math.min(layers, MAX_LAYERS); i++) {
+    const t = (i + 0.5) / layers;
+    const mix = (a: number, b: number) => a + (b - a) * t;
+    const fade = (1 - smoothstep(1 - outerFade, 1, t)) * softness;
+    const [r, g, b] = oklch(mix(0.82, 0.6), mix(0.09, 0.16), mix(edgeHue, faceHue) + hueShift);
+    target.set([r * fade, g * fade, b * fade, (1 - t) ** 2], base + i * 4);
+  }
+  target.set([...oklch(0.96, 0.05, edgeHue + hueShift), 1], base + MAX_LAYERS * 4);
+}
+
 const header = '#version 300 es\nprecision highp float;\n';
 export const emitterFragmentSource = `${header}${commonSource}\n${emitterSource}`;
 
@@ -276,7 +350,7 @@ export function createEmitterRenderer(canvas: HTMLCanvasElement) {
   }
   const vao = gl.createVertexArray();
   if (!vao) throw new Error('无法创建全屏绘制所需的 VAO。');
-  const names = ['u_resolution', 'u_time', 'u_exposure', 'u_count', 'u_points', 'u_frame', 'u_form', 'u_life', 'u_seed', 'u_layers', 'u_look', 'u_source', 'u_bgFrom', 'u_bgTo', 'u_bgShape', 'u_bgRadius'] as const;
+  const names = ['u_resolution', 'u_time', 'u_exposure', 'u_count', 'u_points', 'u_frame', 'u_form', 'u_life', 'u_traits', 'u_layers', 'u_look', 'u_source', 'u_bgFrom', 'u_bgTo', 'u_bgShape', 'u_bgRadius', 'u_edge', 'u_layerShape', 'u_palette'] as const;
   const at = Object.fromEntries(names.map((name) => [name, gl.getUniformLocation(program, name)])) as Record<typeof names[number], WebGLUniformLocation | null>;
 
   // 每帧复用同一组 TypedArray，按光带顺序填好再一次上传。
@@ -284,7 +358,15 @@ export function createEmitterRenderer(canvas: HTMLCanvasElement) {
   const frame = new Float32Array(MAX_RIBBONS * 4);
   const form = new Float32Array(MAX_RIBBONS * 4);
   const life = new Float32Array(MAX_RIBBONS * 4);
-  const seeds = new Float32Array(MAX_RIBBONS);
+  const traits = new Float32Array(MAX_RIBBONS * 4);
+  const layerShape = new Float32Array(MAX_LAYERS * 4);
+  const palette = new Float32Array((MAX_LAYERS + 1) * MAX_RIBBONS * 4);
+  const paletteTexture = gl.createTexture();
+  if (!paletteTexture) throw new Error('无法创建光带调色板纹理。');
+  gl.bindTexture(gl.TEXTURE_2D, paletteTexture);
+  gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA32F, MAX_LAYERS + 1, MAX_RIBBONS);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 
   function collectTimings() {
     if (!timer) return;
@@ -317,8 +399,10 @@ export function createEmitterRenderer(canvas: HTMLCanvasElement) {
       frame.set([...ribbon.origin, ...ribbon.axis], k * 4);
       form.set([ribbon.length, ribbon.width, ribbon.twist, ribbon.twistPhase], k * 4);
       life.set([ribbon.intensity, ribbon.head, ribbon.tail, ribbon.hueShift], k * 4);
-      seeds[k] = ribbon.seed;
+      traits.set([ribbon.seed, ribbon.edgeGain, ribbon.edgeScale, ribbon.wave], k * 4);
+      fillPaletteRow(palette, k, ribbon.hueShift, options);
     }
+    fillLayerShape(layerShape, options);
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.viewport(0, 0, width, height);
@@ -332,7 +416,7 @@ export function createEmitterRenderer(canvas: HTMLCanvasElement) {
     gl.uniform4fv(at.u_frame, frame);
     gl.uniform4fv(at.u_form, form);
     gl.uniform4fv(at.u_life, life);
-    gl.uniform1fv(at.u_seed, seeds);
+    gl.uniform4fv(at.u_traits, traits);
     gl.uniform4f(at.u_layers, options.layers, options.gamma, options.softness, options.smoothing);
     gl.uniform4f(at.u_look, options.edgeHue, options.faceHue, options.outerFade, options.rootPinch);
     gl.uniform3f(at.u_source, options.source[0], options.source[1], options.sourceGlow);
@@ -340,6 +424,12 @@ export function createEmitterRenderer(canvas: HTMLCanvasElement) {
     gl.uniform3f(at.u_bgTo, ...hexToRgb(options.background === 'solid' ? options.backgroundFrom : options.backgroundTo));
     gl.uniform4f(at.u_bgShape, backgroundKinds[options.background], (options.backgroundAngle * Math.PI) / 180, ...options.backgroundCenter);
     gl.uniform1f(at.u_bgRadius, Math.max(options.backgroundRadius, 0.01));
+    gl.uniform4f(at.u_edge, options.edgeCore, options.edgeWidth, options.edgeRandom, options.edgeVary);
+    gl.uniform4fv(at.u_layerShape, layerShape);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, paletteTexture);
+    if (count) gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, MAX_LAYERS + 1, count, gl.RGBA, gl.FLOAT, palette);
+    gl.uniform1i(at.u_palette, 0);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
 
     if (query && timer) { gl.endQuery(timer.TIME_ELAPSED_EXT); queries.push(query); }
@@ -352,6 +442,7 @@ export function createEmitterRenderer(canvas: HTMLCanvasElement) {
     queries.forEach((query) => gl.deleteQuery(query));
     gl.deleteProgram(program);
     gl.deleteVertexArray(vao);
+    gl.deleteTexture(paletteTexture);
   }
 
   return { draw, dispose };
