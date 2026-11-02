@@ -1,4 +1,4 @@
-import { Copy, Dices, Eye, Maximize, Minimize, Pause, Play, RotateCcw, SlidersHorizontal, X } from 'lucide-react';
+import { ChevronRight, Copy, Dices, Eye, Maximize, Minimize, Pause, Play, RotateCcw, SlidersHorizontal, Undo2, X } from 'lucide-react';
 import { useEffect, useId, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import type { Point } from '../core/controlledRibbon';
 import {
@@ -7,7 +7,7 @@ import {
 } from '../core/ribbonEmitter';
 
 // 参数含义或默认值有变化时换一个版本号，旧版本存下的值不再覆盖新默认值。
-const storageKey = 'ribbon-emitter-options-v2';
+const storageKey = 'ribbon-emitter-options-v6';
 
 // 全屏时像素多，默认按 ½ 分辨率绘制；光带是平滑的光场，放大后几乎看不出差别。
 const pageDefaults: EmitterOptions = { ...defaultEmitterOptions, scale: 0.5 };
@@ -29,16 +29,114 @@ function loadOptions(): EmitterOptions {
   }
 }
 
-function Range({ label, value, min, max, step = 0.01, onChange }: {
-  label: string; value: number; min: number; max: number; step?: number; onChange: (value: number) => void;
+// 界面偏好（当前标签页、是否显示发射点）只是本机的便利设置，读写失败时用默认值。
+function readPreference<T>(key: string, fallback: T): T {
+  try { return (JSON.parse(localStorage.getItem(key) ?? 'null') as T | null) ?? fallback; } catch { return fallback; }
+}
+function writePreference(key: string, value: unknown) {
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* 隐私模式下无法保存 */ }
+}
+
+/** 改过的参数在标签前标一个点，并给出单独恢复默认值的按钮。 */
+function Range({ label, hint, value, min, max, step = 0.01, changed = false, onChange, onReset }: {
+  label: string; hint?: string; value: number; min: number; max: number; step?: number; changed?: boolean;
+  onChange: (value: number) => void; onReset?: () => void;
 }) {
   const id = useId();
   const digits = step >= 1 ? 0 : step < 0.01 ? 3 : 2;
-  return <label className="emitter-range" htmlFor={id}>
-    <span>{label}<output htmlFor={id}>{value.toFixed(digits)}</output></span>
+  return <div className="emitter-range" data-changed={changed}>
+    <span>
+      <label htmlFor={id} title={hint}>{label}</label>
+      {changed && onReset && <button type="button" className="emitter-range__reset" onClick={onReset} title="恢复默认值" aria-label={`${label}恢复默认值`}><Undo2 /></button>}
+      <output htmlFor={id}>{value.toFixed(digits)}</output>
+    </span>
     <input id={id} type="range" min={min} max={max} step={step} value={value} onChange={(event) => onChange(Number(event.target.value))} />
-  </label>;
+  </div>;
 }
+
+type NumericKey = { [K in keyof EmitterOptions]: EmitterOptions[K] extends number ? K : never }[keyof EmitterOptions];
+interface ParamSpec { key: NumericKey; label: string; min: number; max: number; step?: number; hint?: string }
+type TabId = 'emit' | 'shape' | 'light' | 'color' | 'scene';
+
+// 速度单独成组：整体速度是总倍率，下面三项分别控制生命、形态和光纹各自的快慢。
+const speedParams: ParamSpec[] = [
+  { key: 'speed', label: '整体速度', min: 0, max: 1.5, hint: '下面三项的总倍率' },
+  { key: 'lifeSpeed', label: '生命节奏', min: 0, max: 3, hint: '发射新光带、生长、变老、消散的快慢' },
+  { key: 'motionSpeed', label: '形态运动', min: 0, max: 3, hint: '弯曲、摆动、亮结流动的快慢' },
+  { key: 'shimmerSpeed', label: '光纹流动', min: 0, max: 3, hint: '亮边明暗、宽度起伏、光面丝纹流动的快慢' },
+];
+
+// 每个标签页先放最常调的几项，其余收进“更多参数”。
+const paramTabs: { id: TabId; label: string; basic: ParamSpec[]; more: ParamSpec[] }[] = [
+  {
+    id: 'emit', label: '发射',
+    basic: [
+      { key: 'interval', label: '发射间隔', min: 0.3, max: 5, hint: '平均每隔多久放出一条光带' },
+      { key: 'spread', label: '扩散角（弧度）', min: 0, max: Math.PI * 2 },
+      { key: 'life', label: '寿命', min: 2, max: 20, step: 0.1 },
+    ],
+    more: [
+      { key: 'direction', label: '发射方向（弧度）', min: -Math.PI, max: Math.PI, hint: '也可以直接在画面上看扇形示意线' },
+      { key: 'growth', label: '生长时长（占寿命）', min: 0.05, max: 0.6 },
+      { key: 'release', label: '尾部回缩', min: 0, max: 1 },
+      { key: 'travel', label: '飘离距离', min: 0, max: 1 },
+      { key: 'defocus', label: '晚年失焦', min: 0, max: 2, hint: '后半生光带变宽、边缘变软' },
+      { key: 'dissolve', label: '晚年散成丝缕', min: 0, max: 1.5, hint: '后半生各层从末端开始先后消失' },
+    ],
+  },
+  {
+    id: 'shape', label: '形态',
+    basic: [
+      { key: 'length', label: '长度', min: 0.4, max: 2.2 },
+      { key: 'width', label: '宽度', min: 0.05, max: 1 },
+      { key: 'curl', label: '固定弯曲', min: 0, max: 1.2 },
+      { key: 'drift', label: '摆动幅度', min: 0, max: 1.2 },
+      { key: 'twist', label: '扭转圈数', min: 0, max: 2 },
+    ],
+    more: [
+      { key: 'widthRandom', label: '宽度差异', min: 0, max: 1, hint: '各条光带之间的宽度差别' },
+      { key: 'widthWave', label: '宽度起伏', min: 0, max: 0.9, hint: '同一条光带沿长度一段宽一段窄' },
+      { key: 'variance', label: '长度与扭转浮动', min: 0, max: 0.8 },
+      { key: 'twistFlow', label: '亮结流速', min: -2, max: 2 },
+      { key: 'rootPinch', label: '根部收窄', min: 0, max: 1 },
+    ],
+  },
+  {
+    id: 'light', label: '光效',
+    basic: [
+      { key: 'edgeCore', label: '亮线强度', min: 0, max: 2 },
+      { key: 'foldGlow', label: '翻折增亮', min: 0, max: 2, hint: '薄膜侧对画面时变亮' },
+      { key: 'bloom', label: '泛光', min: 0, max: 2 },
+      { key: 'exposure', label: '曝光', min: 0.2, max: 3 },
+    ],
+    more: [
+      { key: 'layers', label: '层数', min: 4, max: 48, step: 1 },
+      { key: 'gamma', label: '亮边集中度 γ', min: 1, max: 6, hint: '越大，光越集中在亮边一侧' },
+      { key: 'edgeWidth', label: '亮线宽度', min: 0.0005, max: 0.006, step: 0.0001 },
+      { key: 'edgeVary', label: '亮边明暗变化', min: 0, max: 1 },
+      { key: 'edgeRandom', label: '各条亮线差异', min: 0, max: 1 },
+      { key: 'softness', label: '柔和度', min: 0.001, max: 0.03, step: 0.001 },
+      { key: 'smoothing', label: '光面平滑', min: 0, max: 2.5 },
+      { key: 'outerFade', label: '外缘渐隐', min: 0, max: 1 },
+      { key: 'sourceGlow', label: '发射点光晕', min: 0, max: 2 },
+    ],
+  },
+  {
+    id: 'color', label: '颜色',
+    basic: [
+      { key: 'faceHue', label: '冷色色相（圈）', min: 0, max: 1, step: 0.005, hint: '光面与暗处的颜色' },
+      { key: 'warmHue', label: '暖色色相（圈）', min: 0, max: 1, step: 0.005, hint: '最亮处的颜色' },
+      { key: 'heat', label: '按能量上色', min: 0, max: 1, hint: '越亮越偏暖色' },
+    ],
+    more: [
+      { key: 'heatPoint', label: '变暖阈值', min: 0.05, max: 4, hint: '亮度到这个值时冷暖各半' },
+      { key: 'edgeHue', label: '亮边色相（圈）', min: 0, max: 1, step: 0.005 },
+      { key: 'hueJitter', label: '色相随机（圈）', min: 0, max: 0.2, step: 0.005 },
+    ],
+  },
+  { id: 'scene', label: '画面', basic: [], more: [] },
+];
+const allParams = [...paramTabs.flatMap((tab) => [...tab.basic, ...tab.more]), ...speedParams];
 
 const backgroundKinds: { value: BackgroundKind; label: string }[] = [{ value: 'solid', label: '纯色' }, { value: 'linear', label: '线性' }, { value: 'radial', label: '径向' }];
 const scales = [{ value: 1, label: '1×' }, { value: 0.75, label: '¾×' }, { value: 0.5, label: '½×' }];
@@ -48,6 +146,8 @@ export function EmitterPage() {
   const [seed, setSeed] = useState(1);
   const [playing, setPlaying] = useState(() => !matchMedia('(prefers-reduced-motion: reduce)').matches);
   const [panel, setPanel] = useState(true);
+  const [tab, setTab] = useState<TabId>(() => readPreference<TabId>('ribbon-emitter-tab', 'emit'));
+  const [showHandles, setShowHandles] = useState(() => readPreference('ribbon-emitter-handles', true));
   const [chrome, setChrome] = useState(true);
   const [fullscreen, setFullscreen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -68,13 +168,17 @@ export function EmitterPage() {
     try { localStorage.setItem(storageKey, JSON.stringify(options)); } catch { /* 隐私模式下无法保存，不影响展示 */ }
   }, [options]);
   useEffect(() => { playingRef.current = playing; refreshRef.current?.(); }, [playing]);
+  useEffect(() => writePreference('ribbon-emitter-tab', tab), [tab]);
+  useEffect(() => writePreference('ribbon-emitter-handles', showHandles), [showHandles]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     let renderer: ReturnType<typeof createEmitterRenderer> | null = null;
     const emitter = createEmitter(seedRef.current);
-    let raf = 0, previous = performance.now(), time = 0, reported = 0, frames = 0;
+    // 三个时钟各自累加：调某一个速度时只改它以后的增量，画面不会跳。
+    const clock = { life: 0, motion: 0, shimmer: 0 };
+    let raf = 0, previous = performance.now(), reported = 0, frames = 0;
     let stopped = false, seeded = seedRef.current;
 
     function draw(now: number) {
@@ -82,12 +186,19 @@ export function EmitterPage() {
       const dt = Math.min(Math.max((now - previous) * 0.001, 0), 0.1);
       previous = now;
       // 换种子：从头开始一段新的发射序列，时间也归零。
-      if (seeded !== seedRef.current) { seeded = seedRef.current; emitter.reset(seeded); time = 0; }
-      if (playingRef.current) { time += dt * optionsRef.current.speed * 2.5; frames += 1; }
+      if (seeded !== seedRef.current) { seeded = seedRef.current; emitter.reset(seeded); clock.life = clock.motion = clock.shimmer = 0; }
+      if (playingRef.current) {
+        const { speed, lifeSpeed, motionSpeed, shimmerSpeed } = optionsRef.current;
+        const step = dt * speed * 2.5;
+        clock.life += step * lifeSpeed;
+        clock.motion += step * motionSpeed;
+        clock.shimmer += step * shimmerSpeed;
+        frames += 1;
+      }
       try {
         const fitted = fitToView(optionsRef.current, canvas!.clientWidth / Math.max(canvas!.clientHeight, 1));
-        const ribbons = emitter.update(time, fitted);
-        const frame = renderer.draw(time, ribbons, fitted);
+        const ribbons = emitter.update(clock.life, fitted, clock.motion);
+        const frame = renderer.draw(clock.shimmer, ribbons, fitted);
         if (frame && (!playingRef.current || now - reported >= 500)) {
           const fps = playingRef.current && reported ? frames / ((now - reported) / 1000) : null;
           setInfo({ ...frame, fps });
@@ -177,7 +288,17 @@ export function EmitterPage() {
     const angle = options.direction + side * options.spread;
     return toScreen([view.source[0] + Math.cos(angle) * options.length * 0.5, view.source[1] + Math.sin(angle) * options.length * 0.5]);
   });
-  const handles = chrome && panel && size.height > 0;
+  const handles = chrome && panel && showHandles && size.height > 0;
+  const isChanged = (key: NumericKey) => options[key] !== pageDefaults[key];
+  const param = (spec: ParamSpec) => <Range key={spec.key} label={spec.label} hint={spec.hint} min={spec.min} max={spec.max} step={spec.step}
+    value={options[spec.key]} changed={isChanged(spec.key)} onChange={(value) => change(spec.key, value)} onReset={() => change(spec.key, pageDefaults[spec.key])} />;
+  const backgroundChanged = (['background', 'backgroundFrom', 'backgroundTo', 'backgroundAngle', 'backgroundRadius', 'scale'] as const).some((key) => options[key] !== pageDefaults[key])
+    || options.backgroundCenter.some((value, i) => value !== pageDefaults.backgroundCenter[i]);
+  const tabChanged = (id: TabId) => id === 'scene' ? backgroundChanged
+    : paramTabs.some((item) => item.id === id && [...item.basic, ...item.more, ...(id === 'emit' ? speedParams : [])].some((spec) => isChanged(spec.key)));
+  const changedCount = allParams.filter((spec) => isChanged(spec.key)).length;
+  const current = paramTabs.find((item) => item.id === tab)!;
+  const moreChanged = current.more.filter((spec) => isChanged(spec.key)).length;
 
   return <main className="emitter-page" data-chrome={chrome}>
     <canvas ref={canvasRef} className="emitter-page__canvas" role="img" aria-label="从一个发射点陆续放出、生长、飘离并消失的多条光带" />
@@ -207,69 +328,46 @@ export function EmitterPage() {
         <h1>光带发射器</h1>
         <button type="button" className="emitter-page__icon" onClick={() => setPanel(false)} aria-label="收起参数面板"><X /></button>
       </header>
-      <div className="emitter-page__scroll">
-        <fieldset><legend>背景</legend>
-          <div className="emitter-page__chips">{backgroundPresets.map((preset) => <button key={preset.label} type="button" onClick={() => setOptions((current) => ({ ...current, ...preset.options }))}>{preset.label}</button>)}</div>
-          <div className="emitter-page__radios" role="radiogroup" aria-label="背景类型">{backgroundKinds.map((item) => <label key={item.value}><input type="radio" name="background" checked={options.background === item.value} onChange={() => change('background', item.value)} />{item.label}</label>)}</div>
-          <div className="emitter-page__colors">
-            <label><input type="color" value={options.backgroundFrom} onChange={(event) => change('backgroundFrom', event.target.value)} />{options.background === 'radial' ? '中心色' : options.background === 'linear' ? '起点色' : '颜色'}</label>
-            {options.background !== 'solid' && <label><input type="color" value={options.backgroundTo} onChange={(event) => change('backgroundTo', event.target.value)} />{options.background === 'radial' ? '外圈色' : '终点色'}</label>}
-          </div>
-          {options.background === 'linear' && <Range label="渐变方向（度）" min={0} max={360} step={1} value={options.backgroundAngle} onChange={(value) => change('backgroundAngle', value)} />}
-          {options.background === 'radial' && <>
-            <Range label="中心 x" min={-1} max={1} value={options.backgroundCenter[0]} onChange={(value) => change('backgroundCenter', [value, options.backgroundCenter[1]])} />
-            <Range label="中心 y" min={-0.5} max={0.5} value={options.backgroundCenter[1]} onChange={(value) => change('backgroundCenter', [options.backgroundCenter[0], value])} />
-            <Range label="半径" min={0.1} max={2.5} value={options.backgroundRadius} onChange={(value) => change('backgroundRadius', value)} />
-          </>}
-        </fieldset>
-        <fieldset><legend>发射</legend>
-          <Range label="发射间隔" min={0.3} max={5} value={options.interval} onChange={(value) => change('interval', value)} />
-          <Range label="发射方向（弧度）" min={-Math.PI} max={Math.PI} value={options.direction} onChange={(value) => change('direction', value)} />
-          <Range label="扩散角（弧度）" min={0} max={Math.PI * 2} value={options.spread} onChange={(value) => change('spread', value)} />
-          <Range label="速度" min={0} max={1.5} value={options.speed} onChange={(value) => change('speed', value)} />
-        </fieldset>
-        <fieldset><legend>生命周期</legend>
-          <Range label="寿命" min={2} max={20} step={0.1} value={options.life} onChange={(value) => change('life', value)} />
-          <Range label="生长时长（占寿命）" min={0.05} max={0.6} value={options.growth} onChange={(value) => change('growth', value)} />
-          <Range label="尾部回缩" min={0} max={1} value={options.release} onChange={(value) => change('release', value)} />
-          <Range label="飘离距离" min={0} max={1} value={options.travel} onChange={(value) => change('travel', value)} />
-        </fieldset>
-        <fieldset><legend>每条光带的随机形态</legend>
-          <Range label="长度" min={0.4} max={2.2} value={options.length} onChange={(value) => change('length', value)} />
-          <Range label="宽度" min={0.05} max={1} value={options.width} onChange={(value) => change('width', value)} />
-          <Range label="宽度差异" min={0} max={1} value={options.widthRandom} onChange={(value) => change('widthRandom', value)} />
-          <Range label="宽度起伏" min={0} max={0.9} value={options.widthWave} onChange={(value) => change('widthWave', value)} />
-          <Range label="长度与扭转浮动" min={0} max={0.8} value={options.variance} onChange={(value) => change('variance', value)} />
-          <Range label="弯曲随机度" min={0} max={1.2} value={options.curl} onChange={(value) => change('curl', value)} />
-          <Range label="飘动幅度" min={0} max={0.4} step={0.005} value={options.drift} onChange={(value) => change('drift', value)} />
-          <Range label="扭转圈数" min={0} max={2} value={options.twist} onChange={(value) => change('twist', value)} />
-          <Range label="亮结流速" min={-2} max={2} value={options.twistFlow} onChange={(value) => change('twistFlow', value)} />
-          <Range label="根部收窄" min={0} max={1} value={options.rootPinch} onChange={(value) => change('rootPinch', value)} />
-        </fieldset>
-        <fieldset><legend>亮边与光面</legend>
-          <Range label="层数" min={4} max={48} step={1} value={options.layers} onChange={(value) => change('layers', value)} />
-          <Range label="亮边集中度 γ" min={1} max={6} value={options.gamma} onChange={(value) => change('gamma', value)} />
-          <Range label="亮线强度" min={0} max={2} value={options.edgeCore} onChange={(value) => change('edgeCore', value)} />
-          <Range label="亮线宽度" min={0.0005} max={0.006} step={0.0001} value={options.edgeWidth} onChange={(value) => change('edgeWidth', value)} />
-          <Range label="亮边明暗变化" min={0} max={1} value={options.edgeVary} onChange={(value) => change('edgeVary', value)} />
-          <Range label="各条亮线差异" min={0} max={1} value={options.edgeRandom} onChange={(value) => change('edgeRandom', value)} />
-          <Range label="柔和度" min={0.001} max={0.03} step={0.001} value={options.softness} onChange={(value) => change('softness', value)} />
-          <Range label="光面平滑" min={0} max={2.5} value={options.smoothing} onChange={(value) => change('smoothing', value)} />
-          <Range label="外缘渐隐" min={0} max={1} value={options.outerFade} onChange={(value) => change('outerFade', value)} />
-        </fieldset>
-        <fieldset><legend>颜色与画质</legend>
-          <Range label="亮边色相（圈）" min={0} max={1} step={0.005} value={options.edgeHue} onChange={(value) => change('edgeHue', value)} />
-          <Range label="光面色相（圈）" min={0} max={1} step={0.005} value={options.faceHue} onChange={(value) => change('faceHue', value)} />
-          <Range label="色相随机（圈）" min={0} max={0.2} step={0.005} value={options.hueJitter} onChange={(value) => change('hueJitter', value)} />
-          <Range label="发射点光晕" min={0} max={2} value={options.sourceGlow} onChange={(value) => change('sourceGlow', value)} />
-          <Range label="曝光" min={0.2} max={3} value={options.exposure} onChange={(value) => change('exposure', value)} />
-          <div className="emitter-page__radios" role="radiogroup" aria-label="渲染分辨率">{scales.map((item) => <label key={item.value}><input type="radio" name="scale" checked={options.scale === item.value} onChange={() => change('scale', item.value)} />{item.label}</label>)}</div>
-        </fieldset>
+      <div className="emitter-page__tabs" role="tablist" aria-label="参数分组">
+        {paramTabs.map((item) => <button key={item.id} type="button" role="tab" id={`emitter-tab-${item.id}`} aria-selected={tab === item.id} aria-controls="emitter-tabpanel"
+          data-changed={tabChanged(item.id)} onClick={() => setTab(item.id)}>{item.label}</button>)}
+      </div>
+      <div className="emitter-page__scroll" role="tabpanel" id="emitter-tabpanel" aria-labelledby={`emitter-tab-${tab}`}>
+        {tab === 'scene' ? <>
+          <fieldset><legend>背景</legend>
+            <div className="emitter-page__chips">{backgroundPresets.map((preset) => <button key={preset.label} type="button" onClick={() => setOptions((value) => ({ ...value, ...preset.options }))}>{preset.label}</button>)}</div>
+            <div className="emitter-page__radios" role="radiogroup" aria-label="背景类型">{backgroundKinds.map((item) => <label key={item.value}><input type="radio" name="background" checked={options.background === item.value} onChange={() => change('background', item.value)} />{item.label}</label>)}</div>
+            <div className="emitter-page__colors">
+              <label><input type="color" value={options.backgroundFrom} onChange={(event) => change('backgroundFrom', event.target.value)} />{options.background === 'radial' ? '中心色' : options.background === 'linear' ? '起点色' : '颜色'}</label>
+              {options.background !== 'solid' && <label><input type="color" value={options.backgroundTo} onChange={(event) => change('backgroundTo', event.target.value)} />{options.background === 'radial' ? '外圈色' : '终点色'}</label>}
+            </div>
+            {options.background === 'linear' && param({ key: 'backgroundAngle', label: '渐变方向（度）', min: 0, max: 360, step: 1 })}
+            {options.background === 'radial' && <>
+              <Range label="中心 x" min={-1} max={1} value={options.backgroundCenter[0]} onChange={(value) => change('backgroundCenter', [value, options.backgroundCenter[1]])} />
+              <Range label="中心 y" min={-0.5} max={0.5} value={options.backgroundCenter[1]} onChange={(value) => change('backgroundCenter', [options.backgroundCenter[0], value])} />
+              {param({ key: 'backgroundRadius', label: '半径', min: 0.1, max: 2.5 })}
+            </>}
+          </fieldset>
+          <fieldset><legend>渲染分辨率</legend>
+            <div className="emitter-page__radios" role="radiogroup" aria-label="渲染分辨率">{scales.map((item) => <label key={item.value}><input type="radio" name="scale" checked={options.scale === item.value} onChange={() => change('scale', item.value)} />{item.label}</label>)}</div>
+          </fieldset>
+        </> : <>
+          {tab === 'emit' && <label className="emitter-page__switch">
+            <input type="checkbox" role="switch" checked={showHandles} onChange={(event) => setShowHandles(event.target.checked)} />
+            <span>显示发射点<small>拖动圆点移动发射位置，虚线示意方向与扩散角</small></span>
+          </label>}
+          <div className="emitter-page__group">{current.basic.map(param)}</div>
+          {tab === 'emit' && <fieldset className="emitter-page__speeds"><legend>速度</legend>{speedParams.map(param)}</fieldset>}
+          <details className="emitter-page__more">
+            <summary><ChevronRight />更多参数<small>{current.more.length} 项{moreChanged ? ` · 已改 ${moreChanged}` : ''}</small></summary>
+            <div className="emitter-page__group">{current.more.map(param)}</div>
+          </details>
+        </>}
       </div>
       <footer>
         <div className="emitter-page__actions">
           <button type="button" onClick={copyOptions}><Copy />{copied ? '已复制' : '复制参数'}</button>
-          <button type="button" onClick={() => setOptions({ ...pageDefaults })}><RotateCcw />恢复默认</button>
+          <button type="button" onClick={() => setOptions({ ...pageDefaults })} disabled={!changedCount && !backgroundChanged}><RotateCcw />全部恢复默认{changedCount ? `（${changedCount}）` : ''}</button>
         </div>
         <p aria-live="polite">{info
           ? <>种子 {seed} · {info.count} 条光带 · {info.width}×{info.height}{info.gpuMs !== null ? ` · GPU ${info.gpuMs.toFixed(1)} ms` : ''}{info.fps !== null ? ` · ${info.fps.toFixed(0)} fps` : ''}</>

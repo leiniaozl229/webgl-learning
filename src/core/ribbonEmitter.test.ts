@@ -40,6 +40,20 @@ describe('ribbon emitter', () => {
     }
   });
 
+  it('keeps the life clock and the motion clock independent', () => {
+    const options = { ...defaultEmitterOptions, interval: 100 };
+    const emitter = createEmitter(4);
+    const [still] = emitter.update(5, options, 2);
+    const [moved] = createEmitter(4).update(5, options, 3);
+    const [older] = emitter.update(5.5, options, 2);
+    // 只推进形态时钟：年龄不变，形状变。
+    expect(moved.age).toBe(still.age);
+    expect(moved.points).not.toEqual(still.points);
+    // 只推进生命时钟：形状不变，年龄变。
+    expect(older.points).toEqual(still.points);
+    expect(older.age).toBeGreaterThan(still.age);
+  });
+
   it('spreads widths from a tenth to three times the mean', () => {
     expect(widthFactor(0.3, 0)).toBe(1);
     expect(widthFactor(0, 1)).toBeCloseTo(0.1);

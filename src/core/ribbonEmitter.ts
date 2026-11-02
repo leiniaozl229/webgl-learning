@@ -1,6 +1,8 @@
 import { compileShader, createProgram } from './webgl2';
 import commonSource from './ribbonCommon.glsl?raw';
 import emitterSource from './ribbonEmitter.glsl?raw';
+import bloomSource from './ribbonEmitterBloom.glsl?raw';
+import compositeSource from './ribbonEmitterComposite.glsl?raw';
 import vertexSource from './shaderHandbookVertex.glsl?raw';
 import type { Point } from './controlledRibbon';
 
@@ -36,9 +38,9 @@ export interface EmitterOptions {
   widthRandom: number;
   /** 宽度沿长度的起伏：光带一段宽、一段窄，并随时间缓慢流动。 */
   widthWave: number;
-  /** 控制点之间方向随机转折的幅度（弧度）：越大越弯。 */
+  /** 每条光带固定的弯曲程度（弧度）：出生时随机抽一个方向，越大越弯。 */
   curl: number;
-  /** 每个控制点绕自己中心飘动的幅度，根部为 0。 */
+  /** 摆动幅度：弯曲随时间起伏，从根部向末端传过去，整条光带像丝绸一样连贯地舒展。 */
   drift: number;
   twist: number;
   twistFlow: number;
@@ -56,10 +58,24 @@ export interface EmitterOptions {
   edgeRandom: number;
   /** 亮边沿长度的明暗变化：0 = 整条一样亮，1 = 只剩几段高光。 */
   edgeVary: number;
+  /** 翻折增亮：薄膜转到侧对画面时投影收窄，亮度按 1 / |cos| 增强。 */
+  foldGlow: number;
+  /** 晚年失焦：光带变宽、边缘变软，像散开的光雾。 */
+  defocus: number;
+  /** 晚年散成丝缕：各层在不同时刻、从末端开始先后消失。 */
+  dissolve: number;
   edgeHue: number;
   faceHue: number;
   /** 每条光带色相的随机偏移（圈）。 */
   hueJitter: number;
+  /** 按能量上色：越亮越偏暖色、最终接近白，暗处保持冷色。0 = 只用各层自己的颜色。 */
+  heat: number;
+  /** 亮度达到这个值时冷暖各半。 */
+  heatPoint: number;
+  /** 最亮处的色相（圈）；冷色用光面色相。 */
+  warmHue: number;
+  /** 泛光强度：降采样模糊后叠回画面，亮处带一圈柔光。 */
+  bloom: number;
   sourceGlow: number;
   exposure: number;
   /** 背景：纯色、线性渐变或径向渐变。颜色用 CSS 的十六进制写法。 */
@@ -72,24 +88,33 @@ export interface EmitterOptions {
   backgroundCenter: Point;
   backgroundRadius: number;
   scale: number;
+  /** 整体速度：下面三个时钟的总倍率。 */
   speed: number;
+  /** 生命节奏：发射新光带、光带变老（生长、失焦、消散）的快慢。 */
+  lifeSpeed: number;
+  /** 形态运动：弯曲波传播、绕根部摆动、亮结流动的快慢。 */
+  motionSpeed: number;
+  /** 光纹流动：亮边明暗、宽度起伏、光面丝纹沿光带流动的快慢。 */
+  shimmerSpeed: number;
 }
 
 export const defaultEmitterOptions: EmitterOptions = {
   source: [-0.72, -0.32], direction: 0.32, spread: 0.9,
-  interval: 1.6, life: 9, growth: 0.3, release: 0.6, travel: 0.25,
-  length: 1.3, width: 0.22, variance: 0.35, widthRandom: 0.55, widthWave: 0.35, curl: 0.35, drift: 0.1,
-  twist: 0.6, twistFlow: 0.6, rootPinch: 0.85,
-  layers: 32, gamma: 2.6, softness: 0.005, smoothing: 1.2, outerFade: 0.5, edgeCore: 0.8, edgeWidth: 0.0018, edgeRandom: 0.6, edgeVary: 0.85,
-  edgeHue: 0.95, faceHue: 0.78, hueJitter: 0.04, sourceGlow: 0.6,
+  interval: 1.6, life: 9, growth: 0.3, release: 0.1, travel: 0.08,
+  length: 1.3, width: 0.32, variance: 0.35, widthRandom: 0.55, widthWave: 0.35, curl: 0.5, drift: 0.55,
+  twist: 0.9, twistFlow: 0.6, rootPinch: 0.85,
+  layers: 32, gamma: 1.8, softness: 0.005, smoothing: 1.2, outerFade: 0.5, edgeCore: 0.8, edgeWidth: 0.0018, edgeRandom: 0.6, edgeVary: 0.6,
+  foldGlow: 0.6, defocus: 0.8, dissolve: 0.8,
+  edgeHue: 0.95, faceHue: 0.74, hueJitter: 0.04, heat: 0.85, heatPoint: 0.35, warmHue: 0.17, bloom: 0.45, sourceGlow: 0.6,
   background: 'radial', backgroundFrom: '#1a1033', backgroundTo: '#000000', backgroundAngle: 90, backgroundCenter: [-0.5, -0.25], backgroundRadius: 1.2,
-  exposure: 1, scale: 0.75, speed: 0.4,
+  exposure: 0.65, scale: 0.75, speed: 0.4, lifeSpeed: 1, motionSpeed: 1, shimmerSpeed: 1,
 };
 
 type BackgroundOptions = Pick<EmitterOptions, 'background' | 'backgroundFrom' | 'backgroundTo' | 'backgroundAngle' | 'backgroundCenter' | 'backgroundRadius'>;
 
 /** 几组常用背景，作为调色起点。 */
 export const backgroundPresets: { label: string; options: BackgroundOptions }[] = [
+  { label: '深蓝舞台', options: { background: 'radial', backgroundFrom: '#1d2a8c', backgroundTo: '#04051a', backgroundAngle: 90, backgroundCenter: [0, -0.3], backgroundRadius: 1.3 } },
   { label: '纯黑', options: { background: 'solid', backgroundFrom: '#000000', backgroundTo: '#000000', backgroundAngle: 90, backgroundCenter: [0, 0], backgroundRadius: 1 } },
   { label: '紫色光晕', options: { background: 'radial', backgroundFrom: '#1a1033', backgroundTo: '#000000', backgroundAngle: 90, backgroundCenter: [-0.5, -0.25], backgroundRadius: 1.2 } },
   { label: '夜空', options: { background: 'linear', backgroundFrom: '#02030a', backgroundTo: '#16204a', backgroundAngle: 90, backgroundCenter: [0, 0], backgroundRadius: 1 } },
@@ -109,12 +134,12 @@ const backgroundKinds: Record<BackgroundKind, number> = { solid: 0, linear: 1, r
 interface Ribbon {
   born: number;
   /** 寿命、方向、长度、宽度、扭转、扭转相位、色相各一个随机数。 */
-  rolls: { life: number; angle: number; length: number; width: number; twist: number; phase: number; hue: number; edge: number; edgeWidth: number; wave: number };
+  rolls: { life: number; angle: number; length: number; width: number; twist: number; phase: number; hue: number; edge: number; edgeWidth: number; wave: number; bend: number };
   side: 1 | -1;
-  /** 五个控制点的方向转折与间距抖动，以及各自飘动的两个频率和相位。 */
-  bends: number[];
-  gaps: number[];
-  wobble: { f1: number; f2: number; p1: number }[];
+  /** 弯曲波：每个分量沿长度的波数、随时间的角频率、相位和幅度权重。 */
+  modes: { k: number; w: number; p: number; a: number }[];
+  /** 整条光带绕根部的慢速摆动。 */
+  sway: { w: number; p: number };
 }
 
 export interface RibbonInstance {
@@ -139,6 +164,8 @@ export interface RibbonInstance {
   edgeScale: number;
   /** 这条光带宽度沿长度起伏的幅度。 */
   wave: number;
+  /** 晚年进度 0..1：失焦与散成丝缕从这里开始。 */
+  late: number;
   age: number;
 }
 
@@ -174,57 +201,74 @@ export function ageOf(ribbon: Ribbon, time: number, options: EmitterOptions) {
 
 /**
  * 生命周期：出生后在 growth 比例的时间里从根部长到末端；
- * 末段 40% 的时间里整体变暗，同时尾部按 release 从根部向头部回缩。
+ * 后半生进入晚年（late 0 → 1）：光带失焦、散成丝缕，最后 18% 的时间里整体淡出。尾部按 release 从根部向头部回缩。
  */
 export function lifecycle(age: number, growth: number, release: number) {
   const head = smoothstep(0, Math.max(growth, 0.01), age);
   const tail = release * smoothstep(0.55, 1, age);
-  const intensity = smoothstep(0, 0.08, age) * (1 - smoothstep(0.6, 1, age));
-  return { head, tail, intensity };
+  const intensity = smoothstep(0, 0.08, age) * (1 - smoothstep(0.82, 1, age));
+  const late = smoothstep(0.45, 1, age);
+  return { head, tail, intensity, late };
 }
 
-/** 把出生时抽好的随机量和当前时间组合成这一帧要上传的光带。 */
-export function instanceOf(ribbon: Ribbon, time: number, options: EmitterOptions): RibbonInstance {
+/** 方向限制在 ±0.72 弧度内，用 tanh 软限制：接近上限时逐渐变缓，不会突然拐折。 */
+const maxHeading = 0.72;
+const softClamp = (heading: number) => maxHeading * Math.tanh(heading / maxHeading);
+
+/**
+ * 局部坐标里的五个控制点：沿长度积分方向角，方向角又由曲率积分而来。
+ * 曲率 = 固定弯曲 + 几个沿长度向末端传播的正弦波 sin(k·s − ω·t + φ)：
+ * 弯曲从根部产生、半拍之后才到达末端，整条光带连贯地舒展，而不是每个点各自上下抖。
+ * 柔软度沿长度递增：根部较硬、末端最软，曲率乘 (0.4 + 1.2s)，整条平均仍为 1。像丝绸一样，越往外越飘。
+ */
+export function centreline(ribbon: Pick<Ribbon, 'modes' | 'rolls'>, length: number, time: number, options: Pick<EmitterOptions, 'curl' | 'drift'>): Point[] {
+  const bend = (ribbon.rolls.bend - 0.5) * 3 * options.curl;
+  const curvature = (s: number) => (0.4 + 1.2 * s) * (bend + options.drift * ribbon.modes.reduce((sum, { k, w, p, a }) => sum + a * Math.sin(k * s - w * time + p), 0));
+  const steps = 16, ds = 1 / steps;
+  const points: Point[] = [[0, 0]];
+  let heading = 0, x = 0, y = 0;
+  for (let i = 0; i < steps; i++) {
+    const s = (i + 0.5) * ds;
+    const angle = softClamp(heading + curvature(s) * ds * 0.5);
+    heading += curvature(s) * ds;
+    x += Math.cos(angle) * length * ds;
+    y += Math.sin(angle) * length * ds;
+    if ((i + 1) % (steps / 4) === 0) points.push([x, y]);
+  }
+  return points;
+}
+
+/**
+ * 把出生时抽好的随机量和当前时间组合成这一帧要上传的光带。
+ * time 是生命时钟，决定年龄；motion 是形态时钟，决定弯曲、摆动和亮结的位置。两者分开累加，可以各自调快慢。
+ */
+export function instanceOf(ribbon: Ribbon, time: number, options: EmitterOptions, motion = time): RibbonInstance {
   const { rolls } = ribbon;
   const age = ageOf(ribbon, time, options);
-  const angle = options.direction + (rolls.angle - 0.5) * options.spread;
+  // 整条光带绕根部慢慢摆动；摆动之上的弯曲由 centreline 里的传播波负责。
+  const sway = options.drift * 0.3 * Math.sin(motion * ribbon.sway.w + ribbon.sway.p);
+  const angle = options.direction + (rolls.angle - 0.5) * options.spread + sway;
   const axis: Point = [Math.cos(angle), Math.sin(angle)];
   const length = vary(options.length, rolls.length, options.variance);
-  // 飘离：根部沿发射方向移动，越到晚年越快，像被放开后被风带走。
-  const travel = options.travel * age * age;
+  // 飘离：根部沿发射方向缓慢移开，先快后慢，像被放开后逐渐停下。
+  const travel = options.travel * (1 - (1 - Math.min(age, 1)) ** 2);
   const origin: Point = [options.source[0] + axis[0] * travel, options.source[1] + axis[1] * travel];
+  const points = centreline(ribbon, length, motion, options);
 
-  // 控制点：每段方向在上一段基础上随机转一点（随机游走），弯曲只在局部坐标里发生。
-  // 方向限制在 ±0.55 弧度（约 30°）内：曲线保持平缓，按竖直距离近似垂直距离的误差很小，不会扭成钩子。
-  let heading = 0, x = 0, y = 0;
-  const points: Point[] = [[0, 0]];
-  for (let i = 1; i < 5; i++) {
-    heading = Math.min(Math.max(heading + (ribbon.bends[i] - 0.5) * 2 * options.curl, -0.55), 0.55);
-    const step = (length / 4) * (0.8 + 0.4 * ribbon.gaps[i]);
-    x += step * Math.cos(heading);
-    y += step * Math.sin(heading);
-    // 飘动：每个点有自己的两组频率与相位，幅度从根部的 0 增长到末端。
-    // 只在垂直于发射方向上摆，x 间距保持不变，相邻点不会挤到一起。
-    const { f1, f2, p1 } = ribbon.wobble[i];
-    const reach = options.drift * (i / 4) ** 0.8;
-    points.push([x, y + reach * (Math.sin(time * f1 + p1) + 0.4 * Math.sin(time * f2 * 1.7 + p1 * 2))]);
-  }
-  for (let i = 1; i < 5; i++) points[i][0] = Math.max(points[i][0], points[i - 1][0] + 0.02);
-
-  const { head, tail, intensity } = lifecycle(age, options.growth, options.release);
+  const { head, tail, intensity, late } = lifecycle(age, options.growth, options.release);
   return {
     origin, axis, points, length,
     // 宽度的随机偏向细的一端：多数光带细而锐利，偶尔一条很宽，画面有主次。
     width: options.width * widthFactor(rolls.width, options.widthRandom) * ribbon.side,
     twist: vary(options.twist, rolls.twist, options.variance),
-    twistPhase: rolls.phase * Math.PI * 2 + time * options.twistFlow,
+    twistPhase: rolls.phase * Math.PI * 2 + motion * options.twistFlow,
     intensity, head, tail,
     hueShift: (rolls.hue - 0.5) * 2 * options.hueJitter,
     seed: rolls.phase * 37,
     edgeGain: Math.max(1 + (rolls.edge * 2 - 1) * options.edgeRandom * 1.2, 0),
     edgeScale: 1 + (rolls.edgeWidth * 2 - 1) * options.edgeRandom * 0.7,
     wave: options.widthWave * (0.3 + 1.4 * rolls.wave),
-    age,
+    late, age,
   };
 }
 
@@ -242,15 +286,21 @@ export function createEmitter(seed = 1) {
     const r = random;
     return {
       born,
-      rolls: { life: r(), angle: r(), length: r(), width: r(), twist: r(), phase: r(), hue: r(), edge: r(), edgeWidth: r(), wave: r() },
+      rolls: { life: r(), angle: r(), length: r(), width: r(), twist: r(), phase: r(), hue: r(), edge: r(), edgeWidth: r(), wave: r(), bend: r() },
       side: r() < 0.5 ? 1 : -1,
-      bends: Array.from({ length: 5 }, r),
-      gaps: Array.from({ length: 5 }, r),
-      wobble: Array.from({ length: 5 }, () => ({ f1: 0.5 + r() * 0.6, f2: 0.3 + r() * 0.5, p1: r() * Math.PI * 2 })),
+      // 弯曲波都很长（整条光带上不到一个半波长），低频分量幅度大、走得慢；最高的一个只添一点细节。
+      // 不再用 k ≈ 8–10 的短波：它在五个控制点之间来回折，光带看起来发硬。
+      modes: [
+        { k: 1.8 + r() * 0.8, w: 0.22 + r() * 0.16, p: r() * Math.PI * 2, a: 2.6 },
+        { k: 3.4 + r(), w: 0.32 + r() * 0.2, p: r() * Math.PI * 2, a: 1.2 },
+        { k: 5.5 + r() * 1.5, w: 0.45 + r() * 0.25, p: r() * Math.PI * 2, a: 0.35 },
+      ],
+      sway: { w: 0.15 + r() * 0.15, p: r() * Math.PI * 2 },
     };
   }
 
-  function update(time: number, options: EmitterOptions): RibbonInstance[] {
+  /** time = 生命时钟（发射与变老），motion = 形态时钟；不传 motion 时两者相同。 */
+  function update(time: number, options: EmitterOptions, motion = time): RibbonInstance[] {
     // 时间倒退（重置）时从头开始。
     if (time < last) reset(seed);
     last = time;
@@ -262,7 +312,7 @@ export function createEmitter(seed = 1) {
       nextSpawn += options.interval * (0.5 + random());
     }
     ribbons = ribbons.filter((ribbon) => ageOf(ribbon, time, options) < 1);
-    return ribbons.map((ribbon) => instanceOf(ribbon, time, options));
+    return ribbons.map((ribbon) => instanceOf(ribbon, time, options, motion));
   }
 
   function reset(nextSeed: number) {
@@ -309,8 +359,17 @@ export function fillLayerShape(target: Float32Array, options: Pick<EmitterOption
   }
 }
 
-/** 第 row 行：一条光带每层的颜色（已乘外缘渐隐与柔和度），a = 亮边权重 (1 − t)²；最后一列是亮线颜色。 */
-export function fillPaletteRow(target: Float32Array, row: number, hueShift: number, options: Pick<EmitterOptions, 'layers' | 'softness' | 'outerFade' | 'edgeHue' | 'faceHue'>) {
+/** 0..1 的确定性散列：同一条光带每帧得到相同的值。 */
+const hash = (seed: number, i: number) => {
+  const value = Math.sin(seed * 12.9898 + i * 78.233) * 43758.5453;
+  return value - Math.floor(value);
+};
+
+/**
+ * 第 row 行：一条光带每层的颜色（已乘外缘渐隐与柔和度），a = 这一层散开消失的先后（0.15..1，越小越早）；
+ * 最后一列是亮线颜色。散开的先后由光带自己的 seed 决定，不随它在数组里的位置变化。
+ */
+export function fillPaletteRow(target: Float32Array, row: number, hueShift: number, seed: number, options: Pick<EmitterOptions, 'layers' | 'softness' | 'outerFade' | 'edgeHue' | 'faceHue'>) {
   const { layers, softness, outerFade, edgeHue, faceHue } = options;
   const base = row * (MAX_LAYERS + 1) * 4;
   for (let i = 0; i < Math.min(layers, MAX_LAYERS); i++) {
@@ -318,40 +377,53 @@ export function fillPaletteRow(target: Float32Array, row: number, hueShift: numb
     const mix = (a: number, b: number) => a + (b - a) * t;
     const fade = (1 - smoothstep(1 - outerFade, 1, t)) * softness;
     const [r, g, b] = oklch(mix(0.82, 0.6), mix(0.09, 0.16), mix(edgeHue, faceHue) + hueShift);
-    target.set([r * fade, g * fade, b * fade, (1 - t) ** 2], base + i * 4);
+    target.set([r * fade, g * fade, b * fade, 0.15 + 0.85 * hash(seed, i)], base + i * 4);
   }
   target.set([...oklch(0.96, 0.05, edgeHue + hueShift), 1], base + MAX_LAYERS * 4);
 }
 
 const header = '#version 300 es\nprecision highp float;\n';
 export const emitterFragmentSource = `${header}${commonSource}\n${emitterSource}`;
+export const compositeFragmentSource = `${header}${commonSource}\n${compositeSource}`;
+export const bloomFragmentSource = `${header}${bloomSource}`;
 
 export interface EmitterFrameInfo { width: number; height: number; count: number; gpuMs: number | null; timerSupported: boolean }
 interface TimerExtension { TIME_ELAPSED_EXT: number; GPU_DISJOINT_EXT: number }
 
+interface Target { texture: WebGLTexture; framebuffer: WebGLFramebuffer; width: number; height: number }
+
+/**
+ * 三步绘制：光带累加到离屏的线性光纹理 → 降到 ¼ 分辨率做两次可分离模糊得到泛光 → 与背景合成、压缩高光后输出。
+ * 浮点渲染目标不可用时退回 8 位纹理，存 x / (1 + x)，合成时再还原。
+ */
 export function createEmitterRenderer(canvas: HTMLCanvasElement) {
   const context = canvas.getContext('webgl2', { alpha: false, antialias: false, depth: false, stencil: false });
   if (!context) throw new Error('当前浏览器没有可用的 WebGL2 上下文。请换用支持 WebGL2 的浏览器。');
   const gl = context;
   const timer = gl.getExtension('EXT_disjoint_timer_query_webgl2') as TimerExtension | null;
+  const floatTargets = !!gl.getExtension('EXT_color_buffer_float');
   const queries: WebGLQuery[] = [];
   let gpuMs: number | null = null;
   let disposed = false;
 
-  const vs = compileShader(gl, gl.VERTEX_SHADER, vertexSource);
-  let fs: WebGLShader | null = null;
-  let program: WebGLProgram;
-  try {
-    fs = compileShader(gl, gl.FRAGMENT_SHADER, emitterFragmentSource);
-    program = createProgram(gl, vs, fs);
-  } finally {
-    gl.deleteShader(vs);
-    if (fs) gl.deleteShader(fs);
+  function build<const N extends string>(fragmentSource: string, names: readonly N[]) {
+    const vs = compileShader(gl, gl.VERTEX_SHADER, vertexSource);
+    let fs: WebGLShader | null = null;
+    try {
+      fs = compileShader(gl, gl.FRAGMENT_SHADER, fragmentSource);
+      const program = createProgram(gl, vs, fs);
+      const at = Object.fromEntries(names.map((name) => [name, gl.getUniformLocation(program, name)])) as Record<N, WebGLUniformLocation | null>;
+      return { program, at };
+    } finally {
+      gl.deleteShader(vs);
+      if (fs) gl.deleteShader(fs);
+    }
   }
+  const scene = build(emitterFragmentSource, ['u_resolution', 'u_time', 'u_encoded', 'u_count', 'u_points', 'u_frame', 'u_form', 'u_life', 'u_traits', 'u_late', 'u_layers', 'u_look', 'u_source', 'u_edge', 'u_decay', 'u_heat', 'u_layerShape', 'u_palette'] as const);
+  const blur = build(bloomFragmentSource, ['u_source', 'u_texel', 'u_direction', 'u_target'] as const);
+  const composite = build(compositeFragmentSource, ['u_resolution', 'u_exposure', 'u_encoded', 'u_scene', 'u_bloom', 'u_bloomTexture', 'u_bgFrom', 'u_bgTo', 'u_bgShape', 'u_bgRadius'] as const);
   const vao = gl.createVertexArray();
   if (!vao) throw new Error('无法创建全屏绘制所需的 VAO。');
-  const names = ['u_resolution', 'u_time', 'u_exposure', 'u_count', 'u_points', 'u_frame', 'u_form', 'u_life', 'u_traits', 'u_layers', 'u_look', 'u_source', 'u_bgFrom', 'u_bgTo', 'u_bgShape', 'u_bgRadius', 'u_edge', 'u_layerShape', 'u_palette'] as const;
-  const at = Object.fromEntries(names.map((name) => [name, gl.getUniformLocation(program, name)])) as Record<typeof names[number], WebGLUniformLocation | null>;
 
   // 每帧复用同一组 TypedArray，按光带顺序填好再一次上传。
   const points = new Float32Array(MAX_RIBBONS * 10);
@@ -359,6 +431,7 @@ export function createEmitterRenderer(canvas: HTMLCanvasElement) {
   const form = new Float32Array(MAX_RIBBONS * 4);
   const life = new Float32Array(MAX_RIBBONS * 4);
   const traits = new Float32Array(MAX_RIBBONS * 4);
+  const late = new Float32Array(MAX_RIBBONS);
   const layerShape = new Float32Array(MAX_LAYERS * 4);
   const palette = new Float32Array((MAX_LAYERS + 1) * MAX_RIBBONS * 4);
   const paletteTexture = gl.createTexture();
@@ -367,6 +440,34 @@ export function createEmitterRenderer(canvas: HTMLCanvasElement) {
   gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA32F, MAX_LAYERS + 1, MAX_RIBBONS);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+  // 光场纹理与两张泛光纹理，尺寸跟随画布。
+  let targets: Target[] = [];
+  function createTarget(width: number, height: number): Target {
+    const texture = gl.createTexture();
+    const framebuffer = gl.createFramebuffer();
+    if (!texture || !framebuffer) throw new Error('无法创建离屏绘制目标。');
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texStorage2D(gl.TEXTURE_2D, 1, floatTargets ? gl.RGBA16F : gl.RGBA8, width, height);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+    return { texture, framebuffer, width, height };
+  }
+  function releaseTargets() {
+    targets.forEach(({ texture, framebuffer }) => { gl.deleteTexture(texture); gl.deleteFramebuffer(framebuffer); });
+    targets = [];
+  }
+  function ensureTargets(width: number, height: number) {
+    if (targets[0]?.width === width && targets[0]?.height === height) return targets;
+    releaseTargets();
+    const bloomWidth = Math.max(1, Math.round(width / 4)), bloomHeight = Math.max(1, Math.round(height / 4));
+    targets = [createTarget(width, height), createTarget(bloomWidth, bloomHeight), createTarget(bloomWidth, bloomHeight)];
+    return targets;
+  }
 
   function collectTimings() {
     if (!timer) return;
@@ -382,12 +483,24 @@ export function createEmitterRenderer(canvas: HTMLCanvasElement) {
     }
   }
 
-  function draw(time: number, ribbons: RibbonInstance[], options: EmitterOptions): EmitterFrameInfo | null {
+  function blurPass(source: Target, target: Target, direction: Point) {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, target.framebuffer);
+    gl.viewport(0, 0, target.width, target.height);
+    gl.bindTexture(gl.TEXTURE_2D, source.texture);
+    gl.uniform2f(blur.at.u_texel, 1 / source.width, 1 / source.height);
+    gl.uniform2f(blur.at.u_direction, ...direction);
+    gl.uniform2f(blur.at.u_target, target.width, target.height);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  }
+
+  /** shimmer = 光纹时钟：着色器里亮边明暗、宽度起伏和丝纹的流动都按它走。 */
+  function draw(shimmer: number, ribbons: RibbonInstance[], options: EmitterOptions): EmitterFrameInfo | null {
     if (disposed || !canvas.clientWidth || !canvas.clientHeight) return null;
     const dpr = Math.min(devicePixelRatio || 1, 2) * options.scale;
     const width = Math.max(1, Math.round(canvas.clientWidth * dpr));
     const height = Math.max(1, Math.round(canvas.clientHeight * dpr));
     if (canvas.width !== width || canvas.height !== height) { canvas.width = width; canvas.height = height; }
+    const [light, bloomA, bloomB] = ensureTargets(width, height);
     collectTimings();
     const query = timer && queries.length < 4 ? gl.createQuery() : null;
     if (query && timer) gl.beginQuery(timer.TIME_ELAPSED_EXT, query);
@@ -400,36 +513,72 @@ export function createEmitterRenderer(canvas: HTMLCanvasElement) {
       form.set([ribbon.length, ribbon.width, ribbon.twist, ribbon.twistPhase], k * 4);
       life.set([ribbon.intensity, ribbon.head, ribbon.tail, ribbon.hueShift], k * 4);
       traits.set([ribbon.seed, ribbon.edgeGain, ribbon.edgeScale, ribbon.wave], k * 4);
-      fillPaletteRow(palette, k, ribbon.hueShift, options);
+      late[k] = ribbon.late;
+      fillPaletteRow(palette, k, ribbon.hueShift, ribbon.seed, options);
     }
     fillLayerShape(layerShape, options);
-
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    gl.viewport(0, 0, width, height);
-    gl.useProgram(program);
+    const encoded = floatTargets ? 0 : 1;
     gl.bindVertexArray(vao);
+    gl.activeTexture(gl.TEXTURE0);
+
+    // 1. 光带 → 线性光纹理。
+    gl.bindFramebuffer(gl.FRAMEBUFFER, light.framebuffer);
+    gl.viewport(0, 0, width, height);
+    gl.useProgram(scene.program);
+    const { at } = scene;
     gl.uniform2f(at.u_resolution, width, height);
-    gl.uniform1f(at.u_time, time);
-    gl.uniform1f(at.u_exposure, options.exposure);
+    gl.uniform1f(at.u_time, shimmer);
+    gl.uniform1f(at.u_encoded, encoded);
     gl.uniform1i(at.u_count, count);
     gl.uniform2fv(at.u_points, points);
     gl.uniform4fv(at.u_frame, frame);
     gl.uniform4fv(at.u_form, form);
     gl.uniform4fv(at.u_life, life);
     gl.uniform4fv(at.u_traits, traits);
+    gl.uniform1fv(at.u_late, late);
     gl.uniform4f(at.u_layers, options.layers, options.gamma, options.softness, options.smoothing);
     gl.uniform4f(at.u_look, options.edgeHue, options.faceHue, options.outerFade, options.rootPinch);
     gl.uniform3f(at.u_source, options.source[0], options.source[1], options.sourceGlow);
-    gl.uniform3f(at.u_bgFrom, ...hexToRgb(options.backgroundFrom));
-    gl.uniform3f(at.u_bgTo, ...hexToRgb(options.background === 'solid' ? options.backgroundFrom : options.backgroundTo));
-    gl.uniform4f(at.u_bgShape, backgroundKinds[options.background], (options.backgroundAngle * Math.PI) / 180, ...options.backgroundCenter);
-    gl.uniform1f(at.u_bgRadius, Math.max(options.backgroundRadius, 0.01));
     gl.uniform4f(at.u_edge, options.edgeCore, options.edgeWidth, options.edgeRandom, options.edgeVary);
+    gl.uniform4f(at.u_decay, options.defocus, options.dissolve, options.foldGlow, 0);
+    gl.uniform4f(at.u_heat, options.heat, Math.max(options.heatPoint, 0.01), options.warmHue, options.faceHue);
     gl.uniform4fv(at.u_layerShape, layerShape);
-    gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, paletteTexture);
     if (count) gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, MAX_LAYERS + 1, count, gl.RGBA, gl.FLOAT, palette);
     gl.uniform1i(at.u_palette, 0);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+    // 2. 泛光：降采样，再横竖各模糊两轮，第二轮步长加倍，光晕更宽。
+    if (options.bloom > 0) {
+      gl.useProgram(blur.program);
+      gl.uniform1i(blur.at.u_source, 0);
+      blurPass(light, bloomA, [0, 0]);
+      blurPass(bloomA, bloomB, [1, 0]);
+      blurPass(bloomB, bloomA, [0, 1]);
+      blurPass(bloomA, bloomB, [2, 0]);
+      blurPass(bloomB, bloomA, [0, 2]);
+    }
+
+    // 3. 合成到画布。
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.viewport(0, 0, width, height);
+    gl.useProgram(composite.program);
+    const c = composite.at;
+    gl.uniform2f(c.u_resolution, width, height);
+    gl.uniform1f(c.u_exposure, options.exposure);
+    gl.uniform1f(c.u_encoded, encoded);
+    gl.uniform1f(c.u_bloom, options.bloom);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, light.texture);
+    gl.uniform1i(c.u_scene, 0);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, bloomA.texture);
+    gl.uniform1i(c.u_bloomTexture, 1);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.uniform3f(c.u_bgFrom, ...hexToRgb(options.backgroundFrom));
+    gl.uniform3f(c.u_bgTo, ...hexToRgb(options.background === 'solid' ? options.backgroundFrom : options.backgroundTo));
+    gl.uniform4f(c.u_bgShape, backgroundKinds[options.background], (options.backgroundAngle * Math.PI) / 180, ...options.backgroundCenter);
+    gl.uniform1f(c.u_bgRadius, Math.max(options.backgroundRadius, 0.01));
     gl.drawArrays(gl.TRIANGLES, 0, 3);
 
     if (query && timer) { gl.endQuery(timer.TIME_ELAPSED_EXT); queries.push(query); }
@@ -440,9 +589,10 @@ export function createEmitterRenderer(canvas: HTMLCanvasElement) {
     if (disposed) return;
     disposed = true;
     queries.forEach((query) => gl.deleteQuery(query));
-    gl.deleteProgram(program);
+    [scene, blur, composite].forEach(({ program }) => gl.deleteProgram(program));
     gl.deleteVertexArray(vao);
     gl.deleteTexture(paletteTexture);
+    releaseTargets();
   }
 
   return { draw, dispose };
