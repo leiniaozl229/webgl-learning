@@ -35,12 +35,18 @@ vec3 compressLight(vec3 c) {
   return clamp((c * (2.51 * c + 0.03)) / (c * (2.43 * c + 0.59) + 0.14), 0.0, 1.0);
 }
 
-// 累加的光 → 屏幕颜色。深色底直接显示；白色页面按最亮通道作覆盖率，暗处透出页面，与清华页面一致。
-void present(vec3 light) {
+// 累加的光 → 屏幕颜色，叠在 background 上。cover = 0：直接相加，适合深色底；
+// cover = 1：按最亮通道作覆盖率，光遮住底色，亮底上不会发灰，与清华页面一致。
+void presentOver(vec3 light, vec3 background, float cover) {
   vec3 shown = pow(compressLight(light * u_exposure), vec3(0.9));
   float alpha = max(shown.r, max(shown.g, shown.b));
-  vec3 color = mix(shown, vec3(1.0) * (1.0 - alpha) + shown, u_lightPage);
-  // 抖动：打散 8 位量化在缓变光面上造成的色带。
+  vec3 color = background * (1.0 - alpha * cover) + shown;
+  // 抖动：打散 8 位量化在缓变光面和渐变背景上造成的色带。
   float dither = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));
   outColor = vec4(color + (dither - 0.5) / 255.0, 1.0);
+}
+
+// 深色底或白色页面。
+void present(vec3 light) {
+  presentOver(light, vec3(u_lightPage), u_lightPage);
 }

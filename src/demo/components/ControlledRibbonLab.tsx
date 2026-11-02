@@ -1,6 +1,6 @@
 import { Tabs } from '@base-ui/react/tabs';
 import { Pause, Play, RotateCcw } from 'lucide-react';
-import { useEffect, useId, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
+import { memo, useEffect, useId, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import rendererSource from '../../core/controlledRibbon.ts?raw';
 import {
   clampPoint, commonSource, controlledSource, createRibbonRenderer, defaultRibbonOptions, edgeCurve, openShadersSource,
@@ -22,6 +22,11 @@ const sourceTabs = [
   { id: 'openshaders', label: 'openshaders.glsl', code: openShadersSource, language: 'glsl' },
   { id: 'renderer', label: 'renderer.ts', code: rendererSource, language: 'ts' },
 ];
+
+// 高亮后的源码有上千个节点。单独 memo：滑块变化和每 0.5 秒的状态刷新都不再重新渲染它，否则每次要花十几毫秒，动画会掉帧。
+const Sources = memo(function Sources() {
+  return <Tabs.Root className="ribbon-lab__sources" defaultValue="controlled"><Tabs.List className="editor-tabs" aria-label="可控光带源码">{sourceTabs.map((item) => <Tabs.Tab key={item.id} value={item.id}>{item.label}</Tabs.Tab>)}</Tabs.List>{sourceTabs.map((item) => <Tabs.Panel key={item.id} value={item.id}><CodeBlock label={`${item.label} · 实际运行源码`} language={item.language}>{item.code}</CodeBlock></Tabs.Panel>)}</Tabs.Root>;
+});
 
 const scales = [{ value: 1, label: '1×' }, { value: 0.75, label: '¾×' }, { value: 0.5, label: '½×' }];
 
@@ -51,7 +56,7 @@ export function ControlledRibbonLab() {
     let stopped = false, visible = true;
 
     function draw(now: number) {
-      if (stopped || document.hidden || !visible || !renderer) return;
+      if (stopped || document.hidden || !visible || !renderer) { raf = 0; return; }
       const dt = Math.min(Math.max((now - previous) * 0.001, 0), 0.1);
       previous = now;
       if (playingRef.current) { time += dt * optionsRef.current.speed * 2.5; frames += 1; }
@@ -63,9 +68,12 @@ export function ControlledRibbonLab() {
           reported = now; frames = 0;
         }
       } catch (cause) { setError(cause instanceof Error ? cause.message : String(cause)); return; }
-      if (playingRef.current) raf = requestAnimationFrame(draw);
+      raf = playingRef.current ? requestAnimationFrame(draw) : 0;
     }
+    // 播放中循环每帧都会读最新参数，不打断它；打断会把时钟重置，拖动滑块时动画就会顿住。
+    // 只有暂停、或循环因隐藏而停下时，才立即补画一帧。
     function refresh() {
+      if (playingRef.current && raf && !stopped && !document.hidden && visible) return;
       cancelAnimationFrame(raf);
       previous = performance.now(); reported = 0; frames = 0;
       draw(previous);
@@ -180,7 +188,7 @@ export function ControlledRibbonLab() {
         </fieldset>
       </aside>
     </div>
-    <Tabs.Root className="ribbon-lab__sources" defaultValue="controlled"><Tabs.List className="editor-tabs" aria-label="可控光带源码">{sourceTabs.map((item) => <Tabs.Tab key={item.id} value={item.id}>{item.label}</Tabs.Tab>)}</Tabs.List>{sourceTabs.map((item) => <Tabs.Panel key={item.id} value={item.id}><CodeBlock label={`${item.label} · 实际运行源码`} language={item.language}>{item.code}</CodeBlock></Tabs.Panel>)}</Tabs.Root>
+    <Sources />
     <footer className="ribbon-lab__status" aria-live="polite">{info
       ? <>Canvas {info.width} × {info.height} · {controlled ? `每片段 ${options.layers * (options.mirror ? 2 : 1)} 层细线` : '每片段 96 层光斑'} · {info.timerSupported ? (info.gpuMs === null ? 'GPU 计时等待结果' : `GPU 约 ${info.gpuMs.toFixed(2)} ms`) : '此浏览器不开放 GPU 计时'}{info.fps !== null ? ` · ${info.fps.toFixed(0)} fps` : ''}</>
       : '正在创建 WebGL2 绘制资源…'}</footer>

@@ -318,6 +318,15 @@ export default defineConfig({
     port: 5193,
     strictPort: true,
   },
+  build: {
+    // 教程站点之外，光带发射器是一个独立的全屏页面。
+    rolldownOptions: {
+      input: {
+        main: fileURLToPath(new URL('./index.html', import.meta.url)),
+        emitter: fileURLToPath(new URL('./ribbon-emitter.html', import.meta.url)),
+      },
+    },
+  },
   test: {
     environment: 'node',
     exclude: ['node_modules/**', 'dist/**'],

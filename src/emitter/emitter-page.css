@@ -1,0 +1,93 @@
+/* 光带发射器全屏页：画布铺满视口，界面是浮在上面的深色毛玻璃，可以整体隐藏。 */
+:root {
+  color-scheme: dark;
+  --panel-bg: rgb(16 14 24 / 0.72);
+  --panel-border: rgb(255 255 255 / 0.1);
+  --text: #f2f0f7;
+  --text-dim: rgb(242 240 247 / 0.62);
+  --accent: #b9a4ff;
+  --track: rgb(255 255 255 / 0.16);
+  font-family: system-ui, -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; margin: 0; }
+body { overflow: hidden; background: #000; color: var(--text); }
+
+.emitter-page { position: fixed; inset: 0; }
+.emitter-page__canvas { display: block; width: 100%; height: 100%; }
+.emitter-page[data-chrome="false"] { cursor: none; }
+
+.emitter-page button { font: inherit; color: inherit; }
+.emitter-page svg:not(.emitter-page__handles) { width: 1rem; height: 1rem; flex: none; }
+
+/* 发射点与渐变中心：白色描边，深浅背景都看得清。 */
+.emitter-page__handles { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; pointer-events: none; }
+.emitter-page__handles polyline { fill: none; stroke: rgb(255 255 255 / 0.4); stroke-width: 1; stroke-dasharray: 4 4; mix-blend-mode: difference; }
+.emitter-page__handles circle { pointer-events: auto; cursor: grab; }
+.emitter-page__source { fill: rgb(150 120 255 / 0.85); stroke: #fff; stroke-width: 2; }
+.emitter-page__center { fill: transparent; stroke: #fff; stroke-width: 2; stroke-dasharray: 3 3; mix-blend-mode: difference; }
+.emitter-page__handles circle:active { cursor: grabbing; }
+
+.emitter-page__bar {
+  position: absolute; top: 16px; left: 16px;
+  display: flex; flex-wrap: wrap; gap: 6px; max-width: calc(100% - 32px);
+}
+.emitter-page__bar button, .emitter-page__reveal, .emitter-page__actions button, .emitter-page__chips button {
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 36px; padding: 0 12px;
+  border: 1px solid var(--panel-border); border-radius: 999px;
+  background: var(--panel-bg); backdrop-filter: blur(16px);
+  font-size: 13px; cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.emitter-page__bar button:hover, .emitter-page__actions button:hover, .emitter-page__chips button:hover { border-color: rgb(255 255 255 / 0.32); }
+.emitter-page__bar button[aria-pressed="true"] { border-color: rgb(185 164 255 / 0.5); }
+.emitter-page button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* 隐藏界面后只留一个很淡的提示，鼠标移上去才清楚。 */
+.emitter-page__reveal { position: absolute; left: 16px; bottom: 16px; opacity: 0; transition: opacity 0.3s; cursor: pointer; }
+.emitter-page__reveal:hover, .emitter-page__reveal:focus-visible { opacity: 1; }
+
+.emitter-page__panel {
+  position: absolute; top: 16px; right: 16px; bottom: 16px;
+  display: flex; flex-direction: column; width: 320px;
+  border: 1px solid var(--panel-border); border-radius: 16px;
+  background: var(--panel-bg); backdrop-filter: blur(20px);
+}
+.emitter-page__panel header { display: flex; align-items: center; justify-content: space-between; padding: 14px 12px 10px 18px; }
+.emitter-page__panel h1 { margin: 0; font-size: 15px; font-weight: 650; letter-spacing: 0.02em; }
+.emitter-page__icon { display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 8px; background: none; cursor: pointer; }
+.emitter-page__icon:hover { background: rgb(255 255 255 / 0.08); }
+
+.emitter-page__scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 18px 12px; scrollbar-width: thin; scrollbar-color: rgb(255 255 255 / 0.2) transparent; }
+.emitter-page fieldset { display: grid; gap: 12px; margin: 0 0 22px; padding: 0; border: 0; min-width: 0; }
+.emitter-page legend { margin-bottom: 10px; padding: 0; color: var(--text-dim); font-size: 12px; font-weight: 600; letter-spacing: 0.08em; }
+
+.emitter-range { display: grid; gap: 4px; font-size: 13px; }
+.emitter-range span { display: flex; justify-content: space-between; gap: 8px; }
+.emitter-range output { color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.emitter-range input { width: 100%; height: 20px; margin: 0; accent-color: var(--accent); cursor: pointer; }
+
+.emitter-page__chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.emitter-page__chips button { min-height: 30px; padding: 0 10px; font-size: 12px; background: rgb(255 255 255 / 0.04); backdrop-filter: none; }
+.emitter-page__radios { display: flex; gap: 14px; font-size: 13px; }
+.emitter-page__radios label, .emitter-page__colors label { display: flex; align-items: center; gap: 6px; min-height: 32px; cursor: pointer; }
+.emitter-page__radios input { accent-color: var(--accent); }
+.emitter-page__colors { display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; }
+.emitter-page__colors input { width: 30px; height: 30px; padding: 0; border: 1px solid var(--panel-border); border-radius: 8px; background: none; cursor: pointer; }
+
+.emitter-page__panel footer { padding: 12px 18px 14px; border-top: 1px solid var(--panel-border); }
+.emitter-page__actions { display: flex; gap: 8px; }
+.emitter-page__actions button { background: rgb(255 255 255 / 0.04); backdrop-filter: none; }
+.emitter-page__panel footer p { margin: 10px 0 0; color: var(--text-dim); font-size: 12px; font-variant-numeric: tabular-nums; }
+
+.emitter-page__error { position: absolute; inset: 0; display: grid; place-content: center; gap: 12px; padding: 24px; background: rgb(0 0 0 / 0.8); text-align: center; }
+.emitter-page__error pre { max-width: 40rem; margin: 0; white-space: pre-wrap; color: var(--text-dim); }
+.emitter-page__error button { justify-self: center; min-height: 36px; padding: 0 16px; border: 1px solid var(--panel-border); border-radius: 999px; background: var(--panel-bg); cursor: pointer; }
+
+/* 窄屏：工具栏只留图标，参数面板改为底部抽屉。 */
+@media (max-width: 720px) {
+  .emitter-page__bar span { display: none; }
+  .emitter-page__panel { top: auto; left: 16px; right: 16px; width: auto; max-height: 58dvh; }
+}
