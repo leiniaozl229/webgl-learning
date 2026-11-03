@@ -1,4 +1,4 @@
-import { ChevronRight, Copy, Dices, Eye, Maximize, Minimize, Pause, Play, RotateCcw, SlidersHorizontal, Undo2, X } from 'lucide-react';
+import { BookOpen, ChevronRight, Copy, Dices, Eye, Maximize, Minimize, Pause, Play, RotateCcw, SlidersHorizontal, Undo2, X } from 'lucide-react';
 import { useEffect, useId, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import type { Point } from '../core/controlledRibbon';
 import {
@@ -8,6 +8,9 @@ import {
 
 // 参数含义或默认值有变化时换一个版本号，旧版本存下的值不再覆盖新默认值。
 const storageKey = 'ribbon-emitter-options-v6';
+
+// 教程站点里讲解单条光带画法的课程；直接拼 URL，避免把整套课程导航打进这个页面。
+const anatomyHref = `${import.meta.env.BASE_URL}?lesson=ribbon-anatomy#lesson-title`;
 
 // 全屏时像素多，默认按 ½ 分辨率绘制；光带是平滑的光场，放大后几乎看不出差别。
 const pageDefaults: EmitterOptions = { ...defaultEmitterOptions, scale: 0.5 };
@@ -315,6 +318,7 @@ export function EmitterPage() {
     </svg>}
 
     {chrome && <div className="emitter-page__bar">
+      <a href={anatomyHref} title="光带发射器原理讲解"><BookOpen /><span>原理</span></a>
       <button type="button" aria-pressed={playing} onClick={() => setPlaying((value) => !value)} title="播放 / 暂停（空格）">{playing ? <Pause /> : <Play />}<span>{playing ? '暂停' : '播放'}</span></button>
       <button type="button" onClick={reseed} title="换一组随机"><Dices /><span>换一组随机</span></button>
       <button type="button" onClick={() => setChrome(false)} title="隐藏界面（H）"><Eye /><span>纯净画面</span></button>

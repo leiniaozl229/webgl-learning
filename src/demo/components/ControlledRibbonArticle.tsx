@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { ControlledRibbonLab } from './ControlledRibbonLab';
 import { LessonLink } from './LessonLink';
 import { LessonPagination } from './LessonPagination';
+import { RibbonTwistDiagram } from './RibbonTwistDiagram';
 import '../openshaders.css';
 import '../controlled-ribbon.css';
 
@@ -41,10 +42,11 @@ export function ControlledRibbonArticle({ toc }: { toc?: ReactNode }) {
       <p>它的形状来自折叠矩阵和正弦扭曲的迭代，改一个参数，整体形态一起变。这里换掉的只有这一部分：第 i 层不再由迭代决定位置，而是直接画在“亮边曲线 + 宽度 × 偏移”上。原版的拆解见 <LessonLink lessonId="openshaders-breakdown">OpenShaders 效果拆解</LessonLink>。</p>
     </section>
 
-    <section id="edge-from-spacing" className="lesson-section">
+    <section id="edge-from-spacing" className="lesson-section lesson-section--wide">
       <h2>亮边来自细线的疏密</h2>
       <p>第 i 层的横向位置是 s = tᵞ，t 从 0 到 1 均匀分布。γ = 1 时细线等距，光面亮度均匀，看不出亮边。γ 变大，t 小的那些细线挤在亮边附近，叠出一条亮线；t 大的细线间距变宽，亮度随之下降，形成从亮边向外渐隐的光面。</p>
       <p>扭转让偏移再乘上 cos(扭转角)。转到 cos 接近 0 的地方，所有细线都回到亮边上，亮度叠成一个亮结；过了这一点 cos 变号，光面翻到亮边的另一侧。亮结的位置由扭转圈数控制，不再靠迭代偶然出现。</p>
+      <RibbonTwistDiagram />
       <p>总亮度除以层数。增加层数只会让光面更细腻，整体亮度不变。</p>
       <p>光带很宽、γ 很大时，光面外侧相邻细线的间距会超过发光半径，露出一根根线条。“光面平滑”让每条细线的发光半径至少是本层间距的若干倍：间距 = |宽度 × 扭转| × γ·t^(γ−1) / 层数。半径变大时峰值按比例降低，每条线的总光量不变，光面明暗仍然只由细线疏密决定。亮边附近的间距很小，半径停在原来的柔和度，亮边保持锐利。设为 0 可以找回丝线质感。</p>
     </section>
@@ -67,7 +69,7 @@ export function ControlledRibbonArticle({ toc }: { toc?: ReactNode }) {
       <p>每个片段的成本约为“层数 × 一次光斑衰减”，40 层与 OpenShaders 的 96 层相比更省。光带是平滑的场，可以按 ¾ 或 ½ 的分辨率绘制，再由浏览器放大。</p>
     </section>
 
-    <LessonPagination current="controlled-ribbon" heading="继续实验">打开副光带，把亮边夹在两片光面之间；或者把 γ 调到 1，确认亮边确实来自细线的疏密。</LessonPagination>
+    <LessonPagination current="controlled-ribbon" heading="继续实验">打开副光带，把亮边夹在两片光面之间；或者把 γ 调到 1，确认亮边确实来自细线的疏密。想看很多条光带怎样从一个点生长、衰老和消散，接着读下一篇光带发射器原理。</LessonPagination>
     <footer className="lesson-footer"><p>可控光带为独立教学实现，光斑衰减与配色沿用本站 OpenShaders 研究与清华页面的参数。</p><div className="lesson-footer__links"><a href="https://openshaders.com/explore" target="_blank" rel="noreferrer">OpenShaders</a><a href="https://en.wikipedia.org/wiki/Cubic_Hermite_spline" target="_blank" rel="noreferrer">三次 Hermite 样条</a><a href="https://www.w3.org/TR/css-color-4/#ok-lab" target="_blank" rel="noreferrer">OKLab / OKLCH</a></div></footer>
   </article>;
 }

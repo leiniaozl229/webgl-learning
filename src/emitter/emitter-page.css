@@ -18,7 +18,7 @@ body { overflow: hidden; background: #000; color: var(--text); }
 .emitter-page__canvas { display: block; width: 100%; height: 100%; }
 .emitter-page[data-chrome="false"] { cursor: none; }
 
-.emitter-page button { font: inherit; color: inherit; }
+.emitter-page button, .emitter-page__bar a { font: inherit; color: inherit; text-decoration: none; }
 .emitter-page svg:not(.emitter-page__handles) { width: 1rem; height: 1rem; flex: none; }
 
 /* 发射点与渐变中心：白色描边，深浅背景都看得清。 */
@@ -33,7 +33,7 @@ body { overflow: hidden; background: #000; color: var(--text); }
   position: absolute; top: 16px; left: 16px;
   display: flex; flex-wrap: wrap; gap: 6px; max-width: calc(100% - 32px);
 }
-.emitter-page__bar button, .emitter-page__reveal, .emitter-page__actions button, .emitter-page__chips button {
+.emitter-page__bar button, .emitter-page__bar a, .emitter-page__reveal, .emitter-page__actions button, .emitter-page__chips button {
   display: inline-flex; align-items: center; gap: 6px;
   min-height: 36px; padding: 0 12px;
   border: 1px solid var(--panel-border); border-radius: 999px;
@@ -41,9 +41,9 @@ body { overflow: hidden; background: #000; color: var(--text); }
   font-size: 13px; cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
 }
-.emitter-page__bar button:hover, .emitter-page__actions button:hover, .emitter-page__chips button:hover { border-color: rgb(255 255 255 / 0.32); }
+.emitter-page__bar button:hover, .emitter-page__bar a:hover, .emitter-page__actions button:hover, .emitter-page__chips button:hover { border-color: rgb(255 255 255 / 0.32); }
 .emitter-page__bar button[aria-pressed="true"] { border-color: rgb(185 164 255 / 0.5); }
-.emitter-page button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.emitter-page button:focus-visible, .emitter-page__bar a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* 隐藏界面后只留一个很淡的提示，鼠标移上去才清楚。 */
 .emitter-page__reveal { position: absolute; left: 16px; bottom: 16px; opacity: 0; transition: opacity 0.3s; cursor: pointer; }
