@@ -7,13 +7,12 @@ import {
 } from '../core/ribbonEmitter';
 
 // 参数含义或默认值有变化时换一个版本号，旧版本存下的值不再覆盖新默认值。
-const storageKey = 'ribbon-emitter-options-v6';
+const storageKey = 'ribbon-emitter-options-v7';
 
 // 教程站点里讲解单条光带画法的课程；直接拼 URL，避免把整套课程导航打进这个页面。
 const anatomyHref = `${import.meta.env.BASE_URL}?lesson=ribbon-anatomy#lesson-title`;
 
-// 全屏时像素多，默认按 ½ 分辨率绘制；光带是平滑的光场，放大后几乎看不出差别。
-const pageDefaults: EmitterOptions = { ...defaultEmitterOptions, scale: 0.5 };
+const pageDefaults: EmitterOptions = defaultEmitterOptions;
 
 // 发射点和渐变中心按 16:9 画面设计。窗口比例不同时，x 按宽度等比缩放，竖屏也不会把发射点挤出画面。
 const designAspect = 16 / 9;

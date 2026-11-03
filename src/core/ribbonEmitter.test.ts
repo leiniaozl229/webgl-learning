@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createEmitter, defaultEmitterOptions, emitterFragmentSource, fillLayerShape, lifecycle, MAX_LAYERS, MAX_RIBBONS, mulberry32, oklch, widthFactor } from './ribbonEmitter';
+import { createEmitter, defaultEmitterOptions, KNOT_FLOW_TURNS, emitterFragmentSource, fillLayerShape, lifecycle, MAX_LAYERS, MAX_RIBBONS, mulberry32, oklch, widthFactor } from './ribbonEmitter';
 
 describe('ribbon emitter', () => {
   it('repeats the same sequence for the same seed', () => {
@@ -41,7 +41,8 @@ describe('ribbon emitter', () => {
   });
 
   it('keeps the life clock and the motion clock independent', () => {
-    const options = { ...defaultEmitterOptions, interval: 100 };
+    // 固定寿命、寿命浮动与弯曲，不随默认参数变化：第 5 秒时要有一条活着的光带，形态时钟也要真的改变形状。
+    const options = { ...defaultEmitterOptions, interval: 100, life: 9, variance: 0.35, curl: 0.5, drift: 0.55 };
     const emitter = createEmitter(4);
     const [still] = emitter.update(5, options, 2);
     const [moved] = createEmitter(4).update(5, options, 3);
@@ -93,8 +94,8 @@ describe('ribbon emitter', () => {
       const [after] = emitter.update(4, options, 3);
       return after.twistPhase - before.twistPhase;
     };
-    // 默认圈数下与旧版相同：相位按 流速 × 时间 变化。
-    expect(phaseShift(defaultEmitterOptions.twist)).toBeCloseTo(defaultEmitterOptions.twistFlow * 2);
+    // 基准圈数下相位按 流速 × 时间 变化。
+    expect(phaseShift(KNOT_FLOW_TURNS)).toBeCloseTo(defaultEmitterOptions.twistFlow * 2);
     // 几乎不扭时相位几乎不动，整条光带不会反复翻面。
     expect(Math.abs(phaseShift(0.01))).toBeLessThan(0.02);
   });

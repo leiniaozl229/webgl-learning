@@ -99,15 +99,15 @@ export interface EmitterOptions {
 }
 
 export const defaultEmitterOptions: EmitterOptions = {
-  source: [-0.72, -0.32], direction: 0.32, spread: 0.9,
-  interval: 1.6, life: 9, growth: 0.3, release: 0.1, travel: 0.08,
-  length: 1.3, width: 0.32, variance: 0.35, widthRandom: 0.55, widthWave: 0.35, curl: 0.5, drift: 0.55,
-  twist: 0.9, twistFlow: 0.6, rootPinch: 0.85,
-  layers: 32, gamma: 1.8, softness: 0.005, smoothing: 1.2, outerFade: 0.5, edgeCore: 0.8, edgeWidth: 0.0018, edgeRandom: 0.6, edgeVary: 0.6,
-  foldGlow: 0.6, defocus: 0.8, dissolve: 0.8,
-  edgeHue: 0.95, faceHue: 0.74, hueJitter: 0.04, heat: 0.85, heatPoint: 0.35, warmHue: 0.17, bloom: 0.45, sourceGlow: 0.6,
-  background: 'radial', backgroundFrom: '#1a1033', backgroundTo: '#000000', backgroundAngle: 90, backgroundCenter: [-0.5, -0.25], backgroundRadius: 1.2,
-  exposure: 0.65, scale: 0.75, speed: 0.4, lifeSpeed: 1, motionSpeed: 1, shimmerSpeed: 1,
+  source: [-0.885, -0.0255], direction: 0.0384, spread: 1.05,
+  interval: 1.52, life: 15.2, growth: 0.13, release: 0.1, travel: 0.08,
+  length: 1.37, width: 1, variance: 0, widthRandom: 1, widthWave: 0.9, curl: 0, drift: 1.2,
+  twist: 0.14, twistFlow: 0.36, rootPinch: 0,
+  layers: 48, gamma: 1.69, softness: 0.001, smoothing: 2.5, outerFade: 1, edgeCore: 0, edgeWidth: 0.0005, edgeRandom: 0, edgeVary: 0,
+  foldGlow: 0.26, defocus: 0.8, dissolve: 0.8,
+  edgeHue: 0.815, faceHue: 0.3, hueJitter: 0.02, heat: 0, heatPoint: 0.05, warmHue: 0, bloom: 0, sourceGlow: 0,
+  background: 'radial', backgroundFrom: '#101138', backgroundTo: '#000000', backgroundAngle: 90, backgroundCenter: [-0.868, 0.022], backgroundRadius: 2.47,
+  exposure: 1.79, scale: 0.5, speed: 0.14, lifeSpeed: 2.93, motionSpeed: 2.62, shimmerSpeed: 3,
 };
 
 type BackgroundOptions = Pick<EmitterOptions, 'background' | 'backgroundFrom' | 'backgroundTo' | 'backgroundAngle' | 'backgroundCenter' | 'backgroundRadius'>;
@@ -187,6 +187,9 @@ const smoothstep = (a: number, b: number, x: number) => {
 };
 
 /** 在平均值上下 variance 比例内取值：roll = 0.5 时正好等于平均值。 */
+/** 亮结流速的基准圈数：扭 0.9 圈时，相位每单位形态时间变化 流速 弧度。固定常数，改默认参数不会改变流速的含义。 */
+export const KNOT_FLOW_TURNS = 0.9;
+
 const vary = (mean: number, roll: number, variance: number) => mean * (1 + (roll * 2 - 1) * variance);
 
 /** 宽度倍数：roll 先按 1.5 次方偏向 0，再在 [1 − 0.9r, 1 + 2r] 之间插值；r = 1 时最宽可达平均宽度的 3 倍。 */
@@ -263,8 +266,8 @@ export function instanceOf(ribbon: Ribbon, time: number, options: EmitterOptions
     width: options.width * widthFactor(rolls.width, options.widthRandom) * ribbon.side,
     twist,
     // 亮结流速指亮结沿光带移动的快慢：相位速度乘以圈数，亮结每单位时间走过的长度与圈数无关。
-    // 圈数接近 0 时相位几乎不动，整条光带不会一齐翻面；除以默认圈数，让默认参数下的速度保持原样。
-    twistPhase: rolls.phase * Math.PI * 2 + motion * options.twistFlow * twist / defaultEmitterOptions.twist,
+    // 圈数接近 0 时相位几乎不动，整条光带不会一齐翻面。
+    twistPhase: rolls.phase * Math.PI * 2 + motion * options.twistFlow * twist / KNOT_FLOW_TURNS,
     intensity, head, tail,
     hueShift: (rolls.hue - 0.5) * 2 * options.hueJitter,
     seed: rolls.phase * 37,
