@@ -729,7 +729,7 @@ body.code-window-open { overflow: hidden; }
 
 .code-block[data-code-window-expanded] { display: flex; flex-direction: column; }
 .code-block[data-code-window-expanded] > pre,
-.code-block[data-code-window-expanded] > .twoslash-code { min-height: 0; flex: 1; overflow: auto; }
+.code-block[data-code-window-expanded] > .twoslash-code { min-height: 0; max-height: none; flex: 1; overflow: auto; }
 .code-block[data-code-window-expanded] > .twoslash-code pre { max-height: none; }
 
 .code-workbench[data-code-window-expanded] { display: flex; flex-direction: column; }
