@@ -109,6 +109,7 @@ export function RibbonAnatomyArticle({ toc }: { toc?: ReactNode }) {
       </ul>
       <CodeBlock label="ribbonEmitter.glsl" language="glsl">{twistCode}</CodeBlock>
       <p>侧对画面时同样多的光挤进更窄的投影，亮度约按 1 / |cos| 增加，亮结更醒目。</p>
+      <p>扭转相位随形态时钟前进，亮结就沿光带流动。亮结的移动速度等于 相位速度 ÷ (2π × 圈数)，圈数接近 0 时会趋于无穷大，整条光带变成同时翻面。所以发射器让相位速度乘以圈数：“亮结流速”表示亮结沿光带走多快，几乎不扭的光带也就几乎不翻面。</p>
     </section>
 
     <section id="local-frame" className="lesson-section">

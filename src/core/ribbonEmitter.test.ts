@@ -84,4 +84,18 @@ describe('ribbon emitter', () => {
     expect(emitterFragmentSource).toContain('void present(vec3 light)');
     expect(emitterFragmentSource).toContain(`#define MAX_RIBBONS ${MAX_RIBBONS}`);
   });
+  it('moves the twist knots in proportion to the twist count', () => {
+    const phaseShift = (twist: number) => {
+      const options = { ...defaultEmitterOptions, twist, variance: 0 };
+      const emitter = createEmitter(5);
+      // 同一个生命时刻、两个形态时刻：只有相位随形态时钟变化。
+      const [before] = emitter.update(4, options, 1);
+      const [after] = emitter.update(4, options, 3);
+      return after.twistPhase - before.twistPhase;
+    };
+    // 默认圈数下与旧版相同：相位按 流速 × 时间 变化。
+    expect(phaseShift(defaultEmitterOptions.twist)).toBeCloseTo(defaultEmitterOptions.twistFlow * 2);
+    // 几乎不扭时相位几乎不动，整条光带不会反复翻面。
+    expect(Math.abs(phaseShift(0.01))).toBeLessThan(0.02);
+  });
 });

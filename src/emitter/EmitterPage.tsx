@@ -100,7 +100,7 @@ const paramTabs: { id: TabId; label: string; basic: ParamSpec[]; more: ParamSpec
       { key: 'widthRandom', label: '宽度差异', min: 0, max: 1, hint: '各条光带之间的宽度差别' },
       { key: 'widthWave', label: '宽度起伏', min: 0, max: 0.9, hint: '同一条光带沿长度一段宽一段窄' },
       { key: 'variance', label: '长度与扭转浮动', min: 0, max: 0.8 },
-      { key: 'twistFlow', label: '亮结流速', min: -2, max: 2 },
+      { key: 'twistFlow', label: '亮结流速', min: -2, max: 2, hint: '亮结沿光带移动的快慢；扭转圈数接近 0 时几乎不动' },
       { key: 'rootPinch', label: '根部收窄', min: 0, max: 1 },
     ],
   },

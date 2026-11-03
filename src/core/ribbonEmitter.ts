@@ -254,14 +254,17 @@ export function instanceOf(ribbon: Ribbon, time: number, options: EmitterOptions
   const travel = options.travel * (1 - (1 - Math.min(age, 1)) ** 2);
   const origin: Point = [options.source[0] + axis[0] * travel, options.source[1] + axis[1] * travel];
   const points = centreline(ribbon, length, motion, options);
+  const twist = vary(options.twist, rolls.twist, options.variance);
 
   const { head, tail, intensity, late } = lifecycle(age, options.growth, options.release);
   return {
     origin, axis, points, length,
     // 宽度的随机偏向细的一端：多数光带细而锐利，偶尔一条很宽，画面有主次。
     width: options.width * widthFactor(rolls.width, options.widthRandom) * ribbon.side,
-    twist: vary(options.twist, rolls.twist, options.variance),
-    twistPhase: rolls.phase * Math.PI * 2 + motion * options.twistFlow,
+    twist,
+    // 亮结流速指亮结沿光带移动的快慢：相位速度乘以圈数，亮结每单位时间走过的长度与圈数无关。
+    // 圈数接近 0 时相位几乎不动，整条光带不会一齐翻面；除以默认圈数，让默认参数下的速度保持原样。
+    twistPhase: rolls.phase * Math.PI * 2 + motion * options.twistFlow * twist / defaultEmitterOptions.twist,
     intensity, head, tail,
     hueShift: (rolls.hue - 0.5) * 2 * options.hueJitter,
     seed: rolls.phase * 37,
