@@ -15,6 +15,7 @@ uniform vec2 u_centre;
 uniform float u_phase;
 uniform vec2 u_frequency;
 uniform bool u_toneMap;
+uniform bool u_showWarpGrid;
 out vec4 outColor;
 
 vec3 oklch(float lightness, float chroma, float hue) {
@@ -34,6 +35,14 @@ vec3 oklch(float lightness, float chroma, float hue) {
 
 vec3 compressLight(vec3 c) {
   return clamp((c * (2.51 * c + 0.03)) / (c * (2.43 * c + 0.59) + 0.14), 0.0, 1.0);
+}
+
+// 对同一张网格分别查询原始坐标 p 与扭曲后的 q。
+float gridLine(vec2 coord) {
+  vec2 cell = abs(fract(coord * 8.0 + 0.5) - 0.5);
+  vec2 aa = max(fwidth(coord * 8.0) * 1.25, vec2(0.0001));
+  vec2 line = 1.0 - smoothstep(vec2(0.0), aa, cell);
+  return max(line.x, line.y);
 }
 
 void main() {
@@ -65,9 +74,14 @@ void main() {
     if (i >= count) break;
     float layer = float(i + 1);
     if (u_stage >= 3) {
+      // 第四步临时放大频率和幅度；后续多层光场仍按原有参数计算。
+      float previewFrequency = u_stage == 3 ? 8.0 : 1.0;
+      float previewAmplitude = u_stage == 3 ? 2.3 : 1.0;
       // 纵向扰动读取本层已经更新的横向坐标。
-      q.x -= sin(q.y * u_frequency.x + t + layer * 0.007) * 0.13 * u_warp;
-      q.y -= sin(q.x * u_frequency.y - t + layer * 0.02) * 0.028 * u_warp;
+      q.x -= sin(q.y * u_frequency.x * previewFrequency + t + layer * 0.007)
+        * 0.13 * previewAmplitude * u_warp;
+      q.y -= sin(q.x * u_frequency.y - t + layer * 0.02)
+        * 0.028 * previewAmplitude * u_warp;
     }
     if (u_stage >= 4) q = fold * q * 0.953;
     vec2 local = q - (u_stage >= 4 ? vec2(0.35 + breath * 0.1, 0.0) : vec2(0.0));
@@ -83,5 +97,13 @@ void main() {
   light *= u_exposure;
   if (u_stage < 5) light = light / (1.0 + light);
   else if (u_toneMap) light = pow(compressLight(light), vec3(0.9));
+  if (u_stage == 3 && u_showWarpGrid) {
+    // 灰线是原始网格，青线是用于计算光斑的扭曲坐标网格。
+    float originalGrid = gridLine(p);
+    float warpedGrid = gridLine(q);
+    light = light * 0.62
+      + originalGrid * vec3(0.15, 0.19, 0.24)
+      + warpedGrid * vec3(0.08, 0.55, 0.72);
+  }
   outColor = vec4(clamp(light, 0.0, 1.0), 1.0);
 }

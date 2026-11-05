@@ -54,6 +54,7 @@ export interface RibbonOptions {
   stage: number;
   layers: number;
   warp: number;
+  showWarpGrid: boolean;
   stretch: number;
   exposure: number;
   hue: number;
@@ -162,7 +163,7 @@ export function createRibbonRenderer(canvas: HTMLCanvasElement) {
     Array.from(' .:;+*oO8@').forEach((glyph, index) => glyphContext.fillText(glyph, index * 32 + 16, 24));
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, glyphCanvas);
-    const f = locations(field, ['u_resolution', 'u_stage', 'u_time', 'u_layers', 'u_warp', 'u_stretch', 'u_exposure', 'u_hue', 'u_spread', 'u_tilt', 'u_centre', 'u_phase', 'u_frequency', 'u_toneMap']);
+    const f = locations(field, ['u_resolution', 'u_stage', 'u_time', 'u_layers', 'u_warp', 'u_stretch', 'u_exposure', 'u_hue', 'u_spread', 'u_tilt', 'u_centre', 'u_phase', 'u_frequency', 'u_toneMap', 'u_showWarpGrid']);
     const p = locations(post, ['u_scene', 'u_glyphs', 'u_resolution', 'u_origin', 'u_time', 'u_effect', 'u_strength', 'u_ratio', 'u_light']);
 
     function resizeTarget(item: typeof current, width: number, height: number) {
@@ -196,6 +197,7 @@ export function createRibbonRenderer(canvas: HTMLCanvasElement) {
       gl.uniform1f(f.u_phase, options.parameters.phase);
       gl.uniform2f(f.u_frequency, options.parameters.warpX, options.parameters.warpY);
       gl.uniform1i(f.u_toneMap, options.toneMap ? 1 : 0);
+      gl.uniform1i(f.u_showWarpGrid, options.showWarpGrid && stage === 3 ? 1 : 0);
       // 本次输出纹理与最终显示的输入纹理严格分离。
       gl.drawArrays(gl.TRIANGLES, 0, 3);
 
