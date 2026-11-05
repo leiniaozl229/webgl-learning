@@ -22,10 +22,10 @@ export const openShadersSteps = [
   },
   {
     title: '让坐标连续弯曲', short: '扭曲',
-    description: '用正弦波改变查询坐标，再计算光斑。横向先更新，纵向读取更新后的横坐标；两次扰动共同改变光丝的形状。时间推进波的相位。',
+    description: '用正弦波改变查询坐标，再计算光斑。先更新横坐标，再使用更新后的横坐标计算纵向偏移。此步将频率放大 8 倍、位移放大 2.3 倍作为教学演示，后续步骤使用原始幅度。',
     input: '坐标、时间、扰动强度', operation: '依次执行两个正弦位移', output: '弯曲的发光核',
-    observe: '将扭曲强度设为 0，再逐渐增加。点击“播放流动”，或拖动时间相位，查看同一个场怎样连续变化。',
-    code: 'q.x -= sin(q.y * u_frequency.x + t) * 0.13 * u_warp;\nq.y -= sin(q.x * u_frequency.y - t) * 0.028 * u_warp;',
+    observe: '将扭曲强度设为 0，再逐渐增加。灰线表示原始坐标，青线表示扭曲后的坐标。关闭网格可以单独观察光丝，再拖动时间相位观察弯曲如何变化。',
+    code: 'float previewFrequency = u_stage == 3 ? 8.0 : 1.0;\nfloat previewAmplitude = u_stage == 3 ? 2.3 : 1.0;\nq.x -= sin(q.y * u_frequency.x * previewFrequency + t)\n  * 0.13 * previewAmplitude * u_warp;\nq.y -= sin(q.x * u_frequency.y - t)\n  * 0.028 * previewAmplitude * u_warp;',
   },
   {
     title: '重复折叠并累加', short: '折叠',

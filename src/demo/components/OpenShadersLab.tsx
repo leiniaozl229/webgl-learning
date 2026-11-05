@@ -25,6 +25,7 @@ export function OpenShadersLab({ light }: { light: boolean }) {
   const [layers, setLayers] = useState(80);
   const [stretch, setStretch] = useState(0.17);
   const [warp, setWarp] = useState(1);
+  const [showWarpGrid, setShowWarpGrid] = useState(true);
   const [exposure, setExposure] = useState(1);
   const [style, setStyle] = useState<ShaderStyle>('none');
   const [strength, setStrength] = useState(1);
@@ -40,7 +41,7 @@ export function OpenShadersLab({ light }: { light: boolean }) {
   const refreshRef = useRef<(() => void) | null>(null);
   const timeRef = useRef(0);
   const playingRef = useRef(false);
-  const options = useMemo<RibbonOptions>(() => ({ stage, parameters, layers, stretch, warp, exposure, hue, style, strength, fieldScale, compare, toneMap, light }), [stage, parameters, layers, stretch, warp, exposure, hue, style, strength, fieldScale, compare, toneMap, light]);
+  const options = useMemo<RibbonOptions>(() => ({ stage, parameters, layers, stretch, warp, showWarpGrid, exposure, hue, style, strength, fieldScale, compare, toneMap, light }), [stage, parameters, layers, stretch, warp, showWarpGrid, exposure, hue, style, strength, fieldScale, compare, toneMap, light]);
   const optionsRef = useRef(options);
   const step = openShadersSteps[stage];
   const referenceLabel = stage === 6 ? '原始光场' : stage === 7 ? '全分辨率' : '完成效果';
@@ -139,7 +140,7 @@ export function OpenShadersLab({ light }: { light: boolean }) {
   function reset() {
     playingRef.current = false; timeRef.current = 0;
     setPlaying(false); setTime(0); setStage(0); setName('shader'); setDraftName('shader');
-    setHue(ribbonParameters('shader').hue); setLayers(80); setStretch(0.17); setWarp(1);
+    setHue(ribbonParameters('shader').hue); setLayers(80); setStretch(0.17); setWarp(1); setShowWarpGrid(true);
     setExposure(1); setStyle('none'); setStrength(1); setFieldScale(0.5); setToneMap(true); setCompare(true);
   }
   function applyName(event: FormEvent) {
@@ -176,7 +177,11 @@ export function OpenShadersLab({ light }: { light: boolean }) {
         {stage === 0 && <div className="ribbon-lab__coordinate-note"><strong>左下角原点</strong><p>像素坐标 → 居中坐标<br /><code>p = (frag − R / 2) / R.y</code></p><small>圆环标出半径 0.25。</small></div>}
         {(stage === 1 || stage === 5) && <Range label="曝光" min={0.25} max={3} value={exposure} onChange={setExposure} />}
         {stage === 2 && <Range label="纵轴尺度" min={0.05} max={1} value={stretch} onChange={setStretch} />}
-        {stage === 3 && <Range label="扭曲强度" min={0} max={2} value={warp} onChange={setWarp} />}
+        {stage === 3 && <>
+          <Range label="扭曲强度" min={0} max={2} value={warp} onChange={setWarp} />
+          <label className="ribbon-check"><input type="checkbox" checked={showWarpGrid} onChange={(event) => setShowWarpGrid(event.target.checked)} />显示坐标变形网格</label>
+          <p className="ribbon-lab__style-note">灰线：原始坐标 p；青线：扭曲后坐标 q。第四步临时放大频率与位移，关闭网格可单独观察光斑；第五步之后沿用原始参数。</p>
+        </>}
         {stage === 4 && <Range label="累加层数" min={1} max={96} step={1} value={layers} onChange={setLayers} />}
         {stage === 5 && <><Range label="色相" min={0} max={1} value={hue} onChange={setHue} /><label className="ribbon-check"><input type="checkbox" checked={toneMap} onChange={(event) => setToneMap(event.target.checked)} />压缩高光 Tone mapping</label></>}
         {stage >= 6 && <><label className="ribbon-select" htmlFor="ribbon-style">表面风格<select id="ribbon-style" aria-label="表面风格" value={style} onChange={(event) => setStyle(event.target.value as ShaderStyle)}>{shaderStyles.map((item) => <option key={item.id} value={item.id}>{item.label} · {item.chinese}</option>)}</select></label>{style !== 'none' && <Range label="效果强度" min={0} max={1.3} value={strength} onChange={setStrength} />}<p className="ribbon-lab__style-note">{shaderStyles.find((item) => item.id === style)!.principle}</p></>}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fieldDimensions, ribbonParameters } from './openShadersLab';
+import { fieldDimensions, fieldSource, ribbonParameters } from './openShadersLab';
 
 describe('ribbon seed parameters', () => {
   it('reproduces parameters across spelling case and surrounding whitespace', () => {
@@ -36,5 +36,19 @@ describe('field render target dimensions', () => {
 
   it('retains a valid attachment size for a narrow resized canvas', () => {
     expect(fieldDimensions(1, 1, 0.25)).toEqual({ width: 1, height: 1 });
+  });
+});
+
+describe('fourth-step coordinate warp visualization', () => {
+  it('amplifies frequency and displacement only for stage 3', () => {
+    expect(fieldSource).toContain('float previewFrequency = u_stage == 3 ? 8.0 : 1.0;');
+    expect(fieldSource).toContain('float previewAmplitude = u_stage == 3 ? 2.3 : 1.0;');
+    expect(fieldSource).toContain('q.y -= sin(q.x * u_frequency.y - t + layer * 0.02)');
+  });
+
+  it('draws original and warped grids only when the preview toggle is enabled', () => {
+    expect(fieldSource).toContain('if (u_stage == 3 && u_showWarpGrid)');
+    expect(fieldSource).toContain('float originalGrid = gridLine(p);');
+    expect(fieldSource).toContain('float warpedGrid = gridLine(q);');
   });
 });
